@@ -22,8 +22,8 @@ List<int> encodeCoverThumbnail(image.Image cover) {
     final scale = coverThumbnailLongestSide / longestSide;
     thumbnail = image.copyResize(
       cover,
-      width: (cover.width * scale).round().clamp(1, coverThumbnailLongestSide),
-      height: (cover.height * scale).round().clamp(1, coverThumbnailLongestSide),
+      width: (cover.width * scale).round().clamp(1, coverThumbnailLongestSide).toInt(),
+      height: (cover.height * scale).round().clamp(1, coverThumbnailLongestSide).toInt(),
     );
   } else {
     thumbnail = cover;
