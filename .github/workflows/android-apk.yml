@@ -20,7 +20,20 @@ jobs:
           channel: stable
           cache: true
       - name: Generate Android project files
-        run: flutter create --platforms=android --project-name=selura_reader --org=com.selura .
+        run: flutter create --platforms=android --project-name=reader --org=com.selura .
+      - name: Set Android app name
+        run: sed -i 's/android:label="reader"/android:label="Selura"/' android/app/src/main/AndroidManifest.xml
+      - name: Verify Android application identity
+        run: |
+          ANDROID_GRADLE_FILE="$(find android/app -maxdepth 1 -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) | head -n 1)"
+          test -n "$ANDROID_GRADLE_FILE"
+          grep -q 'com.selura.reader' "$ANDROID_GRADLE_FILE"
+          if grep -q 'com.selura.selura_reader' "$ANDROID_GRADLE_FILE"; then
+            echo 'Legacy application ID is still present.' >&2
+            exit 1
+          fi
+          grep -Rqs '^package com.selura.reader' android/app/src/main/kotlin android/app/src/main/java
+          grep -q 'android:label="Selura"' android/app/src/main/AndroidManifest.xml
       - name: Remove generated template test
         run: rm -f test/widget_test.dart
       - name: Resolve dependencies
