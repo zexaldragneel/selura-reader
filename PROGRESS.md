@@ -43,3 +43,10 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Run #5 (39037991308) failed at `flutter analyze` because of `unnecessary_brace_in_string_interps` at lib/main.dart:60; build/upload skipped.
 - Fixed in commit 3534f5b94a348b310ecaf00f24355654cf9032fb.
 - Awaiting next CI run. APK remains unverified.
+
+## 2026-10-17 — Build #7 reached Android compilation
+- Run #7 (39038184074) passed Flutter setup, dependency resolution, and `flutter analyze` with no issues.
+- Android compilation then failed in transitive package `flutter_html` because `html` 0.15.7 removed the `matches` API used by `flutter_html` 3.0.0.
+- Fix: pin direct dependency `html: 0.15.6` in commit 619b4088aca4deea062002324c361ee8f6137f4d.
+- The `pdfx` Kotlin Gradle warning is non-fatal for this run and will be handled separately if needed.
+- Verification: awaiting the next PR workflow. APK remains unverified.
