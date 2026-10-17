@@ -9,19 +9,20 @@ https://github.com/john-selwyn/selura-reader
 - Added Flutter pubspec.yaml with EPUB, PDF, file picker, local storage dependencies.
 - Added lib/main.dart with bookshelf, local EPUB/PDF import, EPUB reader with table of contents, and PDF reader.
 - Added .github/workflows/android-apk.yml to generate Android scaffolding and build a debug APK.
-- Latest workflow commit: 21d9aa889ce27fba07463e4425a80b7a258c951a
+- GitHub Actions Build #12 successfully compiled and uploaded the first Selura debug APK artifact.
 
 ## Unverified / blockers
-- GitHub Actions build result not yet verified. Do not claim APK exists or is working.
-- EPUB/PDF plugin compatibility and Android device behavior need testing.
+- APK compilation is verified, but Android device installation and runtime behavior are not yet verified.
+- EPUB/PDF opening, import behavior, and plugin compatibility still need device testing.
 - Saved reading position, cover art, themes, and bookmarks are not implemented in this initial scaffold.
+- `pdfx` emits a non-fatal Kotlin Gradle Plugin compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Check Actions tab: https://github.com/john-selwyn/selura-reader/actions
-2. If build fails, read logs and repair.
-3. Download selura-debug-apk artifact and install on Android; test EPUB/PDF.
-4. Implement saved progress, bookmarks, theme controls, cover art.
-5. Update this file after each meaningful milestone.
+1. Download the `selura-debug-apk` artifact from Build #12 and install it on Android.
+2. Test app launch, EPUB/PDF import, EPUB reading, PDF reading, and offline reopening.
+3. If device testing passes, merge Pull Request #1 to main.
+4. Implement saved EPUB/PDF reading progress.
+5. Improve bookshelf UI, cover art, bookmarks, and reader theme controls.
 
 ## Future chat instructions
 Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code and CI status before making claims. Keep this file current.
@@ -59,3 +60,11 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Run #10 (39039469281) failed at `flutter analyze` because file_picker 13 removed the old `FilePicker.platform` API and the legacy `FilePickerResult` flow.
 - Fix: migrated imports to `FilePicker.pickFiles(...)`, the new `List<PlatformFile>` return type, and removed the obsolete `allowMultiple` parameter in commit ba0b8bd81486d548f3c28f1dcd9d26a53e1b97e8.
 - Verification: awaiting the next pull-request build. APK remains unverified.
+
+## 2026-10-17 — First successful Android APK build
+- Run #12 (39039815021) completed successfully.
+- `flutter analyze` reported no issues.
+- `flutter build apk --debug` completed successfully and produced `build/app/outputs/flutter-apk/app-debug.apk`.
+- Artifact `selura-debug-apk` uploaded successfully (83,399,059 bytes, artifact ID 12103653028).
+- Artifact SHA-256: `1736cbf2b57a90a320e4e5ae3a807a031ef932f02c9e7341d9908b8a760c1955`.
+- Build verification is complete; device installation/runtime verification is the next milestone.
