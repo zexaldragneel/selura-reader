@@ -94,6 +94,7 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> {
   List<Book> books = [];
   final Map<String, String> progressLabels = {};
+  final TextEditingController searchController = TextEditingController();
   bool busy = false;
   bool gridView = true;
   String query = '';
@@ -103,6 +104,12 @@ class _LibraryPageState extends State<LibraryPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -117,14 +124,13 @@ class _LibraryPageState extends State<LibraryPage> {
         .where((book) => File(book.path).existsSync())
         .toList();
     final savedSort = prefs.getInt('library_sort') ?? 0;
+    final sortIndex = savedSort.clamp(0, _LibrarySort.values.length - 1).toInt();
 
     if (!mounted) return;
     setState(() {
       books = loadedBooks;
       gridView = prefs.getBool('library_grid') ?? true;
-      sort = _LibrarySort.values[
-        savedSort.clamp(0, _LibrarySort.values.length - 1),
-      ];
+      sort = _LibrarySort.values[sortIndex];
     });
     await _refreshProgress();
   }
@@ -248,6 +254,11 @@ class _LibraryPageState extends State<LibraryPage> {
     await prefs.setInt('library_sort', value.index);
   }
 
+  void _clearSearch() {
+    searchController.clear();
+    setState(() => query = '');
+  }
+
   List<Book> get _visibleBooks {
     final normalized = query.trim().toLowerCase();
     final result = books
@@ -266,15 +277,18 @@ class _LibraryPageState extends State<LibraryPage> {
               ? a.title.toLowerCase().compareTo(b.title.toLowerCase())
               : recent;
         });
+        break;
       case _LibrarySort.title:
         result.sort(
           (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
         );
+        break;
       case _LibrarySort.favorites:
         result.sort((a, b) {
           if (a.favorite != b.favorite) return a.favorite ? -1 : 1;
           return a.title.toLowerCase().compareTo(b.title.toLowerCase());
         });
+        break;
       case _LibrarySort.format:
         result.sort((a, b) {
           final format = a.type.compareTo(b.type);
@@ -282,6 +296,7 @@ class _LibraryPageState extends State<LibraryPage> {
               ? a.title.toLowerCase().compareTo(b.title.toLowerCase())
               : format;
         });
+        break;
     }
     return result;
   }
@@ -370,6 +385,7 @@ class _LibraryPageState extends State<LibraryPage> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
                 TextField(
+                  controller: searchController,
                   onChanged: (value) => setState(() => query = value),
                   decoration: InputDecoration(
                     hintText: 'Search your library',
@@ -378,7 +394,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         ? null
                         : IconButton(
                             tooltip: 'Clear search',
-                            onPressed: () => setState(() => query = ''),
+                            onPressed: _clearSearch,
                             icon: const Icon(Icons.close_rounded),
                           ),
                     filled: true,
