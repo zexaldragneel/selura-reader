@@ -53,8 +53,8 @@ CI status:
 - User confirmed PR #7 test APK works on Android; merged with squash commit `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee`.
 - Post-merge main APK build: pending verification.
 
-## Current milestone — Embedded EPUB cover thumbnails (Pull Request #8)
-- Branch: `feature/epub-cover-thumbnails`; PR: https://github.com/john-selwyn/selura-reader/pull/8. Not merged; device testing is still required.
+## Completed milestone — Embedded EPUB cover thumbnails (Pull Request #8)
+- PR #8 (`feature/epub-cover-thumbnails`) squash-merged to main as `c9d29173690f259af4f67e3ac3f374953143ff2f` after successful user device testing.
 - `lib/cover_cache.dart` reads the EPUB container/package manifest and extracts only the declared cover image from EPUB 2 (`meta name="cover"`) or EPUB 3 (`properties="cover-image"`).
 - Cover extraction, image decode and resizing run in a Flutter background isolate. Thumbnails are JPEG-compressed with a maximum 720px longest side.
 - The app caches thumbnails locally under application support storage keyed to the book path, size and modification time; missing/unsupported covers use the existing book artwork without crashing.
@@ -67,18 +67,18 @@ CI status:
 - **Build #43** (GitHub Actions run `39078336724`) passed source analysis, EPUB cover regression tests, Android debug APK compilation, CI artifact upload, and direct APK prerelease publishing.
 - Test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-8/selura-debug.apk
 - APK SHA-256 from release: `385e818184f70792a76001b2e22ca452c5ec040fc51e318117fbc06646b439ed`.
-- Runtime result: NOT YET DEVICE-VERIFIED. Test imported EPUBs with and without embedded covers, offline restart, existing library covers, and EPUB/PDF auto-resume before merging PR #8.
+- Runtime result: user confirmed on-device real EPUB cover display (screenshot), cover persistence after offline restart, and correct reading-position auto-resume. Missing-cover fallback and every EPUB variation have automated tests but not all were individually device-tested.
 
 ## Unverified / blockers
-- The EPUB cover feature in PR #8 passes CI but remains unmerged and unverified on an Android device.
+- EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
 - Release signing is not configured yet; current downloadable APKs are development/debug builds.
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Install PR #8 test APK on Android and confirm covers for existing/new EPUBs, missing-cover fallback, offline display, and unaffected EPUB/PDF reading/resume.
-2. Once device verification succeeds, merge PR #8 and confirm the post-merge main APK release.
-3. Add per-book EPUB CFI/PDF-page bookmarks and local bookmark navigation.
+1. Confirm post-merge main APK build and direct APK prerelease for PR #8.
+2. Add per-book EPUB CFI/PDF page bookmarks and local bookmark navigation in a feature branch and CI test.
+3. Test bookmarks on Android before merging.
 4. Add EPUB typography and reading-theme controls.
 5. Begin offline manga/CBZ support after core reader milestones.
 
