@@ -50,3 +50,12 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Fix: pin direct dependency `html: 0.15.6` in commit 619b4088aca4deea062002324c361ee8f6137f4d.
 - The `pdfx` Kotlin Gradle warning is non-fatal for this run and will be handled separately if needed.
 - Verification: awaiting the next PR workflow. APK remains unverified.
+
+## 2026-10-17 — Build #9 Android SDK compatibility blocker
+- Run #9 (39038721621) passed dependency resolution and `flutter analyze`, then failed during Android compilation because file_picker 8.x compiled against Android API 34 while a lifecycle dependency required compileSdk 36.
+- Fix: upgraded `file_picker` to 13.1.0 in commit 03f3c0676ede1d497978421eae7831e58dbb24d6.
+
+## 2026-10-17 — Build #10 file_picker API migration
+- Run #10 (39039469281) failed at `flutter analyze` because file_picker 13 removed the old `FilePicker.platform` API and the legacy `FilePickerResult` flow.
+- Fix: migrated imports to `FilePicker.pickFiles(...)`, the new `List<PlatformFile>` return type, and removed the obsolete `allowMultiple` parameter in commit ba0b8bd81486d548f3c28f1dcd9d26a53e1b97e8.
+- Verification: awaiting the next pull-request build. APK remains unverified.
