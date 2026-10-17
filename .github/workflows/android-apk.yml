@@ -1,0 +1,33 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android project files
+        run: flutter create --platforms=android --project-name=selura_reader --org=com.selura .
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze source
+        run: flutter analyze
+      - name: Build debug APK
+        run: flutter build apk --debug
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
