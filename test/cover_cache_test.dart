@@ -23,8 +23,15 @@ void main() {
     expect(result.height, 180);
   });
 
-  test('reads a declared cover from a local EPUB archive', () async {
+  for (final epubVersion in ['2.0', '3.0']) {
+    test('reads a declared cover from EPUB $epubVersion', () async {
     final archive = Archive();
+    final coverMeta = epubVersion == '2.0'
+        ? '<meta name="cover" content="cover-image"/>'
+        : '';
+    final coverProperty = epubVersion == '3.0'
+        ? ' properties="cover-image"'
+        : '';
 
     void addText(String name, String value) {
       final data = utf8.encode(value);
@@ -45,14 +52,14 @@ void main() {
     addText('OEBPS/content.opf', '''
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf"
- version="2.0" unique-identifier="uid">
+ version="$epubVersion" unique-identifier="uid">
  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
   <dc:title>Selura Cover Fixture</dc:title>
   <dc:identifier id="uid">selura-cover-test</dc:identifier>
-  <meta name="cover" content="cover-image"/>
+  $coverMeta
  </metadata>
  <manifest>
-  <item id="cover-image" href="cover.png" media-type="image/png"/>
+  <item id="cover-image" href="cover.png" media-type="image/png"$coverProperty/>
   <item id="chapter1" href="chapter.xhtml"
     media-type="application/xhtml+xml"/>
  </manifest>
@@ -83,7 +90,8 @@ void main() {
     expect(decoded, isNotNull);
     expect(decoded!.width, 320);
     expect(decoded.height, 480);
-  });
+    });
+  }
 
   test('corrupt EPUB falls back without crashing', () async {
     final folder = await Directory.systemTemp.createTemp('selura-bad-');
