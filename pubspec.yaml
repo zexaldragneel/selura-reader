@@ -1,0 +1,20 @@
+name: selura_reader
+description: Selura offline EPUB and PDF reader
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  file_picker: ^8.1.2
+  path_provider: ^2.1.4
+  shared_preferences: ^2.3.2
+  epub_view: ^3.2.0
+  pdfx: ^2.9.2
+
+flutter:
+  uses-material-design: true
