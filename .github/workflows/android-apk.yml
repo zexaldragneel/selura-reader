@@ -33,6 +33,8 @@ jobs:
         run: flutter pub get
       - name: Analyze source
         run: flutter analyze
+      - name: Test cover extraction
+        run: flutter test
       - name: Build debug APK
         run: flutter build apk --debug
       - name: Upload CI artifact
