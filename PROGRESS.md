@@ -38,3 +38,8 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Root cause: `flutter create` generated a counter-app widget test referencing nonexistent `MyApp`, while `flutter_test` and `flutter_lints` were absent from pubspec.
 - Fix commits: 10a137bc65a9cf791950ebfb0b4b6e732305481e (dev dependencies), e3595918d2f127e60c6890cb6dabe4df3acbf48a (remove generated template test before analysis).
 - Verification: awaiting subsequent PR workflow. APK not yet confirmed.
+
+## 2026-10-17 — Build #5 lint repair
+- Run #5 (39037991308) failed at `flutter analyze` because of `unnecessary_brace_in_string_interps` at lib/main.dart:60; build/upload skipped.
+- Fixed in commit 3534f5b94a348b310ecaf00f24355654cf9032fb.
+- Awaiting next CI run. APK remains unverified.
