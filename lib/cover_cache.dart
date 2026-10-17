@@ -117,7 +117,7 @@ Future<List<int>?> readCoverThumbnail(String epubPath) async {
     String? coverHref;
     for (final item in manifest.children.whereType<xml.XmlElement>()) {
       if (item.name.local != 'item') continue;
-      final props = item.getAttribute('properties')?.split(RegExp(r'\\s+')) ?? [];
+      final props = item.getAttribute('properties')?.split(RegExp(r'\s+')) ?? [];
       if (props.contains('cover-image')) {
         coverHref = item.getAttribute('href');
         break;
