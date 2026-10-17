@@ -25,3 +25,10 @@ https://github.com/john-selwyn/selura-reader
 
 ## Future chat instructions
 Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code and CI status before making claims. Keep this file current.
+
+## 2026-10-17 — Offline library hardening (feature branch)
+- Commit: 6408e7c40dbfb7181be1ae306e031fafe1d28330
+- Imported files now use generated safe filenames rather than user-supplied filenames.
+- Missing local files are filtered when loading the bookshelf.
+- Build status: not verified. Commit-specific workflow lookup returned no runs; the existing workflow only triggers on main or manual dispatch.
+- Next: validate Android CI, add PR-triggered builds, implement EPUB/PDF resume positions and test on a device.
