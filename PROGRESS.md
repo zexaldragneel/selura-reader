@@ -12,28 +12,31 @@ https://github.com/john-selwyn/selura-reader
 - GitHub Actions Build #12 successfully compiled and uploaded the first Selura debug APK artifact.
 - User confirmed the Build #12 APK installs and runs acceptably on an Android device.
 - Pull Request #1 was squash-merged to main at e9c8d3a18f2fc5224ae41076dc7ebdebd69be752.
-- Pull Request #2 Build #17 completed successfully with source analysis and APK compilation passing.
+- Pull Request #2 Build #19 completed successfully: source analysis, APK compilation, CI artifact upload, and direct APK prerelease publishing all passed.
+- User confirmed the latest Android build works and EPUB/PDF automatic resume restores reading position correctly.
+- Pull Request #2 was squash-merged to main at 0521e3bfeac5484c57d82c9362a1e727b73d4d0f.
 
 ## Current milestone
-- Feature branch: `feature/persisted-reading-progress`.
-- EPUB reading position is now persisted as EPUB CFI and restored on reopen.
-- PDF current page is now persisted and restored on reopen.
+- EPUB reading position is persisted as EPUB CFI and restored on reopen.
+- PDF current page is persisted and restored on reopen.
 - Reader pages show a loading indicator while saved progress is restored.
 - Bookshelf labels imported books as supporting auto-resume.
 - Direct APK publishing is enabled for both main builds and same-repository pull-request test builds, so device testing does not require ZIP extraction.
 
 ## Unverified / blockers
-- Persisted EPUB/PDF progress changes require a fresh Android device test before merge.
-- The new pull-request direct APK release path requires verification on the next CI run.
+- The post-merge main build/direct APK release still needs verification after Pull Request #2 merge.
+- The generated Android application ID is still `com.selura.selura_reader`; project requirement is `com.selura.reader`. This should be fixed before release builds or long-term user data depends on the current package ID.
+- The workflow regenerates Android scaffolding during CI; persisting the Android project with the correct package ID will make builds more stable and predictable.
 - `pdfx` emits a non-fatal Kotlin Gradle Plugin compatibility warning that should be addressed before a future Flutter upgrade.
-- Cover art, bookmarks, annotations, typography controls, and a more premium bookshelf UI are still pending.
+- Cover art, bookmarks, annotations, typography controls, premium bookshelf UI, and manga/CBZ support are still pending.
 
 ## Next steps
-1. Verify the next Pull Request #2 build publishes a direct `.apk` prerelease asset.
-2. Install that APK and confirm EPUB and PDF resume positions on Android.
-3. Merge Pull Request #2 after device verification.
-4. Verify the post-merge main build publishes a direct `selura-debug.apk` release asset.
-5. Improve bookshelf UI, cover art, bookmarks, annotations, and reader theme/typography controls.
+1. Verify the post-merge main build publishes a direct `selura-debug.apk` release asset.
+2. Persist the Android scaffold and set the final application ID/namespace to `com.selura.reader`.
+3. Rebuild and device-test installation/update behavior after the package-ID correction.
+4. Improve bookshelf UI with covers, search/sort, favorites, and continue-reading presentation.
+5. Add bookmarks and EPUB typography/theme controls.
+6. Begin offline manga support with CBZ import and right-to-left/continuous reading modes.
 
 ## Future chat instructions
 Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code and CI status before making claims. Keep this file current.
@@ -85,7 +88,9 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Commit: 4620a4c939c9c821e5950dd2765763b780a8475b.
 - EPUB: saves `EpubController.generateEpubCfi()` and restores it through `EpubController(epubCfi: ...)`.
 - PDF: saves the current page via `onPageChanged` and restores it through `PdfControllerPinch(initialPage: ...)`.
-- Status: implemented but not yet device verified.
+- Build #19 (39042188909) passed analysis, APK compilation, artifact upload, and direct APK publishing.
+- Device verification: user confirmed automatic resume works in the latest Android build.
+- Pull Request #2 merged to main at 0521e3bfeac5484c57d82c9362a1e727b73d4d0f.
 
 ## 2026-10-17 — Direct-install APK publishing
 - Initial commit: d28d1460b4245d43ebf938f69579b1472073d64f.
@@ -93,5 +98,5 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Main-branch builds publish `selura-debug.apk` as a GitHub prerelease asset.
 - Build #17 passed, but its `Publish direct APK` job was intentionally skipped because that first workflow revision only published on `main`.
 - Follow-up commit: 2726b93c409cff8fada9cfc3a49c09106524a7c8 enables direct `.apk` prerelease publishing for same-repository pull-request builds as well.
-- User-facing result: feature builds can now be device-tested from a direct APK download without extracting a ZIP.
-- Status: awaiting verification of the next PR workflow release job.
+- Build #19 verified that the pull-request direct APK release job succeeds.
+- User-facing result: feature builds can be device-tested from a direct APK download without extracting a ZIP.
