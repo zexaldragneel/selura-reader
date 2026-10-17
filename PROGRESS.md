@@ -8,35 +8,37 @@ https://github.com/john-selwyn/selura-reader
 - Created project context and progress docs on main.
 - Added Flutter pubspec.yaml with EPUB, PDF, file picker, local storage dependencies.
 - Added lib/main.dart with bookshelf, local EPUB/PDF import, EPUB reader with table of contents, and PDF reader.
-- Added .github/workflows/android-apk.yml to generate Android scaffolding and build a debug APK.
 - GitHub Actions Build #12 successfully compiled and uploaded the first Selura debug APK artifact.
 - User confirmed the Build #12 APK installs and runs acceptably on an Android device.
 - Pull Request #1 was squash-merged to main at e9c8d3a18f2fc5224ae41076dc7ebdebd69be752.
 - Pull Request #2 Build #19 completed successfully: source analysis, APK compilation, CI artifact upload, and direct APK prerelease publishing all passed.
 - User confirmed the latest Android build works and EPUB/PDF automatic resume restores reading position correctly.
 - Pull Request #2 was squash-merged to main at 0521e3bfeac5484c57d82c9362a1e727b73d4d0f.
+- Post-merge main Build #23 (39043338015) passed APK compilation, artifact upload, and direct APK prerelease publishing.
 
 ## Current milestone
-- EPUB reading position is persisted as EPUB CFI and restored on reopen.
-- PDF current page is persisted and restored on reopen.
-- Reader pages show a loading indicator while saved progress is restored.
-- Bookshelf labels imported books as supporting auto-resume.
-- Direct APK publishing is enabled for both main builds and same-repository pull-request test builds, so device testing does not require ZIP extraction.
+Pull Request #5 (`fix/android-app-identity`) finalizes the Android application identity before premium bookshelf work:
+- Android namespace/application ID is `com.selura.reader`.
+- Launcher label is `Selura`.
+- The Android project scaffold is now committed to the repository instead of regenerated during every CI build.
+- CI explicitly verifies the committed application ID, MainActivity package, and launcher label before compiling.
+- Flutter SDK caching was removed from this workflow after earlier cache-save disk-pressure warnings; the final verification run no longer depends on that cache.
+- Build #28 (39045696185) passed the committed-Android identity check, dependency resolution, `flutter analyze`, debug APK compilation, artifact upload, and direct APK prerelease publishing.
+- GitHub prerelease `test-pr-5` contains the direct `selura-debug.apk` from Build #28.
 
 ## Unverified / blockers
-- The post-merge main build/direct APK release still needs verification after Pull Request #2 merge.
-- The generated Android application ID is still `com.selura.selura_reader`; project requirement is `com.selura.reader`. This should be fixed before release builds or long-term user data depends on the current package ID.
-- The workflow regenerates Android scaffolding during CI; persisting the Android project with the correct package ID will make builds more stable and predictable.
+- Pull Request #5 is not merged yet because the corrected package ID needs Android device testing first.
+- Because the package ID changed from `com.selura.selura_reader` to `com.selura.reader`, the PR #5 test APK installs as a separate app from earlier debug builds. Existing app-private imported books and reading progress do not automatically migrate to the corrected package.
 - `pdfx` emits a non-fatal Kotlin Gradle Plugin compatibility warning that should be addressed before a future Flutter upgrade.
+- Release signing is not configured yet; current APKs are development/debug builds.
 - Cover art, bookmarks, annotations, typography controls, premium bookshelf UI, and manga/CBZ support are still pending.
 
 ## Next steps
-1. Verify the post-merge main build publishes a direct `selura-debug.apk` release asset.
-2. Persist the Android scaffold and set the final application ID/namespace to `com.selura.reader`.
-3. Rebuild and device-test installation/update behavior after the package-ID correction.
-4. Improve bookshelf UI with covers, search/sort, favorites, and continue-reading presentation.
-5. Add bookmarks and EPUB typography/theme controls.
-6. Begin offline manga support with CBZ import and right-to-left/continuous reading modes.
+1. Install the Pull Request #5 direct APK on Android and test launch, EPUB/PDF import, reading, auto-resume, and offline reopening under the corrected package ID.
+2. If device testing passes, merge Pull Request #5 to main and verify the post-merge main APK.
+3. Build the premium bookshelf: cover extraction, Continue Reading, progress display, search, sorting, favorites, and grid/list views.
+4. Add bookmarks and EPUB typography/theme controls.
+5. Begin offline manga support with CBZ import and right-to-left/continuous reading modes.
 
 ## Future chat instructions
 Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code and CI status before making claims. Keep this file current.
@@ -60,7 +62,7 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Awaiting next CI run. APK remains unverified.
 
 ## 2026-10-17 — Build #7 reached Android compilation
-- Run #7 (39038184074) passed Flutter setup, dependency resolution, and `flutter analyze` with no issues.
+- Run #7 (39038184074) passed dependency resolution and `flutter analyze` with no issues.
 - Android compilation then failed in transitive package `flutter_html` because `html` 0.15.7 removed the `matches` API used by `flutter_html` 3.0.0.
 - Fix: pin direct dependency `html: 0.15.6` in commit 619b4088aca4deea062002324c361ee8f6137f4d.
 - The `pdfx` Kotlin Gradle warning is non-fatal for this run and will be handled separately if needed.
@@ -99,4 +101,14 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Build #17 passed, but its `Publish direct APK` job was intentionally skipped because that first workflow revision only published on `main`.
 - Follow-up commit: 2726b93c409cff8fada9cfc3a49c09106524a7c8 enables direct `.apk` prerelease publishing for same-repository pull-request builds as well.
 - Build #19 verified that the pull-request direct APK release job succeeds.
-- User-facing result: feature builds can be device-tested from a direct APK download without extracting a ZIP.
+- User-facing result: feature builds can now be device-tested from a direct APK download without extracting a ZIP.
+
+## 2026-10-17 — Android application identity and committed scaffold
+- Pull Request: #5, branch `fix/android-app-identity`.
+- Final Android namespace/application ID: `com.selura.reader`.
+- Launcher label: `Selura`.
+- Generated Android scaffold was committed by CI at cbbfa0ee6f049e9ae46ea8f9a03f971516b5137e.
+- Workflow cleanup commit 6f12281a706b1eec3624cd57c7234c24e6a4b9c0 removed Android regeneration from normal CI and now verifies the committed scaffold directly.
+- Build #28 (39045696185) passed identity verification, dependencies, `flutter analyze`, debug APK compilation, artifact upload, and direct APK publishing.
+- Direct APK prerelease: `test-pr-5`; Build #28 asset SHA-256 `c78ea4cd3f4a2ae8f9a73e7356b0b80c34434b76104e10ec20b08054d3f3c64b`.
+- Device/runtime status: not yet verified for the corrected package ID. Do not merge PR #5 until the user tests the APK.
