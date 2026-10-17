@@ -69,16 +69,18 @@ CI status:
 - APK SHA-256 from release: `385e818184f70792a76001b2e22ca452c5ec040fc51e318117fbc06646b439ed`.
 - Runtime result: user confirmed on-device real EPUB cover display (screenshot), cover persistence after offline restart, and correct reading-position auto-resume. Missing-cover fallback and every EPUB variation have automated tests but not all were individually device-tested.
 
-## Current milestone — Offline EPUB/PDF bookmarks (PR #9)
-- Branch: `feature/local-reader-bookmarks`; pull request: https://github.com/john-selwyn/selura-reader/pull/9 (unmerged).
+## Completed milestone — Offline EPUB/PDF bookmarks (PR #9)
+- Pull Request #9 (`feature/local-reader-bookmarks`) squash-merged into `main` at `e9bcc5a365f53e01f26a9f23cceb33e38f83a2ad` after successful user device testing.
 - Added `lib/bookmarks.dart`: per-book SharedPreferences bookmark storage, duplicate-location handling, malformed-record isolation, deletion and bookmark list UI.
 - EPUB reader: save current EPUB CFI, show saved positions and jump to a CFI with `gotoEpubCfi`.
 - PDF reader: save current page, show saved pages and jump using `PdfControllerPinch.jumpToPage`.
 - Existing EPUB/PDF auto-resume and bookshelf are unchanged; bookmarks have independent local storage.
 - Regression tests in `test/bookmarks_test.dart`: persistence across reads, isolation per book, deduplication, delete and corrupt stored rows.
 - Commits: `b3a0e466ee575785aa540e710799d28150723adc` (bookmark persistence/UI), `a4d81a0ae7778733bdc1d77b7fd919d0d648e20c` (reader controls), `b105f35fe775dcced30341f7ac0d993feb85739f` (tests).
-- Build #47 (run `39079345156`): `flutter analyze` and `flutter test` passed; Android APK compilation was in progress at the latest inspection.
-- Device verification: NOT YET. Wait for CI + APK publishing, then test adding, reopening, jumping, deleting and keeping saved bookmarks offline for both EPUB/PDF.
+- Build #47 (run `39079345156`) completed successfully.
+- Build #48 (run `39079512964`) passed source analysis, `flutter test`, Android debug APK compilation, CI artifact upload, and direct APK publishing; test APK: `https://github.com/john-selwyn/selura-reader/releases/download/test-pr-9/selura-debug.apk`.
+- Device verification: user reported that the installed PR #9 test APK and bookmarks work on Android. Comprehensive separate checks for every edge case were not individually reported.
+- Post-merge `main` build: pending verification.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -87,10 +89,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify completion of PR #9 Build #47 and published bookmark test APK.
-2. Device-test saving, jumping, deleting and persisting EPUB/PDF bookmarks, including offline restart.
-3. Merge PR #9 only after CI and user device verification, then verify post-merge Android build.
-4. Add EPUB typography and reading-theme controls.
+1. Verify post-merge `main` APK build and publishing for PR #9.
+2. Build EPUB typography and reading themes (font size/family, line spacing, light/dark/sepia where supported) in a new feature branch after inspecting renderer APIs.
+3. Test reader controls and persistence on Android before merging.
+4. Improve progress presentation with grounded PDF page counts and EPUB position indicators.
 5. Begin offline manga/CBZ support after core reader milestones.
 
 ## Key milestone history
@@ -101,6 +103,8 @@ CI status:
 - Build #23 (run `39043338015`): post-merge main build and direct APK publishing passed.
 - Pull Request #5: final Android identity and committed scaffold; merged at `c0fcd6f46fd514cff182c10606a38bced2a581b1` after successful device testing.
 - Pull Request #7: premium bookshelf, Build #34 (run `39048049148`) fully passed, direct APK `test-pr-7` published, user confirmed it works on Android, squash-merged at `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee`.
+- Pull Request #8: real EPUB covers, Build #43 passed, offline on-device cover display/resume verified, squash-merged at `c9d29173690f259af4f67e3ac3f374953143ff2f`.
+- Pull Request #9: local EPUB/PDF bookmarks, Build #48 (run `39079512964`) passed analysis/tests/APK/release; user confirmed runtime works, squash-merged at `e9bcc5a365f53e01f26a9f23cceb33e38f83a2ad`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
