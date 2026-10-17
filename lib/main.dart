@@ -57,7 +57,7 @@ class _LibraryPageState extends State<LibraryPage> {
         if (file.path == null) continue;
         final extension = file.extension?.toLowerCase() ?? '';
         if (extension != 'epub' && extension != 'pdf') continue;
-        final dest = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${books.length}.${extension}';
+        final dest = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${books.length}.$extension';
         await File(file.path!).copy(dest);
         books.add(Book(dest, file.name.replaceFirst(RegExp(r'\.(epub|pdf)$', caseSensitive: false), ''), extension));
       }
