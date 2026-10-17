@@ -32,3 +32,9 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Missing local files are filtered when loading the bookshelf.
 - Build status: not verified. Commit-specific workflow lookup returned no runs; the existing workflow only triggers on main or manual dispatch.
 - Next: validate Android CI, add PR-triggered builds, implement EPUB/PDF resume positions and test on a device.
+
+## 2026-10-17 — Build #3 failure diagnosed and patched
+- Run #3 (39037710648) failed at `flutter analyze`; Android compilation was skipped.
+- Root cause: `flutter create` generated a counter-app widget test referencing nonexistent `MyApp`, while `flutter_test` and `flutter_lints` were absent from pubspec.
+- Fix commits: 10a137bc65a9cf791950ebfb0b4b6e732305481e (dev dependencies), e3595918d2f127e60c6890cb6dabe4df3acbf48a (remove generated template test before analysis).
+- Verification: awaiting subsequent PR workflow. APK not yet confirmed.
