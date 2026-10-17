@@ -33,7 +33,7 @@ List<int> encodeCoverThumbnail(image.Image cover) {
 
 /// Invoked by compute() so decoding and resizing cannot stall the Flutter UI.
 /// Only the EPUB's declared cover is used; unrelated illustrations are ignored.
-Future<List<int>?> _readCoverThumbnail(String epubPath) async {
+Future<List<int>?> readCoverThumbnail(String epubPath) async {
   try {
     final bytes = await File(epubPath).readAsBytes();
     final book = await epubx.EpubReader.openBook(bytes);
@@ -82,7 +82,7 @@ class EpubCoverCache {
       }
       if (await absent.exists()) return null;
 
-      final thumbnail = await compute(_readCoverThumbnail, epubPath);
+      final thumbnail = await compute(readCoverThumbnail, epubPath);
       await folder.create(recursive: true);
       if (thumbnail == null) {
         // Avoid reparsing an EPUB with no usable cover on every app launch.
