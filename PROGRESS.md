@@ -12,6 +12,7 @@ https://github.com/john-selwyn/selura-reader
 - GitHub Actions Build #12 successfully compiled and uploaded the first Selura debug APK artifact.
 - User confirmed the Build #12 APK installs and runs acceptably on an Android device.
 - Pull Request #1 was squash-merged to main at e9c8d3a18f2fc5224ae41076dc7ebdebd69be752.
+- Pull Request #2 Build #17 completed successfully with source analysis and APK compilation passing.
 
 ## Current milestone
 - Feature branch: `feature/persisted-reading-progress`.
@@ -19,19 +20,19 @@ https://github.com/john-selwyn/selura-reader
 - PDF current page is now persisted and restored on reopen.
 - Reader pages show a loading indicator while saved progress is restored.
 - Bookshelf labels imported books as supporting auto-resume.
-- Main-branch builds will publish `selura-debug.apk` as a GitHub prerelease asset for direct phone download and installation, avoiding manual ZIP extraction.
+- Direct APK publishing is enabled for both main builds and same-repository pull-request test builds, so device testing does not require ZIP extraction.
 
 ## Unverified / blockers
-- Persisted EPUB/PDF progress changes require GitHub Actions verification and a fresh Android device test before merge.
-- Direct APK GitHub Release publishing is implemented but requires a main-branch build after merge to verify.
+- Persisted EPUB/PDF progress changes require a fresh Android device test before merge.
+- The new pull-request direct APK release path requires verification on the next CI run.
 - `pdfx` emits a non-fatal Kotlin Gradle Plugin compatibility warning that should be addressed before a future Flutter upgrade.
 - Cover art, bookmarks, annotations, typography controls, and a more premium bookshelf UI are still pending.
 
 ## Next steps
-1. Verify the persisted-reading-progress branch in GitHub Actions.
-2. Install the resulting APK and confirm EPUB and PDF resume positions on Android.
-3. Merge the reading-progress pull request after verification.
-4. Verify the post-merge GitHub prerelease exposes a direct `selura-debug.apk` download.
+1. Verify the next Pull Request #2 build publishes a direct `.apk` prerelease asset.
+2. Install that APK and confirm EPUB and PDF resume positions on Android.
+3. Merge Pull Request #2 after device verification.
+4. Verify the post-merge main build publishes a direct `selura-debug.apk` release asset.
 5. Improve bookshelf UI, cover art, bookmarks, annotations, and reader theme/typography controls.
 
 ## Future chat instructions
@@ -84,11 +85,13 @@ Read PROJECT_CONTEXT.md and PROGRESS.md from the GitHub main branch. Verify code
 - Commit: 4620a4c939c9c821e5950dd2765763b780a8475b.
 - EPUB: saves `EpubController.generateEpubCfi()` and restores it through `EpubController(epubCfi: ...)`.
 - PDF: saves the current page via `onPageChanged` and restores it through `PdfControllerPinch(initialPage: ...)`.
-- Status: implemented but not yet CI/device verified.
+- Status: implemented but not yet device verified.
 
 ## 2026-10-17 — Direct-install APK publishing
-- Commit: d28d1460b4245d43ebf938f69579b1472073d64f.
+- Initial commit: d28d1460b4245d43ebf938f69579b1472073d64f.
 - GitHub Actions still keeps a CI artifact internally, because GitHub artifacts are downloaded as ZIP archives.
-- On successful pushes to `main`, a separate release job downloads the built APK, renames it to `selura-debug.apk`, and publishes it as a GitHub prerelease asset.
-- User-facing result: future verified builds can be downloaded directly as an `.apk` without extracting a ZIP first.
-- Status: workflow change implemented; requires post-merge main build verification.
+- Main-branch builds publish `selura-debug.apk` as a GitHub prerelease asset.
+- Build #17 passed, but its `Publish direct APK` job was intentionally skipped because that first workflow revision only published on `main`.
+- Follow-up commit: 2726b93c409cff8fada9cfc3a49c09106524a7c8 enables direct `.apk` prerelease publishing for same-repository pull-request builds as well.
+- User-facing result: feature builds can now be device-tested from a direct APK download without extracting a ZIP.
+- Status: awaiting verification of the next PR workflow release job.
