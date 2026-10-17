@@ -45,19 +45,19 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList('books') ?? [];
-    if (mounted) setState(() => books = raw.map((e) => Book.fromJson(jsonDecode(e) as Map<String, dynamic>)).toList());
+    if (mounted) setState(() => books = raw.map((e) => Book.fromJson(jsonDecode(e) as Map<String, dynamic>)).where((book) => File(book.path).existsSync()).toList());
   }
   Future<void> _import() async {
     setState(() => busy = true);
     try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['epub', 'pdf'], allowMultiple: true);
-      if (result == null) return;
+      final files = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['epub', 'pdf']);
+      if (files.isEmpty) return;
       final dir = await getApplicationDocumentsDirectory();
-      for (final file in result.files) {
+      for (final file in files) {
         if (file.path == null) continue;
         final extension = file.extension?.toLowerCase() ?? '';
         if (extension != 'epub' && extension != 'pdf') continue;
-        final dest = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${file.name}';
+        final dest = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${books.length}.$extension';
         await File(file.path!).copy(dest);
         books.add(Book(dest, file.name.replaceFirst(RegExp(r'\.(epub|pdf)$', caseSensitive: false), ''), extension));
       }

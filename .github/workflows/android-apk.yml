@@ -3,6 +3,8 @@ name: Build Android APK
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +21,8 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name=selura_reader --org=com.selura .
+      - name: Remove generated template test
+        run: rm -f test/widget_test.dart
       - name: Resolve dependencies
         run: flutter pub get
       - name: Analyze source
