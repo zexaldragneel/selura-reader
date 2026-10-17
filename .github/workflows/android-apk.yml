@@ -19,10 +19,12 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Generate Android project files
-        run: flutter create --platforms=android --project-name=reader --org=com.selura .
-      - name: Set Android app name
-        run: sed -i 's/android:label="reader"/android:label="Selura"/' android/app/src/main/AndroidManifest.xml
+      - name: Ensure Android project files
+        run: |
+          if [ ! -f android/app/build.gradle.kts ] && [ ! -f android/app/build.gradle ]; then
+            flutter create --platforms=android --project-name=reader --org=com.selura .
+            sed -i 's/android:label="reader"/android:label="Selura"/' android/app/src/main/AndroidManifest.xml
+          fi
       - name: Verify Android application identity
         run: |
           ANDROID_GRADLE_FILE="$(find android/app -maxdepth 1 -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) | head -n 1)"
@@ -48,6 +50,46 @@ jobs:
           name: selura-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
+
+  persist-android:
+    name: Persist Android scaffold
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'fix/android-app-identity'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Commit generated Android project if missing
+        run: |
+          if git ls-files --error-unmatch android/app/build.gradle.kts >/dev/null 2>&1 || \
+             git ls-files --error-unmatch android/app/build.gradle >/dev/null 2>&1; then
+            echo 'Android scaffold is already tracked.'
+            exit 0
+          fi
+
+          flutter create --platforms=android --project-name=reader --org=com.selura .
+          sed -i 's/android:label="reader"/android:label="Selura"/' android/app/src/main/AndroidManifest.xml
+          rm -f test/widget_test.dart
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android
+          if git diff --cached --quiet; then
+            echo 'No Android scaffold changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Persist Android project scaffold'
+          git push origin "HEAD:${GITHUB_HEAD_REF}"
 
   release:
     name: Publish direct APK
