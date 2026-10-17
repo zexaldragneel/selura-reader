@@ -21,6 +21,35 @@ jobs:
           cache: true
       - name: Generate Android project files
         run: flutter create --platforms=android --project-name=selura_reader --org=com.selura .
+      - name: Set stable Android application ID
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          gradle = Path('android/app/build.gradle.kts')
+          if not gradle.exists():
+              gradle = Path('android/app/build.gradle')
+          if not gradle.exists():
+              raise SystemExit('Android Gradle app configuration not found')
+
+          content = gradle.read_text()
+          original = content
+          content = content.replace('com.selura.selura_reader', 'com.selura.reader')
+          if content == original or 'com.selura.reader' not in content:
+              raise SystemExit('Expected generated Android package ID not found')
+          gradle.write_text(content)
+
+          # Flutter's generated MainActivity retains its original Kotlin package.
+          # Resolve it explicitly so the new namespace does not break launch.
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          content = manifest.read_text()
+          if 'android:name=".MainActivity"' not in content:
+              raise SystemExit('Expected MainActivity declaration not found')
+          manifest.write_text(content.replace(
+              'android:name=".MainActivity"',
+              'android:name="com.selura.selura_reader.MainActivity"',
+          ))
+          PY
       - name: Remove generated template test
         run: rm -f test/widget_test.dart
       - name: Resolve dependencies
