@@ -53,18 +53,34 @@ CI status:
 - User confirmed PR #7 test APK works on Android; merged with squash commit `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee`.
 - Post-merge main APK build: pending verification.
 
+## Current milestone — Embedded EPUB cover thumbnails (Pull Request #8)
+- Branch: `feature/epub-cover-thumbnails`; PR: https://github.com/john-selwyn/selura-reader/pull/8. Not merged; device testing is still required.
+- `lib/cover_cache.dart` reads the EPUB container/package manifest and extracts only the declared cover image from EPUB 2 (`meta name="cover"`) or EPUB 3 (`properties="cover-image"`).
+- Cover extraction, image decode and resizing run in a Flutter background isolate. Thumbnails are JPEG-compressed with a maximum 720px longest side.
+- The app caches thumbnails locally under application support storage keyed to the book path, size and modification time; missing/unsupported covers use the existing book artwork without crashing.
+- Existing EPUB imports are warmed lazily; newly imported EPUBs generate covers after the bookshelf appears. Covers display in Continue Reading, grid, and list views.
+- EPUB files above 128 MiB and embedded cover files above 16 MiB are skipped for memory safety.
+- Added tests for EPUB 2 and EPUB 3 declared covers, aspect-preserving downsampling, non-upscaling, and corrupt-file fallback; `flutter test` now runs in CI.
+- Main commits: `5910d44562596592c3b4420fb175e819f22e6f82` (cache implementation), `92507a53f4895d5d58d04873d5918bd0870d9fab` (EPUB 2/3 package parsing), `4537d6fc308445102b83fbc1c61a4148de097148` (dual-format regression tests).
+- Builds #37 and #38 caught missing async and Image import conflicts; fixed in `d7dc6e7e2a8567f71752b9fe9bb09183ac2aa7c9`.
+- Build #39 surfaced an EPUB fixture failing in the older EPUB 2-only reader; replaced extraction with manifest-based ZIP parsing.
+- **Build #43** (GitHub Actions run `39078336724`) passed source analysis, EPUB cover regression tests, Android debug APK compilation, CI artifact upload, and direct APK prerelease publishing.
+- Test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-8/selura-debug.apk
+- APK SHA-256 from release: `385e818184f70792a76001b2e22ca452c5ec040fc51e318117fbc06646b439ed`.
+- Runtime result: NOT YET DEVICE-VERIFIED. Test imported EPUBs with and without embedded covers, offline restart, existing library covers, and EPUB/PDF auto-resume before merging PR #8.
+
 ## Unverified / blockers
-- Real EPUB embedded-cover extraction is not implemented yet; the current premium cards use generated format-aware artwork.
+- The EPUB cover feature in PR #8 passes CI but remains unmerged and unverified on an Android device.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
 - Release signing is not configured yet; current downloadable APKs are development/debug builds.
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` CI APK compilation and direct APK publishing for PR #7 merge.
-2. Add real embedded EPUB cover extraction and robust offline cache; improve reading-progress presentation without inventing EPUB percentages.
-3. Add per-book EPUB CFI/PDF-page bookmarks, jump-to-bookmark navigation, and local persistence.
+1. Install PR #8 test APK on Android and confirm covers for existing/new EPUBs, missing-cover fallback, offline display, and unaffected EPUB/PDF reading/resume.
+2. Once device verification succeeds, merge PR #8 and confirm the post-merge main APK release.
+3. Add per-book EPUB CFI/PDF-page bookmarks and local bookmark navigation.
 4. Add EPUB typography and reading-theme controls.
-5. Begin offline manga/CBZ support after the core reader milestones.
+5. Begin offline manga/CBZ support after core reader milestones.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.

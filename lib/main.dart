@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:epub_view/epub_view.dart';
+import 'package:epub_view/epub_view.dart' hide Image;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'cover_cache.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -94,6 +97,8 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> {
   List<Book> books = [];
   final Map<String, String> progressLabels = {};
+  final Map<String, String> coverPaths = {};
+  final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
   bool busy = false;
   bool gridView = true;
@@ -133,6 +138,20 @@ class _LibraryPageState extends State<LibraryPage> {
       sort = _LibrarySort.values[sortIndex];
     });
     await _refreshProgress();
+    // Cache old imports lazily without delaying library presentation.
+    unawaited(_warmCovers(loadedBooks));
+  }
+
+  Future<void> _warmCovers(Iterable<Book> requestedBooks) async {
+    for (final book in requestedBooks) {
+      if (!mounted) return;
+      if (book.type != 'epub' || coverPaths.containsKey(book.path)) continue;
+      final cachedPath = await coverCache.load(book.path);
+      if (!mounted) return;
+      if (cachedPath != null) {
+        setState(() => coverPaths[book.path] = cachedPath);
+      }
+    }
   }
 
   Future<void> _saveBooks() async {
@@ -175,6 +194,7 @@ class _LibraryPageState extends State<LibraryPage> {
       if (files.isEmpty) return;
 
       final dir = await getApplicationDocumentsDirectory();
+      final imported = <Book>[];
       for (final file in files) {
         if (file.path == null) continue;
         final extension = file.extension?.toLowerCase() ?? '';
@@ -183,21 +203,23 @@ class _LibraryPageState extends State<LibraryPage> {
         final dest =
             '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${books.length}.$extension';
         await File(file.path!).copy(dest);
-        books.add(
-          Book(
-            dest,
-            file.name.replaceFirst(
-              RegExp(r'\.(epub|pdf)$', caseSensitive: false),
-              '',
-            ),
-            extension,
+        final newBook = Book(
+          dest,
+          file.name.replaceFirst(
+            RegExp(r'\.(epub|pdf)$', caseSensitive: false),
+            '',
           ),
+          extension,
         );
+        books.add(newBook);
+        imported.add(newBook);
       }
 
       await _saveBooks();
       await _refreshProgress();
       if (mounted) setState(() {});
+      // Rendering the bookshelf never waits for EPUB image decoding.
+      unawaited(_warmCovers(imported));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -423,6 +445,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         final book = continueReading[index];
                         return _ContinueCard(
                           book: book,
+                          coverPath: coverPaths[book.path],
                           progress: progressLabels[book.path] ?? 'Not started',
                           onTap: () => _openBook(book),
                         );
@@ -469,6 +492,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       final book = visibleBooks[index];
                       return _GridBookCard(
                         book: book,
+                        coverPath: coverPaths[book.path],
                         progress: progressLabels[book.path] ?? 'Not started',
                         onTap: () => _openBook(book),
                         onFavorite: () => _toggleFavorite(book),
@@ -485,6 +509,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       final book = visibleBooks[index];
                       return _ListBookCard(
                         book: book,
+                        coverPath: coverPaths[book.path],
                         progress: progressLabels[book.path] ?? 'Not started',
                         opened: _relativeOpened(book),
                         onTap: () => _openBook(book),
@@ -563,12 +588,14 @@ class _EmptyLibrary extends StatelessWidget {
 
 class _BookCover extends StatelessWidget {
   final Book book;
+  final String? coverPath;
   final double? width;
   final double? height;
   final BorderRadius borderRadius;
 
   const _BookCover({
     required this.book,
+    this.coverPath,
     this.width,
     this.height,
     this.borderRadius = const BorderRadius.all(Radius.circular(18)),
@@ -592,16 +619,33 @@ class _BookCover extends StatelessWidget {
         ),
       ),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          Center(
-            child: Icon(
-              book.type == 'pdf'
-                  ? Icons.picture_as_pdf_rounded
-                  : Icons.auto_stories_rounded,
-              size: 46,
-              color: scheme.onPrimaryContainer,
+          if (coverPath != null)
+            ClipRRect(
+              borderRadius: borderRadius,
+              child: Image.file(
+                File(coverPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Icon(
+                    Icons.auto_stories_rounded,
+                    size: 46,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            )
+          else
+            Center(
+              child: Icon(
+                book.type == 'pdf'
+                    ? Icons.picture_as_pdf_rounded
+                    : Icons.auto_stories_rounded,
+                size: 46,
+                color: scheme.onPrimaryContainer,
+              ),
             ),
-          ),
           Positioned(
             left: 10,
             bottom: 10,
@@ -628,11 +672,13 @@ class _BookCover extends StatelessWidget {
 
 class _ContinueCard extends StatelessWidget {
   final Book book;
+  final String? coverPath;
   final String progress;
   final VoidCallback onTap;
 
   const _ContinueCard({
     required this.book,
+    this.coverPath,
     required this.progress,
     required this.onTap,
   });
@@ -650,6 +696,7 @@ class _ContinueCard extends StatelessWidget {
                 children: [
                   _BookCover(
                     book: book,
+                    coverPath: coverPath,
                     width: 82,
                     height: 128,
                     borderRadius: BorderRadius.circular(14),
@@ -694,12 +741,14 @@ class _ContinueCard extends StatelessWidget {
 
 class _GridBookCard extends StatelessWidget {
   final Book book;
+  final String? coverPath;
   final String progress;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
 
   const _GridBookCard({
     required this.book,
+    this.coverPath,
     required this.progress,
     required this.onTap,
     required this.onFavorite,
@@ -716,7 +765,7 @@ class _GridBookCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _BookCover(book: book),
+                  _BookCover(book: book, coverPath: coverPath),
                   Positioned(
                     top: 6,
                     right: 6,
@@ -758,6 +807,7 @@ class _GridBookCard extends StatelessWidget {
 
 class _ListBookCard extends StatelessWidget {
   final Book book;
+  final String? coverPath;
   final String progress;
   final String opened;
   final VoidCallback onTap;
@@ -765,6 +815,7 @@ class _ListBookCard extends StatelessWidget {
 
   const _ListBookCard({
     required this.book,
+    this.coverPath,
     required this.progress,
     required this.opened,
     required this.onTap,
@@ -782,6 +833,7 @@ class _ListBookCard extends StatelessWidget {
               children: [
                 _BookCover(
                   book: book,
+                  coverPath: coverPath,
                   width: 68,
                   height: 102,
                   borderRadius: BorderRadius.circular(12),
