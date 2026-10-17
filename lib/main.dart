@@ -50,10 +50,10 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _import() async {
     setState(() => busy = true);
     try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['epub', 'pdf'], allowMultiple: true);
-      if (result == null) return;
+      final files = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['epub', 'pdf']);
+      if (files.isEmpty) return;
       final dir = await getApplicationDocumentsDirectory();
-      for (final file in result.files) {
+      for (final file in files) {
         if (file.path == null) continue;
         final extension = file.extension?.toLowerCase() ?? '';
         if (extension != 'epub' && extension != 'pdf') continue;
