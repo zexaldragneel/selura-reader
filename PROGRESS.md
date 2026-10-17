@@ -1,5 +1,5 @@
 # Selura — Development Progress
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## Repository
 https://github.com/john-selwyn/selura-reader
@@ -26,10 +26,10 @@ https://github.com/john-selwyn/selura-reader
 - User installed and tested the corrected-package APK successfully before merge.
 - Post-merge main Build #31 (run `39047362727`) has passed identity checks, dependency resolution, and source analysis; Android APK compilation was still running at the last check.
 
-## Current milestone — Premium bookshelf
-Pull Request #7 (`feature/premium-bookshelf`) is open.
+## Completed milestone — Premium bookshelf
+Pull Request #7 (`feature/premium-bookshelf`) was squash-merged to `main` at `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee` after the user confirmed the test APK works on Android.
 
-Implemented on the feature branch:
+Implemented and device-tested:
 - Premium responsive bookshelf UI with grid and list layouts.
 - Grid/list preference persists locally.
 - Search by book title or format.
@@ -48,23 +48,23 @@ Commits:
 CI status:
 - Build #32 (run `39047510035`) failed at `flutter analyze` with `Expected to find ']'` in the first bookshelf revision. Android compilation was skipped.
 - The syntax issue was fixed in `8c1ab3afe18e182c2a3afadfb24b2f9a8e9869cd`.
-- Build #33 (run `39047653966`) passed Android identity verification, dependency resolution, and `flutter analyze`; debug APK compilation was still running at the last check.
+- Build #33 (run `39047653966`) completed successfully.
+- Build #34 (run `39048049148`) completed successfully for the final PR #7 head, including `flutter analyze`, Android APK compilation, artifact upload, and direct APK prerelease publishing (`test-pr-7`).
+- User confirmed PR #7 test APK works on Android; merged with squash commit `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee`.
+- Post-merge main APK build: pending verification.
 
 ## Unverified / blockers
-- Premium bookshelf runtime behavior has not yet been device-tested.
-- Build #33 must finish APK compilation, artifact upload, and direct APK publishing before the bookshelf build can be considered build-verified.
 - Real EPUB embedded-cover extraction is not implemented yet; the current premium cards use generated format-aware artwork.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
 - Release signing is not configured yet; current downloadable APKs are development/debug builds.
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify Build #33 completes successfully and publishes the PR #7 direct APK.
-2. Device-test the premium bookshelf: import, grid/list toggle, search, sort, favorites, Continue Reading, EPUB/PDF opening, resume, and offline reopening.
-3. Fix any UI/runtime issues found during testing, then merge Pull Request #7.
-4. Add real EPUB cover extraction and richer progress presentation.
-5. Add bookmarks and EPUB typography/theme controls.
-6. Begin offline manga support with CBZ import, right-to-left page mode, and continuous/webtoon mode.
+1. Verify post-merge `main` CI APK compilation and direct APK publishing for PR #7 merge.
+2. Add real embedded EPUB cover extraction and robust offline cache; improve reading-progress presentation without inventing EPUB percentages.
+3. Add per-book EPUB CFI/PDF-page bookmarks, jump-to-bookmark navigation, and local persistence.
+4. Add EPUB typography and reading-theme controls.
+5. Begin offline manga/CBZ support after the core reader milestones.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -73,6 +73,7 @@ CI status:
 - Build #19 (run `39042188909`): analysis, APK compilation, artifact upload, and direct APK publishing passed; user verified automatic resume on device.
 - Build #23 (run `39043338015`): post-merge main build and direct APK publishing passed.
 - Pull Request #5: final Android identity and committed scaffold; merged at `c0fcd6f46fd514cff182c10606a38bced2a581b1` after successful device testing.
+- Pull Request #7: premium bookshelf, Build #34 (run `39048049148`) fully passed, direct APK `test-pr-7` published, user confirmed it works on Android, squash-merged at `073c0b0ca9a7816f6c8aaf3209fe7863f88f5fee`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
