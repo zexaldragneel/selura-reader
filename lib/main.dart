@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bookmarks.dart';
 import 'cover_cache.dart';
 
 void main() => runApp(const SeluraApp());
@@ -890,6 +891,50 @@ class EpubBookPage extends StatefulWidget {
 
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
+  final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  void _bookmarkMessage(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<void> _addBookmark() async {
+    final cfi = controller?.generateEpubCfi();
+    if (cfi == null || cfi.isEmpty) {
+      _bookmarkMessage('Wait until the EPUB has loaded, then try again.');
+      return;
+    }
+    try {
+      final added = await _bookmarkStore.add(
+        bookPath: widget.book.path,
+        location: cfi,
+        label: 'EPUB reading position',
+      );
+      _bookmarkMessage(added ? 'Bookmark saved' : 'Already bookmarked here');
+    } catch (_) {
+      _bookmarkMessage('Could not save bookmark');
+    }
+  }
+
+  Future<void> _showBookmarks() async {
+    final activeController = controller;
+    if (activeController == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => ReaderBookmarksSheet(
+        bookPath: widget.book.path,
+        onGoToBookmark: (bookmark) {
+          try {
+            activeController.gotoEpubCfi(bookmark.location);
+          } catch (_) {
+            _bookmarkMessage('Could not open this bookmark');
+          }
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -942,6 +987,16 @@ class _EpubBookPageState extends State<EpubBookPage> {
         title: Text(widget.book.title),
         actions: [
           IconButton(
+            tooltip: 'Add bookmark',
+            onPressed: activeController == null ? null : _addBookmark,
+            icon: const Icon(Icons.bookmark_add_outlined),
+          ),
+          IconButton(
+            tooltip: 'View bookmarks',
+            onPressed: activeController == null ? null : _showBookmarks,
+            icon: const Icon(Icons.bookmarks_outlined),
+          ),
+          IconButton(
             tooltip: 'Chapters',
             icon: const Icon(Icons.list),
             onPressed: activeController == null
@@ -978,6 +1033,57 @@ class PdfBookPage extends StatefulWidget {
 
 class _PdfBookPageState extends State<PdfBookPage> {
   PdfControllerPinch? controller;
+  final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  void _bookmarkMessage(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<void> _addBookmark() async {
+    final current = controller;
+    if (current == null || current.pagesCount == null || current.page < 1) {
+      _bookmarkMessage('Wait until the PDF has loaded, then try again.');
+      return;
+    }
+    final page = current.page;
+    try {
+      final added = await _bookmarkStore.add(
+        bookPath: widget.book.path,
+        location: page.toString(),
+        label: 'Page $page',
+      );
+      _bookmarkMessage(added ? 'Bookmark saved' : 'Already bookmarked here');
+    } catch (_) {
+      _bookmarkMessage('Could not save bookmark');
+    }
+  }
+
+  Future<void> _showBookmarks() async {
+    final activeController = controller;
+    if (activeController == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => ReaderBookmarksSheet(
+        bookPath: widget.book.path,
+        onGoToBookmark: (bookmark) {
+          final page = int.tryParse(bookmark.location);
+          final total = activeController.pagesCount;
+          if (page == null || page < 1 || (total != null && page > total)) {
+            _bookmarkMessage('This PDF bookmark is no longer valid');
+            return;
+          }
+          try {
+            activeController.jumpToPage(page);
+          } catch (_) {
+            _bookmarkMessage('Could not open this bookmark');
+          }
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -1025,7 +1131,21 @@ class _PdfBookPageState extends State<PdfBookPage> {
   Widget build(BuildContext context) {
     final activeController = controller;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.book.title)),
+      appBar: AppBar(
+        title: Text(widget.book.title),
+        actions: [
+          IconButton(
+            tooltip: 'Add bookmark',
+            onPressed: activeController == null ? null : _addBookmark,
+            icon: const Icon(Icons.bookmark_add_outlined),
+          ),
+          IconButton(
+            tooltip: 'View bookmarks',
+            onPressed: activeController == null ? null : _showBookmarks,
+            icon: const Icon(Icons.bookmarks_outlined),
+          ),
+        ],
+      ),
       body: activeController == null
           ? const Center(child: CircularProgressIndicator())
           : PdfViewPinch(

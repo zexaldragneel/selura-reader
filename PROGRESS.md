@@ -69,6 +69,17 @@ CI status:
 - APK SHA-256 from release: `385e818184f70792a76001b2e22ca452c5ec040fc51e318117fbc06646b439ed`.
 - Runtime result: user confirmed on-device real EPUB cover display (screenshot), cover persistence after offline restart, and correct reading-position auto-resume. Missing-cover fallback and every EPUB variation have automated tests but not all were individually device-tested.
 
+## Current milestone — Offline EPUB/PDF bookmarks (PR #9)
+- Branch: `feature/local-reader-bookmarks`; pull request: https://github.com/john-selwyn/selura-reader/pull/9 (unmerged).
+- Added `lib/bookmarks.dart`: per-book SharedPreferences bookmark storage, duplicate-location handling, malformed-record isolation, deletion and bookmark list UI.
+- EPUB reader: save current EPUB CFI, show saved positions and jump to a CFI with `gotoEpubCfi`.
+- PDF reader: save current page, show saved pages and jump using `PdfControllerPinch.jumpToPage`.
+- Existing EPUB/PDF auto-resume and bookshelf are unchanged; bookmarks have independent local storage.
+- Regression tests in `test/bookmarks_test.dart`: persistence across reads, isolation per book, deduplication, delete and corrupt stored rows.
+- Commits: `b3a0e466ee575785aa540e710799d28150723adc` (bookmark persistence/UI), `a4d81a0ae7778733bdc1d77b7fd919d0d648e20c` (reader controls), `b105f35fe775dcced30341f7ac0d993feb85739f` (tests).
+- Build #47 (run `39079345156`): `flutter analyze` and `flutter test` passed; Android APK compilation was in progress at the latest inspection.
+- Device verification: NOT YET. Wait for CI + APK publishing, then test adding, reopening, jumping, deleting and keeping saved bookmarks offline for both EPUB/PDF.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -76,9 +87,9 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Confirm post-merge main APK build and direct APK prerelease for PR #8.
-2. Add per-book EPUB CFI/PDF page bookmarks and local bookmark navigation in a feature branch and CI test.
-3. Test bookmarks on Android before merging.
+1. Verify completion of PR #9 Build #47 and published bookmark test APK.
+2. Device-test saving, jumping, deleting and persisting EPUB/PDF bookmarks, including offline restart.
+3. Merge PR #9 only after CI and user device verification, then verify post-merge Android build.
 4. Add EPUB typography and reading-theme controls.
 5. Begin offline manga/CBZ support after core reader milestones.
 
