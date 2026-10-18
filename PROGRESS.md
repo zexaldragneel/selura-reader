@@ -112,6 +112,13 @@ CI status:
 - Root-cause assessment: GitHub Actions builds with `flutter build apk --debug` on fresh ephemeral runners, with no persistent signing keystore; signing certificate changes can cause update rejection. Every build also uses `version: 0.1.0+1` with no monotonic build number.
 - Corrective work: configure persistent signing and monotonic versionCode before further installable APK releases; first signing-key transition cannot replace an incompatible preexisting signing certificate without uninstall, so plan data preservation carefully.
 
+## Runtime confirmation and EPUB import report — 2026-10-18
+- User confirmed the permanently signed Selura **Build #74 installed over Build #73 without uninstalling**, validating the actual Android in-place upgrade after first signer transition.
+- The new `com.selura.reader` release signing certificate is stable across #73 and #74, Android versionCode increases (73 -> 74), and Android device installation was reported successful.
+- **New unresolved issue:** after the signed-release installation, attempting to import an EPUB shows an error on the phone. Exact error text, whether failure occurs in the file picker/copy or when opening the EPUB, and whether a PDF imports successfully are not yet established. Do not assume root cause or claim the EPUB reader is working in signed release.
+- Reviewed current `lib/main.dart`: `_import` uses `FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['epub', 'pdf'])`, copies the selected platform file into app documents, persists library JSON, and shows caught exceptions as `Import failed: $e`. `_warmCovers` happens asynchronously after import and uses an isolated cover decoder. Await a screenshot/exact error before targeted source changes; no reinstall is needed to diagnose.
+- Next: reproduce from the on-device error message, implement targeted fix on a feature branch, verify signed-release CI, ask user to test import again. Preserve install signing/version continuity.
+
 ## Current milestone — Signed APK upgrade verification (PRs #12 and #13)
 - User confirmed PR #11 feature APK works but repeatedly had to **uninstall current Selura** to install another APK. Android update requires the same app ID and signing certificate and a non-decreasing versionCode; uninstall can remove app-private books/bookmarks/progress.
 - Previous Actions builds used `flutter build apk --debug` on fresh ephemeral runners with no persistent debug keystore and static version `0.1.0+1`. Changing debug certificates are a likely cause of the update failure; no exact Android installer error code or cross-APK certificate comparison has been collected yet.
@@ -150,7 +157,7 @@ CI status:
 1. Do not uninstall current debug-signed Selura until user confirms whether preserving its app-private books/bookmarks/reading positions is necessary; there is no verified lossless migration path.
 2. If user can reimport originals and accepts losing local app data, install a first permanent-signed build after the one-time debug-to-release transition. Android cannot replace an incompatible debug-signed install in place.
 3. Test a newer permanent-signed APK as an in-place upgrade over an older permanent-signed APK, confirming the bookshelf and reading progress survive.
-4. Record device upgrade result before claiming the APK installation issue is fully resolved; add backup/export and restore to avoid future data loss.
+4. In-place signed upgrade verified on Android for #73 to #74; investigate the newly reported EPUB import error in signed release before further feature milestones.
 5. Continue toward offline CBZ manga reading after safe update installation is verified.
 
 ## Key milestone history
