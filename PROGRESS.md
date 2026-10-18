@@ -168,6 +168,18 @@ CI status:
 - Limitations: EPUB narration starts at the beginning of the visible **chapter**, not the exact visible paragraph; PDF text-to-speech and continuing narration after closing the reader are not implemented.
 - Post-merge `main` build and publication: pending verification.
 
+## Completed milestone — Paragraph narration and scalable library (PR #16)
+- PR #16 (`feature/paragraph-tts-library-performance`) was squash-merged into `main` at `02e125515d16f63ecb14cd9612b014735d638287` **after** user installed and tested Build #102 on Android and confirmed the navigation overlap was fixed.
+- The EPUB TTS panel now supports selecting the narration start paragraph and skipping to previous/next paragraphs. The selected chapter XHTML is parsed to a cached, per-paragraph speech plan in an isolate. Playback interruption and pause/resume preserve the segment index, repeating only the short interrupted utterance (native Android TTS does not provide reliable exact pause within a segment).
+- Bookshelf now uses lazily built `CustomScrollView` sliver grid/list items rather than shrink-wrapped nested lists, retaining search, sorting, favorites, Continue Reading, covers and reading-progress summaries.
+- Regression tests cover paragraph bounds, seek/skip, long speech segments, playback continuity, panel reopening, and route opacity.
+- **Build #101** (run `39094466298`) passed Flutter analysis/tests, persistent release signing and direct GitHub APK publishing. User tested APK features and reported a reader/bookshelf overlay during slow EPUB opening.
+- **Transition fix:** commit `5f39db25c32674be1dcae5f4d5077bb1744ce2a3` replaces the fade-and-slide book route with an immediately opaque reader route and adds a navigation regression test. No EPUB/PDF content or user data format changes.
+- **Build #102** (run `39096407925`) passed dependency pin verification, `flutter analyze`, `flutter test`, signed APK compilation, cert/package/version checks, CI artifact upload, and published the direct APK at https://github.com/john-selwyn/selura-reader/releases/download/test-pr-16-run-102/selura.apk.
+- Build #102 APK: `com.selura.reader` version `0.2.0`, versionCode `102`; certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` (unchanged); APK SHA-256 `352bdc48c929592866793fe63df25cb4b6024766b93f4bb3de1a568d1cfe1b4b`.
+- **Device result:** user installed Build #102 and explicitly confirmed Selura and the corrected reader opening now work; broad device testing of huge libraries and unusually structured EPUBs remains outstanding.
+- **Post-merge main build:** Build #103 (run `39097231670`) started for squash commit `02e125515d16f63ecb14cd9612b014735d638287`; final signing and publication result must be verified.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -176,11 +188,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` signed APK build and release publication for PR #15.
-2. Continue UI/UX optimization with measured launch, import and large-library responsiveness on Android; address regressions only after verified evidence.
-3. Enhance EPUB TTS with sentence/paragraph selection or more accurate position-aware narration, and consider safe background playback controls.
-4. Add in-app backup/export and restore for imported books, bookmarks and reading positions.
-5. Begin offline CBZ manga support when prioritized; keep the Android preferences plugin pinned to verified `shared_preferences_android 2.4.28` until a compatible update passes device testing.
+1. Verify successful, permanently signed post-merge `main` Build #103 (run `39097231670`) and its direct APK publication. Builds #96/#97 already validated PR #15 after merge.
+2. Prioritize safe offline **backup/export and restore** for EPUB/PDF originals, library metadata, favorites, bookmarks, reading locations and preferences. Ensure non-destructive restore and path remapping with import validation; user data protection matters before more experimental features.
+3. Continue improving EPUB TTS UX (optional sentence-accurate resume, clearer controls) and measure large-library behavior on real Android devices; do not regress current working features.
+4. Later: EPUB highlights/annotations and offline CBZ manga support. Keep `shared_preferences_android` pinned at `2.4.28` until an updated implementation is device-verified.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -196,6 +207,8 @@ CI status:
 - Pull Request #11: accurate PDF pages and EPUB chapters, Build #58 (run `39082566356`) passed analysis/tests/APK/release; user confirmed feature works but reports update installation failures with debug APKs; squash-merged at `2c3f71cbbf7e0c4c3966689ea3be95c6398031a0`.
 - Pull Request #14: signed-release EPUB import plugin compatibility fix, Build #77 (run `39090015554`) passed source/tests/release APK/signing/release publishing; user confirmed Android EPUB import works, squash-merged at `b94153c8491389551d53c43791c047af441272ab`.
 - Pull Request #15: premium Selura UI, native loading states and offline EPUB chapter narration, signed Build #95 (run `39092988929`) fully passed, user confirmed Android runtime works, squash-merged at `05732ee33897550fd3d26543479f0ef08411dd63`.
+
+- Pull Request #16: paragraph seeking/skip offline TTS, sliver bookshelf performance and instant opaque reader navigation; Build #102 (run `39096407925`) passed analysis/tests/signing/APK/release; user confirmed Android fix works; squash-merged at `02e125515d16f63ecb14cd9612b014735d638287`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
