@@ -86,6 +86,58 @@ void main() {
     expect(settings.textStyle.fontFamily, 'monospace');
   });
 
+  test('comfort presets change real settings without losing typography/theme',
+      () async {
+    const starting = EpubReadingSettings(
+      font: EpubReaderFont.serif,
+      theme: EpubReadingTheme.sepia,
+    );
+    expect(starting.matchingComfortPreset, EpubComfortPreset.balanced);
+
+    final relaxed = starting.withComfortPreset(EpubComfortPreset.relaxed);
+    expect(relaxed.fontSize, 19);
+    expect(relaxed.lineHeight, 1.6);
+    expect(relaxed.horizontalMargin, 24);
+    expect(relaxed.font, EpubReaderFont.serif);
+    expect(relaxed.theme, EpubReadingTheme.sepia);
+    expect(relaxed.matchingComfortPreset, EpubComfortPreset.relaxed);
+
+    expect(await relaxed.save(), isTrue);
+    final loaded = await EpubReadingSettings.load();
+    expect(loaded.matchingComfortPreset, EpubComfortPreset.relaxed);
+    expect(loaded.font, EpubReaderFont.serif);
+    expect(loaded.theme, EpubReadingTheme.sepia);
+
+    final compact = relaxed.withComfortPreset(EpubComfortPreset.compact);
+    expect(compact.fontSize, 15);
+    expect(compact.lineHeight, 1.15);
+    expect(compact.horizontalMargin, 10);
+    expect(compact.matchingComfortPreset, EpubComfortPreset.compact);
+
+    final custom = relaxed.copyWith(fontSize: 20);
+    expect(custom.matchingComfortPreset, isNull);
+  });
+
+  testWidgets('tapping a comfort chip updates the live reading sheet',
+      (tester) async {
+    EpubReadingSettings current = const EpubReadingSettings();
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: EpubReaderSettingsSheet(
+          settings: current,
+          onChanged: (value) => current = value,
+        ),
+      ),
+    ));
+    final chip = find.byKey(const Key('reader-comfort-relaxed'));
+    await tester.ensureVisible(chip);
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    expect(current.matchingComfortPreset, EpubComfortPreset.relaxed);
+    expect(current.fontSize, 19);
+    expect(tester.widget<ChoiceChip>(chip).selected, isTrue);
+  });
+
   testWidgets('theme and font chips provide working live settings controls',
       (tester) async {
     EpubReadingSettings current = const EpubReadingSettings();
