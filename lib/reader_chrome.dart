@@ -236,3 +236,4 @@ class ReaderFontSizeControls extends StatelessWidget {
           ),
         ],
       );
+}
