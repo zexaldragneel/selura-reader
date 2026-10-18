@@ -42,7 +42,7 @@ class SeluraShelfFilterBar extends StatelessWidget {
         children: [
           for (final filter in SeluraShelfFilter.values) ...[
             ChoiceChip(
-              key: Key('selura-filter-\${filter.name}'),
+              key: Key('selura-filter-${filter.name}'),
               label: Text(filter.label),
               selected: selected == filter,
               onSelected: (_) => onSelected(filter),
