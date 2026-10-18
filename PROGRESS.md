@@ -112,7 +112,7 @@ CI status:
 - Root-cause assessment: GitHub Actions builds with `flutter build apk --debug` on fresh ephemeral runners, with no persistent signing keystore; signing certificate changes can cause update rejection. Every build also uses `version: 0.1.0+1` with no monotonic build number.
 - Corrective work: configure persistent signing and monotonic versionCode before further installable APK releases; first signing-key transition cannot replace an incompatible preexisting signing certificate without uninstall, so plan data preservation carefully.
 
-## Current milestone — Fix Android APK update installation (PR #12)
+## Current milestone — Signed APK upgrade verification (PRs #12 and #13)
 - User confirmed PR #11 feature APK works but repeatedly had to **uninstall current Selura** to install another APK. Android update requires the same app ID and signing certificate and a non-decreasing versionCode; uninstall can remove app-private books/bookmarks/progress.
 - Previous Actions builds used `flutter build apk --debug` on fresh ephemeral runners with no persistent debug keystore and static version `0.1.0+1`. Changing debug certificates are a likely cause of the update failure; no exact Android installer error code or cross-APK certificate comparison has been collected yet.
 - Infrastructure PR #12 (`fix/persistent-release-signing`) squash-merged into `main` at `b2ad074f745514363bf04c4984b4f914f2a0127a`. It adds permanent release signing with a GPG-AES256-encrypted keystore stored only in armored form in the repo, with decryption password in GitHub Actions secret `SELURA_SIGNING_PASSWORD`, plus monotonically increasing `versionCode` from `GITHUB_RUN_NUMBER`.
@@ -120,7 +120,7 @@ CI status:
 - Build validation includes Android package ID verification, source analysis/tests, a temporary non-published release signing smoke test before permanent setup, and `apksigner` + `aapt` validation for published builds. Fork PRs do not receive signing secrets.
 - Local Java `keytool` + GPG AES256 encrypt/decrypt/keystore round-trip was verified successfully without exposing any persistent signing credentials.
 - CI Build #62 (run `39083965699`) passed `flutter analyze` and `flutter test`, then intentionally failed at permanent-key setup because it has not yet been configured. No unsigned APK was published. Build #64 (run `39084137395`) passed source analysis, `flutter test`, **Android release APK compilation signed with a disposable test key, and APK signature verification**. It then intentionally failed at `Unlock persistent release signing key` because the GitHub repository signing secret and permanent encrypted keystore are not configured; the release publishing job was correctly skipped.
-- **Signing bootstrap complete** (run #1 success). The permanent encrypted signing key now exists, but no final permanently signed Selura APK has been verified yet; CI release publishing and actual in-place update behavior still require verification.
+- **Permanent-key build setup complete and verified:** Bootstrap #1 generated the encrypted key, and signed APK Builds #73 and #74 passed Android compilation, signature/package/version-code checks, artifact upload and GitHub Releases publishing. Android in-place update behavior still requires a device test.
 - The already-installed debug-signed Selura cannot be updated by an APK bearing a new signing certificate. Do **not** uninstall before considering loss of app-private imported books and reading data. There is no verified lossless migration path to the first permanent signer yet. Once that initial transition has been made, two consecutive new builds must be checked for identical certificate fingerprint and increasing version codes, and then an on-device in-place update must be tested without uninstall.
 - Setup and security instructions: `android/signing/README.md`. **Do not claim the update installation problem is fully fixed until the signer is bootstrapped and an in-place Android update has been verified.**
 
@@ -132,18 +132,26 @@ CI status:
 - Next: confirm Build #70 analysis/tests/release-signing, inspect `apksigner` SHA-256 fingerprint and APK versionCode, then compare against a second signed build. Do not claim in-place upgrade works until Android device testing.
 - Old debug-signed APKs remain incompatible with the new permanent key; DO NOT uninstall old Selura until the owner understands app-private data loss and verifies copies of imported files.
 
+## Signed APK CI verification — Builds #73 and #74
+- PR #13 (`fix/apk-verification-sdk-tools`) merged to main at `19aba6db11f50f18521468791908c88ba112d813`, updating verifier to recognize `V2 Signer: certificate SHA-256 digest` from current Android Build Tools.
+- Build #72 compiled the signed APK but failed its certificate-label grep. Build #73 (`39088658937`) and main Build #74 (`39088677579`) **fully succeeded**, including all source tests, Android release APK build, APK signature verification, package/version checks, artifact upload, and GitHub release publishing.
+- **Same permanent certificate:** Build #73 and Build #74 both logged `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` as signer certificate SHA-256; `apksigner` verified APK Signature Scheme v2 on both builds.
+- **Monotonic Android versionCode:** `com.selura.reader` `0.2.0`, versionCode `73` for Build #73 and versionCode `74` for Build #74.
+- Verified GitHub release artifacts: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-13/selura.apk and https://github.com/john-selwyn/selura-reader/releases/download/dev-74/selura.apk (the latter SHA-256 asset digest `bf11d331c7d0fc67cd932013b6b69fcbc8e8a5a8e0514e3b29d32988b9a3329e`).
+- **Outstanding device verification:** test that Build #74 installs over already-installed Build #73 without uninstalling (or a later signed APK installs over #74). This does **not** remove the one-time old debug-signature incompatibility or automatically save app-private library data.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
-- Release signing is not configured yet; current downloadable APKs are development/debug builds.
+- Release signing is configured: new `selura.apk` releases from Build #73 onward use the permanent certificate. Prior `selura-debug.apk` builds remain signed by unrelated debug keys and cannot upgrade normally to new release-signed APKs.
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify first permanent-key release Build #70 APK, signing certificate and version code.
-2. Verify a second signed APK has the identical certificate SHA-256 and higher Android versionCode; test installing the second APK over the first without uninstalling.
-3. Before the old debug-to-release transition, safeguard original EPUB/PDF copies and decide how to handle private bookmarks/progress; Android will not preserve app data through uninstall.
-4. Record on-device upgrade verification and only then consider the signing issue resolved.
-5. Implement in-app backup/restore and offline CBZ manga reading as following milestones.
+1. Do not uninstall current debug-signed Selura until user confirms whether preserving its app-private books/bookmarks/reading positions is necessary; there is no verified lossless migration path.
+2. If user can reimport originals and accepts losing local app data, install a first permanent-signed build after the one-time debug-to-release transition. Android cannot replace an incompatible debug-signed install in place.
+3. Test a newer permanent-signed APK as an in-place upgrade over an older permanent-signed APK, confirming the bookshelf and reading progress survive.
+4. Record device upgrade result before claiming the APK installation issue is fully resolved; add backup/export and restore to avoid future data loss.
+5. Continue toward offline CBZ manga reading after safe update installation is verified.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
