@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premium Selura adaptive launcher icon for Android 8 and newer. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/selura_launch_bg_start" />
+    <foreground android:drawable="@drawable/selura_launch_mark" />
+</adaptive-icon>
