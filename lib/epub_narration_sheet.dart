@@ -227,18 +227,22 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                             ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        switch (player.status) {
-                          NarrationStatus.playing => 'Playing with Android voice',
-                          NarrationStatus.paused => 'Paused',
-                          NarrationStatus.finished => 'Chapter completed',
-                          NarrationStatus.loading => 'Preparing offline voice…',
-                          NarrationStatus.error => 'Narration unavailable',
-                          NarrationStatus.idle => 'Ready to read aloud',
-                        },
-                        style: TextStyle(
-                          color: color.onPrimaryContainer.withValues(
-                            alpha: 0.8,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          key: ValueKey(player.status),
+                          switch (player.status) {
+                            NarrationStatus.playing => 'Playing with Android voice',
+                            NarrationStatus.paused => 'Paused',
+                            NarrationStatus.finished => 'Chapter completed',
+                            NarrationStatus.loading => 'Preparing offline voice…',
+                            NarrationStatus.error => 'Narration unavailable',
+                            NarrationStatus.idle => 'Ready to read aloud',
+                          },
+                          style: TextStyle(
+                            color: color.onPrimaryContainer.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ),
                       ),
