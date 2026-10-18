@@ -182,13 +182,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('MangaDex'), findsOneWidget);
-    expect(find.byKey(const Key('manga-extension-browse')), findsNothing);
+    expect(find.byKey(const Key('manga-extension-browse-mangadex')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('manga-extension-toggle')));
+    await tester.tap(find.byKey(const Key('manga-extension-toggle-mangadex')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('manga-extension-browse')), findsOneWidget);
+    expect(find.byKey(const Key('manga-extension-browse-mangadex')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('manga-extension-browse')));
+    await tester.tap(find.byKey(const Key('manga-extension-browse-mangadex')));
     await tester.pumpAndSettle();
     expect(find.text('Sample Space Adventure'), findsOneWidget);
 
