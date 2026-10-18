@@ -156,6 +156,66 @@ void main() {
     );
   });
 
+  test('MangaDex chapter feed supports language fallback and pagination', () async {
+    final captured = <Uri>[];
+    final client = MangaDexClient(fetchJson: (uri) async {
+      captured.add(uri);
+      if (uri.queryParameters['offset'] == '100') {
+        return {
+          'result': 'ok',
+          'total': 101,
+          'data': [
+            {
+              'id': '99999999-9999-4999-8999-999999999999',
+              'attributes': {
+                'chapter': '101',
+                'translatedLanguage': 'fr',
+              },
+            },
+          ],
+        };
+      }
+      return {
+        'result': 'ok',
+        'total': 101,
+        'data': List.generate(100, (index) => {
+          'id': '11111111-1111-4111-8111-' +
+              index.toString().padLeft(12, '0'),
+          'attributes': {
+            'chapter': (index + 1).toString(),
+            'translatedLanguage': index == 0 ? 'fr' : 'en',
+            if (index == 1) 'externalUrl': 'https://example.com',
+          },
+        }),
+      };
+    });
+
+    final first = await client.chapterPage(mangaId, language: null);
+    expect(first.total, 101);
+    expect(first.nextOffset, 100);
+    expect(first.hasMore, isTrue);
+    expect(first.chapters, hasLength(99));
+    expect(first.chapters.first.label, '[fr] Chapter 1');
+    expect(first.chapters.any((item) => item.label == 'Chapter 2'), isFalse);
+    expect(captured.first.queryParameters.containsKey('translatedLanguage[]'),
+        isFalse);
+
+    final more = await client.chapterPage(mangaId,
+        language: null, offset: first.nextOffset);
+    final whole = first.appended(more);
+    expect(more.hasMore, isFalse);
+    expect(whole.chapters, hasLength(100));
+    expect(whole.chapters.last.label, '[fr] Chapter 101');
+    expect(captured.last.queryParameters['offset'], '100');
+
+    await client.chapterPage(mangaId, language: 'id');
+    expect(captured.last.queryParameters['translatedLanguage[]'], 'id');
+    await expectLater(
+      client.chapterPage(mangaId, offset: -1),
+      throwsA(isA<MangaSourceException>()),
+    );
+  });
+
   testWidgets('install source then navigate to working manga catalog',
       (tester) async {
     // No live internet access is needed for the UI integration test.
