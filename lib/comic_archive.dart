@@ -157,6 +157,9 @@ Future<void> _extractComicPage(Map<String, Object> args) async {
 
 class ComicPageCache {
   ComicPageCache._(this.archive, this.directory);
+
+  @visibleForTesting
+  ComicPageCache.forTesting(this.archive, this.directory);
   final ComicArchive archive;
   final Directory directory;
   final Map<int, Future<File>> _pending = {};
