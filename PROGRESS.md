@@ -199,7 +199,7 @@ CI status:
 - Added widget regressions for preserving mounted reader state during Focus Mode, entering/exiting chrome, font-size bounds/increments, and PDF progress. Initial Build #106 failed Flutter syntax analysis; commit `bbaf28d85bd4061fd354a00c54ccc068eba7ef9b` corrected the unmatched class closure.
 - **Signed PR Build #107** (run `39100988481`) passed the pinned preferences-dependency guard, `flutter analyze`, all `flutter test`, release APK compilation, signing certificate/package/version verification, artifact upload and GitHub direct release. User confirmed on-phone functionality.
 - Published PR APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-18-run-107/selura.apk (60,757,489 bytes; SHA-256 `a4b429998537073761b13b8dd94a7a957a35b33b07251150650eb85d1590931e`). Application ID `com.selura.reader`, version `0.2.0` (code 107), permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged.
-- **Post-merge Build #108** (run `39102269836`) started for merge commit `c767af6c013c53345cea25e745c337f39f27979d`. Verify tests, signing and published APK; do not report this build as successful until CI concludes.
+- **Post-merge Build #108** (run `39102269836`) completed successfully for merge commit `c767af6c013c53345cea25e745c337f39f27979d`, including Flutter checks, signed APK and direct release publishing: https://github.com/john-selwyn/selura-reader/releases/download/dev-108/selura.apk (60,757,489 bytes; SHA-256 `3e6c46a628e994836675a0cc90337cc905b6e7c3a67946f282887d55918f0716`). The user tested PR Build #107, not necessarily this post-merge APK.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -209,7 +209,7 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` Build #108 (run `39102269836`), release signature, package/version and direct APK publishing.
+1. Develop and physically test PR #19 (`feature/reading-comfort-cover-memory`): Compact/Balanced/Relaxed EPUB reading presets and bounded decoded bookshelf cover sizes. Validate signed APK before merge.
 2. Prioritize premium visual refinements, reading comfort, and measured performance improvements rather than highlights/annotations. Keep EPUB/PDF loading, auto-resume, TTS and reading settings stable.
 3. Consider an optional night-reading sleep timer, safer TTS playback in the background, and large-library performance testing on real Android; scope each as a separate feature PR and request phone testing before merge.
 4. Re-test restore on a second phone when available and keep the backup ZIP outside app storage. Maintain the `shared_preferences_android 2.4.28` pin until replacement is proven compatible on Android.
