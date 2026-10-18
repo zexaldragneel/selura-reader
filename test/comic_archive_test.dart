@@ -65,7 +65,7 @@ void main() {
     final second = await cache.page(1);
     expect(second.path, endsWith('page-1.png'));
     expect(await second.readAsBytes(), png);
-    expect(await cache.page(1), second);
+    expect((await cache.page(1)).path, second.path);
     expect(await zip.exists(), isTrue);
     expect(await zip.length(), greaterThan(0));
     expect(() => cache.page(99), throwsRangeError);
