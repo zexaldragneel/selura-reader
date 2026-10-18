@@ -109,7 +109,9 @@ jobs:
             exit 1
           fi
           "$APKSIGNER" verify --verbose --print-certs "$APK" | tee "$RUNNER_TEMP/selura-apk-signature.txt"
-          grep -F 'Signer #1 certificate SHA-256 digest:' "$RUNNER_TEMP/selura-apk-signature.txt"
+          # Recent Android Build Tools label the signer "V2 Signer" rather than
+          # the older "Signer #1"; accept either while still requiring SHA-256.
+          grep -m1 -E 'Signer.*certificate SHA-256 digest: [0-9a-f]{64}' "$RUNNER_TEMP/selura-apk-signature.txt"
 
           if [ -x "$AAPT" ]; then
             "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/selura-apk-metadata.txt"
