@@ -960,6 +960,7 @@ class _GridBookCard extends StatelessWidget {
   final VoidCallback onFavorite;
 
   const _GridBookCard({
+    super.key,
     required this.book,
     this.coverPath,
     required this.progress,
@@ -1022,6 +1023,7 @@ class _ListBookCard extends StatelessWidget {
   final VoidCallback onFavorite;
 
   const _ListBookCard({
+    super.key,
     required this.book,
     this.coverPath,
     required this.progress,
