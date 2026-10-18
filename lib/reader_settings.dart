@@ -9,6 +9,24 @@ enum EpubReadingTheme { light, sepia, dark }
 
 enum EpubReaderFont { system, serif, sans, monospace }
 
+/// Real layout settings, not a visual-only preset. A preset can be refined
+/// with individual sliders and saved through the existing settings key.
+enum EpubComfortPreset { compact, balanced, relaxed }
+
+extension EpubComfortPresetLabel on EpubComfortPreset {
+  String get label => switch (this) {
+        EpubComfortPreset.compact => 'Compact',
+        EpubComfortPreset.balanced => 'Balanced',
+        EpubComfortPreset.relaxed => 'Relaxed',
+      };
+
+  String get description => switch (this) {
+        EpubComfortPreset.compact => 'More text per screen',
+        EpubComfortPreset.balanced => 'Everyday reading',
+        EpubComfortPreset.relaxed => 'Larger text & airy spacing',
+      };
+}
+
 extension EpubReaderFontLabel on EpubReaderFont {
   String get label => switch (this) {
         EpubReaderFont.system => 'System',
@@ -85,6 +103,35 @@ class EpubReadingSettings {
   final double horizontalMargin;
   final EpubReadingTheme theme;
   final EpubReaderFont font;
+
+  EpubComfortPreset? get matchingComfortPreset {
+    for (final preset in EpubComfortPreset.values) {
+      final values = _comfortValues(preset);
+      if (fontSize == values.$1 &&
+          lineHeight == values.$2 &&
+          horizontalMargin == values.$3) {
+        return preset;
+      }
+    }
+    return null;
+  }
+
+  static (double, double, double) _comfortValues(EpubComfortPreset preset) =>
+      switch (preset) {
+        EpubComfortPreset.compact => (15.0, 1.15, 10.0),
+        EpubComfortPreset.balanced => (16.0, 1.25, 16.0),
+        EpubComfortPreset.relaxed => (19.0, 1.6, 24.0),
+      };
+
+  /// Preserve the reader theme and font while updating only reading geometry.
+  EpubReadingSettings withComfortPreset(EpubComfortPreset preset) {
+    final values = _comfortValues(preset);
+    return copyWith(
+      fontSize: values.$1,
+      lineHeight: values.$2,
+      horizontalMargin: values.$3,
+    );
+  }
 
   EpubReadingSettings copyWith({
     double? fontSize,
@@ -236,7 +283,43 @@ class _EpubReaderSettingsSheetState
                 style: _settings.textStyle,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
+            Text(
+              'Reading comfort',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Start with a layout, then fine-tune below.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final preset in EpubComfortPreset.values)
+                  ChoiceChip(
+                    key: Key('reader-comfort-${preset.name}'),
+                    label: Text(preset.label),
+                    tooltip: preset.description,
+                    selected: _settings.matchingComfortPreset == preset,
+                    onSelected: (_) =>
+                        _change(_settings.withComfortPreset(preset)),
+                  ),
+              ],
+            ),
+            if (_settings.matchingComfortPreset == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 7),
+                child: Text(
+                  'Custom layout',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+            const SizedBox(height: 24),
             Text('Reading theme', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Wrap(
