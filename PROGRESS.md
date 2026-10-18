@@ -94,7 +94,20 @@ CI status:
 - **Build #52 (run `39081145276`) passed Android identity verification, dependency resolution, `flutter analyze`, all `flutter test` suites, debug APK compilation, CI artifact upload, and the direct prerelease APK job.**
 - Verified test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-10/selura-debug.apk ; GitHub release SHA-256 `4c9b8e3d061ee86df7aa05001c2886e25f8512396f537c7d3fe859c4899628db`.
 - Device verification: user confirmed PR #10 APK works on Android. The user did not separately report individual test results for every theme, margin, bookmark and persistence edge case; those remain useful regression checks.
-- Post-merge `main` build: awaiting verification.
+- Post-merge `main` Builds #54 (run `39082036348`) and #55 (run `39082054291`) both passed full Android APK build and direct APK publishing.
+
+## Current milestone — Accurate reading position (PR #11)
+- Branch `feature/reading-progress-details`; PR https://github.com/john-selwyn/selura-reader/pull/11 is OPEN and must not be merged before Android device testing.
+- Existing EPUB CFI (`reading_epub_cfi:`) and PDF page (`reading_pdf_page:`) keys are retained unchanged to preserve auto-resume for previously imported books.
+- Added `lib/reading_progress.dart` with optional EPUB chapter number/title and actual PDF total-page metadata, plus backward-compatible, per-book summary formatting.
+- PDF: `PdfViewPinch.onDocumentLoaded` persists the document's real `pagesCount`. Reader and bookshelf/Continue Reading show `Page X of Y` with a page-position bar when totals are available. Older PDFs show `Page X` until reopened; no invented totals or reading percentages.
+- EPUB: chapter number/title come from `EpubView.onChapterChanged` and appear in the reader and bookshelf/Continue Reading. CFI remains the exact resume location; no EPUB percentage is inferred.
+- UI updates from the chapter/page callbacks are deferred until after layout frames to avoid `setState` during the renderer's build/layout phase. Existing bookmarks, covers, appearance controls and offline storage remain intact.
+- Tests: `test/reading_progress_test.dart` covers true PDF fractions, unknown or changed totals, backwards compatibility with legacy positions, EPUB chapter and CFI handling, invalid metadata, and chapter-title normalization.
+- Implementation commits: `05d226048099f185c47e1a0b57ae1f81c741cd1b`, `2994c201aa2f8d6c7d60c1153899d9abcbbe7d3d`, `d45f8c68f82107857c980463d2c288bd7261c8b1`, `7b4b39fa6431748be152fbda3efdc35fdf27344b`, `ff65d6cb8149868186cfdceca1759058f0b84bfa`, `623444753f7596b9e6d08d21447372e0f02c32e8`, `1e9e60c0e8776f0a466d62e265fc79e0c505c93f`, and `c6275c9399df8115972c22d84c94ab2de9f10032`.
+- Build #58 (GitHub Actions run `39082566356`) passed Android project verification, dependencies, `flutter analyze`, `flutter test`, APK compilation, artifact upload and direct APK prerelease publishing.
+- Direct APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-11/selura-debug.apk (GitHub asset SHA-256 `121e5adb556c9c6472d269ba3dfa0cc0ccdf0d271caa8275821476fa1b07a967`).
+- Device/runtime verification: PENDING. Test a multi-page PDF and multi-chapter EPUB, progress after reopening offline, reading controls and bookmarks before merging PR #11.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -103,11 +116,11 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` APK build and release publishing for reader customization.
-2. Improve reading-progress presentation using verified PDF page counts and EPUB location metadata, without inventing percentages.
-3. Confirm bookmark jumps and reading appearance persistence across a wider set of EPUBs.
-4. Review APK release signing and update compatibility before distribution beyond personal testing.
-5. Begin offline manga/CBZ support after core reader milestones.
+1. Device-test PR #11 test APK on Android: PDF page totals/bar, EPUB chapter indicator, reopen/offline saved metadata, bookmarks and EPUB appearance.
+2. Fix any issues found; merge PR #11 only after successful user verification and confirm the post-merge `main` APK.
+3. Review release signing and debug APK upgrade compatibility.
+4. Begin local CBZ manga import and page reading, then right-to-left and webtoon modes.
+5. Expand EPUB/PDF regression testing on varied files.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
