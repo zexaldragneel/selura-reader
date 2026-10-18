@@ -189,7 +189,17 @@ CI status:
 - Signed PR test **Build #104** (run `39098475269`) passed dependency regression pin, `flutter analyze`, all `flutter test`, release APK build, certificate/application ID/version checks, artifact upload and GitHub release publishing.
 - Direct test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-17-run-104/selura.apk (60,675,277 bytes; SHA-256 `a28ecae57ede41e20ade4f3ce404629bc933b7d63cf85390ab1e46ceac68a423`). Application ID `com.selura.reader`, versionCode `104`, same permanent signer certificate `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
 - **Device testing:** user reports Build #104 works on Android; individual edge cases including fresh-device recovery, very large ZIP files, checksum tampering, and recovery after accidental uninstall have not all been independently device-tested.
-- **Post-merge main Build #105** (run `39099324058`) started for merge commit; verify final CI and release before claiming it passed.
+- **Post-merge main Build #105** (run `39099324058`) completed successfully for PR #17 merge commit `9a9f9d06678e8aa72bcacb6d961a18b735389ae9`, with signed APK and direct GitHub publication at https://github.com/john-selwyn/selura-reader/releases/download/dev-105/selura.apk (60,675,277 bytes; SHA-256 `5b8a4845969e56c458645e16c6d09780aaad6ce8f4bce339773c92579bd46d93`). Separate phone testing of Build #105 was not reported; PR test Build #104 was confirmed working.
+
+## Completed milestone — Premium reading chrome and Focus Mode (PR #18)
+- PR #18 (`feature/immersive-reading-chrome`) was squash-merged to `main` as `c767af6c013c53345cea25e745c337f39f27979d` **after** the user installed Build #107 and confirmed it works on their Android phone.
+- EPUB/PDF Focus Mode hides the reader top and bottom chrome without remounting the loaded document; a small visible `Show controls` pill restores normal mode. This is an in-app focus layout, not forced Android system-bar immersive mode.
+- EPUB quick A−/A+ buttons adjust reading font from 12–32sp using the existing serialized appearance-settings persistence. Theme-aware bottom bars show EPUB chapter labels and actual PDF page/progress metadata.
+- Preserved EPUB/PDF rendering packages, reader navigation, progress/bookmarks, offline TTS, books, app package ID and permanent signing certificate. No highlights or annotations: the owner explicitly declined that feature.
+- Added widget regressions for preserving mounted reader state during Focus Mode, entering/exiting chrome, font-size bounds/increments, and PDF progress. Initial Build #106 failed Flutter syntax analysis; commit `bbaf28d85bd4061fd354a00c54ccc068eba7ef9b` corrected the unmatched class closure.
+- **Signed PR Build #107** (run `39100988481`) passed the pinned preferences-dependency guard, `flutter analyze`, all `flutter test`, release APK compilation, signing certificate/package/version verification, artifact upload and GitHub direct release. User confirmed on-phone functionality.
+- Published PR APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-18-run-107/selura.apk (60,757,489 bytes; SHA-256 `a4b429998537073761b13b8dd94a7a957a35b33b07251150650eb85d1590931e`). Application ID `com.selura.reader`, version `0.2.0` (code 107), permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged.
+- **Post-merge Build #108** (run `39102269836`) started for merge commit `c767af6c013c53345cea25e745c337f39f27979d`. Verify tests, signing and published APK; do not report this build as successful until CI concludes.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -199,10 +209,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` Build #105 (run `39099324058`), including signed APK and published download asset, without changing application ID or permanent signing certificate.
-2. Next priority: offline EPUB highlights and annotations with per-book locally persisted text selections, colors, notes and navigation, implemented through a dedicated feature PR with regression tests and Android device verification before merging. Investigate limitations of the current `epub_view` renderer before promising on-page selection/highlight behavior.
-3. Improve reading/TTS UX and measure large-library performance on physical Android devices. Validate restoration on a second phone when possible; consider optional encrypted backup support later.
-4. Keep `shared_preferences_android` pinned to `2.4.28` until a compatible replacement passes real Android tests. Consider future offline CBZ manga support.
+1. Verify post-merge `main` Build #108 (run `39102269836`), release signature, package/version and direct APK publishing.
+2. Prioritize premium visual refinements, reading comfort, and measured performance improvements rather than highlights/annotations. Keep EPUB/PDF loading, auto-resume, TTS and reading settings stable.
+3. Consider an optional night-reading sleep timer, safer TTS playback in the background, and large-library performance testing on real Android; scope each as a separate feature PR and request phone testing before merge.
+4. Re-test restore on a second phone when available and keep the backup ZIP outside app storage. Maintain the `shared_preferences_android 2.4.28` pin until replacement is proven compatible on Android.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -222,6 +232,8 @@ CI status:
 - Pull Request #16: paragraph seeking/skip offline TTS, sliver bookshelf performance and instant opaque reader navigation; Build #102 (run `39096407925`) passed analysis/tests/signing/APK/release; user confirmed Android fix works; squash-merged at `02e125515d16f63ecb14cd9612b014735d638287`.
 
 - Pull Request #17: offline library backup/export and non-destructive ZIP restore, CI Build #104 passed signing/APK/release, user confirmed Android functionality, squash-merged into main at `9a9f9d06678e8aa72bcacb6d961a18b735389ae9`; post-merge Build #105 pending verification.
+
+- Pull Request #18: premium EPUB/PDF Focus Mode, quick EPUB typography and refined status footers; signed Build #107 (run `39100988481`) passed CI and user confirmed Android runtime; squash-merged as `c767af6c013c53345cea25e745c337f39f27979d`. Main Build #108 awaiting verification. Highlights and annotations intentionally excluded by user choice.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
