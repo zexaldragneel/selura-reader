@@ -138,7 +138,7 @@ class _MihonLibraryPageState extends State<MihonLibraryPage> {
     if (library == null) return [];
     final query = _query.trim().toLowerCase();
     return library.manga.where((m) =>
-      (_category == null || m.categoryIds.contains(_category)) &&
+      (_category == null || m.categoryOrders.contains(_category)) &&
       (query.isEmpty ||
         m.title.toLowerCase().contains(query) ||
         m.author.toLowerCase().contains(query) ||
@@ -265,11 +265,11 @@ class _MihonLibraryPageState extends State<MihonLibraryPage> {
                                   padding: const EdgeInsets.only(right: 8),
                                   child: ChoiceChip(
                                     key: Key('mihon-category-' +
-                                        category.id.toString()),
+                                        category.order.toString()),
                                     label: Text(category.name),
-                                    selected: _category == category.id,
+                                    selected: _category == category.order,
                                     onSelected: (_) => setState(
-                                      () => _category = category.id,
+                                      () => _category = category.order,
                                     ),
                                   ),
                                 ),
