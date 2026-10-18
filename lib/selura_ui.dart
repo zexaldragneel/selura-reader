@@ -179,46 +179,54 @@ class SeluraLoadError extends StatelessWidget {
   }
 }
 
+/// A restrained, editorial library introduction with real collection counts.
 class SeluraLibraryBanner extends StatelessWidget {
   const SeluraLibraryBanner({
     super.key,
     required this.bookCount,
+    required this.favoriteCount,
     required this.onImport,
   });
 
   final int bookCount;
+  final int favoriteCount;
   final VoidCallback? onImport;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final textColor = colors.onPrimaryContainer;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final light = theme.brightness == Brightness.light;
+    final ink = light ? const Color(0xFF29243A) : const Color(0xFFF1EAF9);
+    final muted = ink.withValues(alpha: 0.68);
 
     return Container(
+      key: const Key('selura-premium-library-banner'),
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 22, 16, 19),
+      padding: const EdgeInsets.fromLTRB(22, 22, 20, 21),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(27),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            colors.primaryContainer,
-            colors.tertiaryContainer,
-          ],
+          colors: light
+              ? const [Color(0xFFF0E9FB), Color(0xFFF8F1E8)]
+              : const [Color(0xFF30273E), Color(0xFF26232D)],
+        ),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.28),
         ),
       ),
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
           Positioned(
-            right: -10,
-            top: -26,
+            right: -24,
+            top: -29,
             child: Icon(
               Icons.auto_stories_rounded,
-              size: 120,
-              color: textColor.withValues(alpha: 0.08),
+              color: ink.withValues(alpha: 0.055),
+              size: 145,
             ),
           ),
           Column(
@@ -226,40 +234,85 @@ class SeluraLibraryBanner extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.offline_bolt_rounded, size: 16, color: textColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    'YOUR OFFLINE SHELF',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: textColor,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.9,
-                        ),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.bookmark_border_rounded,
+                      color: ink,
+                      size: 17,
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      'YOUR PRIVATE LIBRARY',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: ink,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 13),
+              const SizedBox(height: 18),
               Text(
-                'Stories worth\ngetting lost in.',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      height: 1.15,
-                      color: textColor,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '$bookCount ${bookCount == 1 ? 'book' : 'books'} in your pocket',
-                style: TextStyle(color: textColor.withValues(alpha: 0.82)),
-              ),
-              const SizedBox(height: 15),
-              FilledButton.tonalIcon(
-                onPressed: onImport,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Add a book'),
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
+                'A little space for\nbig stories.',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: ink,
+                  height: 1.11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.9,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Every chapter, entirely yours. Even offline.',
+                style: theme.textTheme.bodySmall?.copyWith(color: muted),
+              ),
+              const SizedBox(height: 19),
+              Row(
+                children: [
+                  Expanded(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _ShelfMetric(
+                          value: bookCount.toString(),
+                          label: bookCount == 1 ? 'BOOK' : 'BOOKS',
+                          ink: ink,
+                        ),
+                        _ShelfMetric(
+                          value: favoriteCount.toString(),
+                          label: 'FAVORITES',
+                          ink: ink,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    key: const Key('selura-banner-import'),
+                    tooltip: 'Import EPUB or PDF',
+                    onPressed: onImport,
+                    style: IconButton.styleFrom(
+                      backgroundColor: ink,
+                      foregroundColor: light
+                          ? const Color(0xFFFFFFFF)
+                          : const Color(0xFF1B1922),
+                    ),
+                    icon: const Icon(Icons.add_rounded),
+                  ),
+                ],
               ),
             ],
           ),
@@ -267,4 +320,40 @@ class SeluraLibraryBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ShelfMetric extends StatelessWidget {
+  const _ShelfMetric({
+    required this.value,
+    required this.label,
+    required this.ink,
+  });
+
+  final String value;
+  final String label;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: ink,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: ink.withValues(alpha: 0.68),
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              letterSpacing: 0.65,
+            ),
+          ),
+        ],
+      );
 }

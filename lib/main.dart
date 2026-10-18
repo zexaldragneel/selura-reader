@@ -22,6 +22,7 @@ import 'reader_chrome.dart';
 import 'epub_narration.dart';
 import 'epub_narration_sheet.dart';
 import 'selura_ui.dart';
+import 'bookshelf_design.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -35,11 +36,11 @@ ThemeData _seluraTheme(Brightness brightness) {
     colorScheme: colors,
     useMaterial3: true,
     scaffoldBackgroundColor:
-        dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+        dark ? const Color(0xFF181720) : const Color(0xFFF8F6F1),
     appBarTheme: AppBarTheme(
       elevation: 0,
       backgroundColor:
-          dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+          dark ? const Color(0xFF181720) : const Color(0xFFF8F6F1),
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
     ),
@@ -152,6 +153,7 @@ class _LibraryPageState extends State<LibraryPage> {
   bool gridView = true;
   String query = '';
   _LibrarySort sort = _LibrarySort.recent;
+  SeluraShelfFilter shelfFilter = SeluraShelfFilter.all;
 
   @override
   void initState() {
@@ -518,13 +520,23 @@ class _LibraryPageState extends State<LibraryPage> {
     setState(() => query = '');
   }
 
+  void _resetShelfFilters() {
+    searchController.clear();
+    setState(() {
+      query = '';
+      shelfFilter = SeluraShelfFilter.all;
+    });
+  }
+
   List<Book> get _visibleBooks {
     final normalized = query.trim().toLowerCase();
     final result = books
         .where(
-          (book) => normalized.isEmpty ||
-              book.title.toLowerCase().contains(normalized) ||
-              book.type.toLowerCase().contains(normalized),
+          (book) =>
+              shelfFilter.accepts(format: book.type, favorite: book.favorite) &&
+              (normalized.isEmpty ||
+                  book.title.toLowerCase().contains(normalized) ||
+                  book.type.toLowerCase().contains(normalized)),
         )
         .toList();
 
@@ -592,18 +604,26 @@ class _LibraryPageState extends State<LibraryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'SELURA',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.4,
+              'Selura',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.8,
               ),
             ),
-            Text('My Library'),
+            Text(
+              'THE READING ROOM',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.7,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 9,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -688,47 +708,25 @@ class _LibraryPageState extends State<LibraryPage> {
                                 children: [
                                   SeluraLibraryBanner(
                                     bookCount: books.length,
+                                    favoriteCount:
+                                        books.where((book) => book.favorite).length,
                                     onImport: busy ? null : _import,
                                   ),
-                                  const SizedBox(height: 24),
-                                  TextField(
-                                    controller: searchController,
-                                    onChanged: (value) =>
-                                        setState(() => query = value),
-                                    decoration: InputDecoration(
-                                      hintText: 'Search your library',
-                                      prefixIcon: const Icon(Icons.search_rounded),
-                                      suffixIcon: query.isEmpty
-                                          ? null
-                                          : IconButton(
-                                              tooltip: 'Clear search',
-                                              onPressed: _clearSearch,
-                                              icon: const Icon(Icons.close_rounded),
-                                            ),
-                                      filled: true,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(18),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
-                                  ),
                                   if (continueReading.isNotEmpty) ...[
-                                    const SizedBox(height: 28),
-                                    Text(
-                                      'Continue reading',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(fontWeight: FontWeight.w700),
+                                    const SizedBox(height: 27),
+                                    const SeluraShelfHeading(
+                                      title: 'Continue reading',
+                                      subtitle: 'Return to a story you love',
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 14),
                                     SizedBox(
-                                      height: 158,
+                                      height: 190,
                                       child: ListView.separated(
+                                        key: const Key('selura-continue-carousel'),
                                         scrollDirection: Axis.horizontal,
                                         itemCount: continueReading.length,
                                         separatorBuilder: (_, __) =>
-                                            const SizedBox(width: 12),
+                                            const SizedBox(width: 13),
                                         itemBuilder: (context, index) {
                                           final book = continueReading[index];
                                           return _ContinueCard(
@@ -743,35 +741,65 @@ class _LibraryPageState extends State<LibraryPage> {
                                     ),
                                   ],
                                   const SizedBox(height: 28),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Library',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge
-                                              ?.copyWith(fontWeight: FontWeight.w700),
+                                  SeluraShelfHeading(
+                                    title: 'Your bookshelf',
+                                    subtitle:
+                                        '${visibleBooks.length} of ${books.length} books',
+                                  ),
+                                  const SizedBox(height: 15),
+                                  TextField(
+                                    key: const Key('selura-shelf-search'),
+                                    controller: searchController,
+                                    onChanged: (value) =>
+                                        setState(() => query = value),
+                                    textInputAction: TextInputAction.search,
+                                    decoration: InputDecoration(
+                                      hintText: 'Find a book or format',
+                                      prefixIcon: const Icon(Icons.search_rounded),
+                                      suffixIcon: query.isEmpty
+                                          ? null
+                                          : IconButton(
+                                              tooltip: 'Clear search',
+                                              onPressed: _clearSearch,
+                                              icon: const Icon(Icons.close_rounded),
+                                            ),
+                                      filled: true,
+                                      fillColor: Theme.of(context)
+                                          .colorScheme.surfaceContainerLow,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(vertical: 14),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(17),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme.outlineVariant
+                                              .withValues(alpha: 0.45),
                                         ),
                                       ),
-                                      Text(
-                                        '${visibleBooks.length} ${visibleBooks.length == 1 ? 'book' : 'books'}',
-                                        style: Theme.of(context).textTheme.bodyMedium,
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(17),
+                                        borderSide: BorderSide(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          width: 1.6,
+                                        ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 10),
+                                  SeluraShelfFilterBar(
+                                    selected: shelfFilter,
+                                    onSelected: (value) =>
+                                        setState(() => shelfFilter = value),
+                                  ),
+                                  const SizedBox(height: 16),
                                 ],
                               ),
                             ),
                           ),
                           if (visibleBooks.isEmpty)
-                            const SliverPadding(
-                              padding: EdgeInsets.symmetric(vertical: 56),
-                              sliver: SliverToBoxAdapter(
-                                child: Center(
-                                  child: Text('No books match your search.'),
-                                ),
+                            SliverToBoxAdapter(
+                              child: SeluraShelfEmptyResults(
+                                onReset: _resetShelfFilters,
                               ),
                             )
                           else if (gridView)
@@ -784,7 +812,7 @@ class _LibraryPageState extends State<LibraryPage> {
                                       MediaQuery.sizeOf(context).width >= 700 ? 4 : 2,
                                   crossAxisSpacing: 14,
                                   mainAxisSpacing: 18,
-                                  childAspectRatio: 0.63,
+                                  childAspectRatio: 0.61,
                                 ),
                                 itemBuilder: (context, index) {
                                   final book = visibleBooks[index];
@@ -853,7 +881,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add_rounded),
-              label: const Text('Import'),
+              label: const Text('Add book'),
             ),
     );
   }
@@ -886,7 +914,7 @@ class _EmptyLibrary extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Build your Selura library',
+                'Your library begins here',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -894,7 +922,7 @@ class _EmptyLibrary extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Import EPUB and PDF books for private, offline reading.',
+                'Bring your favorite EPUB and PDF stories together. Your books stay private and available offline.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
@@ -902,7 +930,7 @@ class _EmptyLibrary extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onImport,
                 icon: const Icon(Icons.upload_file_rounded),
-                label: const Text('Import EPUB or PDF'),
+                label: const Text('Add your first book'),
               ),
             ],
           ),
@@ -1053,59 +1081,96 @@ class _ContinueCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 290,
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  _BookCover(
-                    book: book,
-                    coverPath: coverPath,
-                    width: 82,
-                    height: 128,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          book.title,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return SizedBox(
+      width: 336,
+      child: Card(
+        color: colors.surfaceContainerLow,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(23),
+          side: BorderSide(
+            color: colors.outlineVariant.withValues(alpha: 0.35),
+          ),
+        ),
+        child: InkWell(
+          key: Key('selura-continue-${book.path}'),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                _BookCover(
+                  book: book,
+                  coverPath: coverPath,
+                  width: 96,
+                  height: 157,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PICK UP WHERE YOU LEFT OFF',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 9,
+                          color: colors.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.45,
                         ),
-                        const SizedBox(height: 8),
-                        _BookProgressIndicator(progress: progress),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.play_circle_fill_rounded,
-                              color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 9),
+                      Text(
+                        book.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 9),
+                      _BookProgressIndicator(progress: progress),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.play_arrow_rounded,
+                            size: 19,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Continue',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.w800,
                             ),
-                            const SizedBox(width: 6),
-                            const Text('Continue'),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: colors.primary,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _GridBookCard extends StatelessWidget {
@@ -1125,49 +1190,71 @@ class _GridBookCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      color: colors.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(21),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.26),
+        ),
+      ),
+      child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _BookCover(book: book, coverPath: coverPath),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: IconButton.filledTonal(
-                      tooltip: book.favorite
-                          ? 'Remove from favorites'
-                          : 'Add to favorites',
-                      onPressed: onFavorite,
-                      icon: Icon(
-                        book.favorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _BookCover(
+                      book: book,
+                      coverPath: coverPath,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: IconButton.filledTonal(
+                        tooltip: book.favorite
+                            ? 'Remove from favorites'
+                            : 'Add to favorites',
+                        onPressed: onFavorite,
+                        icon: Icon(
+                          book.favorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              book.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 3),
-            _BookProgressIndicator(progress: progress),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                book.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              _BookProgressIndicator(progress: progress),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ListBookCard extends StatelessWidget {
