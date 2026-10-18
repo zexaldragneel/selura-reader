@@ -424,13 +424,14 @@ class MangaDetailPage extends StatefulWidget {
 }
 
 class _MangaDetailPageState extends State<MangaDetailPage> {
-  late Future<List<OnlineMangaChapter>> _chapters;
+  late Future<OnlineMangaChapterPage> _chapters;
+  String _language = 'en';
   String? _resumeId;
 
   @override
   void initState() {
     super.initState();
-    _chapters = widget.client.chapters(widget.manga.id);
+    _chapters = widget.client.chapterPage(widget.manga.id);
     unawaited(_restoreResume());
   }
 
@@ -444,7 +445,34 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
   }
 
   void _refresh() {
-    setState(() => _chapters = widget.client.chapters(widget.manga.id));
+    setState(() => _chapters = widget.client.chapterPage(
+      widget.manga.id,
+      language: _language == 'all' ? null : _language,
+    ));
+  }
+
+  void _changeLanguage(String? language) {
+    if (language == null || language == _language) return;
+    setState(() {
+      _language = language;
+      _chapters = widget.client.chapterPage(
+        widget.manga.id,
+        language: language == 'all' ? null : language,
+      );
+    });
+  }
+
+  void _loadMore() {
+    final language = _language == 'all' ? null : _language;
+    setState(() => _chapters = _chapters.then((previous) async {
+      if (!previous.hasMore) return previous;
+      final next = await widget.client.chapterPage(
+        widget.manga.id,
+        language: language,
+        offset: previous.nextOffset,
+      );
+      return previous.appended(next);
+    }));
   }
 
   Future<void> _read(OnlineMangaChapter chapter) async {
@@ -461,7 +489,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.manga.title,
         overflow: TextOverflow.ellipsis)),
-    body: FutureBuilder<List<OnlineMangaChapter>>(
+    body: FutureBuilder<OnlineMangaChapterPage>(
       future: _chapters,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -473,7 +501,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final chapters = snapshot.data!;
+        final listing = snapshot.data!;
+        final chapters = listing.chapters;
         final resume = chapters.where((c) => c.id == _resumeId).toList();
         return ListView(
           padding: const EdgeInsets.all(18),
@@ -490,7 +519,7 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                       fontWeight: FontWeight.w800,
                     )),
                   const SizedBox(height: 9),
-                  const Text('MangaDex · English chapters'),
+                  const Text('MangaDex · chapter translations'),
                   const SizedBox(height: 6),
                   const Text('Scanlation groups are credited on each chapter.'),
                 ],
@@ -510,7 +539,28 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                 label: const Text('Continue reading'),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              key: const Key('mangadex-chapter-language'),
+              initialValue: _language,
+              decoration: const InputDecoration(
+                labelText: 'Chapter language',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'en', child: Text('English')),
+                DropdownMenuItem(value: 'all', child: Text('All languages')),
+                DropdownMenuItem(value: 'id', child: Text('Indonesian')),
+                DropdownMenuItem(value: 'es', child: Text('Spanish')),
+                DropdownMenuItem(value: 'es-la', child: Text('Spanish (Latin America)')),
+                DropdownMenuItem(value: 'pt-br', child: Text('Portuguese (Brazil)')),
+                DropdownMenuItem(value: 'fr', child: Text('French')),
+                DropdownMenuItem(value: 'ja', child: Text('Japanese')),
+                DropdownMenuItem(value: 'fil', child: Text('Filipino')),
+              ],
+              onChanged: _changeLanguage,
+            ),
+            const SizedBox(height: 16),
             Text('Available chapters (' + chapters.length.toString() + ')',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -518,10 +568,14 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
             ),
             const SizedBox(height: 8),
             if (chapters.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(18),
-                child: Text('No readable English chapters found. '
-                    'Availability is managed by MangaDex.'),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Text(_language == 'en'
+                    ? 'No readable English chapters on this page. '
+                      'Try All languages, or Load more if available. '
+                      'Some MangaDex chapters link to external sites.'
+                    : 'No chapters hosted by MangaDex in this language. '
+                      'Try All languages or another translation.'),
               ),
             for (final chapter in chapters)
               Card(
@@ -534,6 +588,22 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
                   onTap: () => _read(chapter),
                 ),
               ),
+            if (listing.hasMore) ...[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                key: const Key('mangadex-load-more-chapters'),
+                onPressed: _loadMore,
+                icon: const Icon(Icons.more_horiz_rounded),
+                label: const Text('Load more chapters'),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Showing feed entries through ' + listing.nextOffset.toString()
+                  + ' of ' + listing.total.toString() +
+                  '. External-hosted chapters are excluded.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
             const SizedBox(height: 12),
             Text(
               'Manga and images from MangaDex. Credit to their original '
