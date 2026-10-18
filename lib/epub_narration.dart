@@ -285,6 +285,8 @@ class EpubNarrationController extends ChangeNotifier {
   int _session = 0;
   int _index = 0;
   List<String> _utterances = <String>[];
+  NarrationChapterPlan? _plan;
+  int _selectedParagraph = 0;
 
   NarrationStatus status = NarrationStatus.idle;
   NarrationSpeed speed = NarrationSpeed.normal;
@@ -295,6 +297,20 @@ class EpubNarrationController extends ChangeNotifier {
 
   int get spokenParts => _index;
   int get totalParts => _utterances.length;
+  List<String> get paragraphs => _plan?.paragraphs ?? const <String>[];
+  int get currentParagraph {
+    final plan = _plan;
+    if (plan == null || plan.isEmpty) return 0;
+    if (status == NarrationStatus.playing ||
+        status == NarrationStatus.paused ||
+        status == NarrationStatus.finished) {
+      final segment = _index >= plan.segmentParagraphs.length
+          ? plan.segmentParagraphs.length - 1
+          : _index;
+      return plan.segmentParagraphs[segment];
+    }
+    return _selectedParagraph;
+  }
 
   void _emit() {
     if (!_closed) notifyListeners();
@@ -344,27 +360,81 @@ class EpubNarrationController extends ChangeNotifier {
     _emit();
   }
 
-  Future<void> readChapter(String html, {String? title}) async {
+  /// Decode the active chapter in an isolate once; reselecting a paragraph
+  /// uses the resulting local speech plan without parsing XHTML again.
+  Future<void> prepareChapter(String html, {String? title}) async {
     if (_closed) return;
     await initialize();
     if (!_ready || _closed) return;
-    await stop();
-    // Parsing very large XHTML chapters happens in a worker isolate so it
-    // cannot freeze page scrolling or the loading/player controls.
-    final chunks = await compute(NarrationText.chapterUtterances, html);
-    if (_closed) return;
-    _utterances = chunks;
-    chapterName = title?.trim().isNotEmpty == true
-        ? title!.trim()
-        : 'Current chapter';
-    _index = 0;
-    if (_utterances.isEmpty) {
+
+    final generation = ++_session;
+    status = NarrationStatus.loading;
+    errorMessage = null;
+    _emit();
+
+    try {
+      await _engine.stop();
+      final plan = await compute(NarrationText.chapterPlan, html);
+      if (_closed || generation != _session) return;
+      _plan = plan;
+      _utterances = plan.utterances;
+      chapterName = title?.trim().isNotEmpty == true
+          ? title!.trim()
+          : 'Current chapter';
+      _selectedParagraph = 0;
+      _index = 0;
+      if (plan.isEmpty) {
+        status = NarrationStatus.error;
+        errorMessage = 'This chapter has no readable text.';
+      } else {
+        status = NarrationStatus.idle;
+      }
+    } catch (_) {
+      if (_closed || generation != _session) return;
       status = NarrationStatus.error;
-      errorMessage = 'This chapter has no readable text.';
-      _emit();
+      errorMessage = 'Selura could not prepare this chapter for narration.';
+    }
+    _emit();
+  }
+
+  /// Keeps the original one-tap chapter narration workflow compatible.
+  Future<void> readChapter(String html, {String? title}) async {
+    await prepareChapter(html, title: title);
+    if (_closed || status != NarrationStatus.idle) return;
+    await playFromParagraph(0);
+  }
+
+  Future<void> playFromParagraph(int paragraph) async {
+    final plan = _plan;
+    if (_closed || !_ready || plan == null || plan.isEmpty ||
+        paragraph < 0 || paragraph >= plan.paragraphs.length) {
       return;
     }
-    unawaited(_playLoop());
+
+    final generation = ++_session;
+    _selectedParagraph = paragraph;
+    _index = plan.segmentForParagraph(paragraph);
+    status = NarrationStatus.loading;
+    errorMessage = null;
+    _emit();
+    try {
+      // Android TTS lacks reliable native seeking; a short current utterance
+      // is interrupted and the selected paragraph starts from its beginning.
+      await _engine.stop();
+      if (_closed || generation != _session) return;
+      unawaited(_playLoop());
+    } catch (_) {
+      if (_closed || generation != _session) return;
+      status = NarrationStatus.error;
+      errorMessage = 'Could not start narration from that paragraph.';
+      _emit();
+    }
+  }
+
+  Future<void> skipParagraph(int offset) async {
+    final target = currentParagraph + offset;
+    if (target < 0 || target >= paragraphs.length) return;
+    await playFromParagraph(target);
   }
 
   Future<void> _playLoop() async {
@@ -375,6 +445,11 @@ class EpubNarrationController extends ChangeNotifier {
     _emit();
     try {
       while (!_closed && session == _session && _index < _utterances.length) {
+        final plan = _plan;
+        if (plan != null) {
+          _selectedParagraph = plan.segmentParagraphs[_index];
+          _emit();
+        }
         await _engine.speak(_utterances[_index]);
         if (_closed || session != _session) return;
         _index += 1;
@@ -402,14 +477,13 @@ class EpubNarrationController extends ChangeNotifier {
     try {
       await _engine.stop();
     } catch (_) {
-      // A failed stop should not block the user's next control action.
+      // Native engines can complete an utterance while the pause is requested.
     }
   }
 
   void resume() {
     if (status != NarrationStatus.paused || _closed) return;
-    // Android TTS doesn't support native pause consistently. We restart
-    // the interrupted short segment rather than losing the chapter position.
+    // Resume the interrupted bounded segment; does not restart the chapter.
     unawaited(_playLoop());
   }
 
@@ -417,13 +491,15 @@ class EpubNarrationController extends ChangeNotifier {
     if (_closed) return;
     ++_session;
     status = NarrationStatus.idle;
-    _utterances = <String>[];
-    _index = 0;
+    final plan = _plan;
+    _index = plan != null && !plan.isEmpty
+        ? plan.segmentForParagraph(_selectedParagraph)
+        : 0;
     _emit();
     try {
       await _engine.stop();
     } catch (_) {
-      // The phone may not have an installed TTS provider.
+      // A missing phone TTS provider must not block book reading.
     }
   }
 
