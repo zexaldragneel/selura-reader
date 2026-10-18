@@ -212,12 +212,6 @@ void main() {
       prefs: prefs,
       output: output,
     );
-    final result = await const SeluraBackupService().restore(
-      backup: output, documents: restored, prefs: prefs,
-    );
-    expect(result.imported, 0);
-    expect(result.skipped, 1);
-
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final otherPrefs = await SharedPreferences.getInstance();
     final otherDir = Directory(root.path + '/another-device');
@@ -235,5 +229,10 @@ void main() {
     expect(otherPrefs.getInt(ReadingProgressStore.comicTotalKey(newPath)), 99);
     expect(otherPrefs.getStringList('selura_bookmarks_v1:' + newPath),
         hasLength(1));
+    final repeated = await const SeluraBackupService().restore(
+      backup: output, documents: otherDir, prefs: otherPrefs,
+    );
+    expect(repeated.imported, 0);
+    expect(repeated.skipped, 1);
   });
 }
