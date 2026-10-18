@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart' hide DefaultBuilderOptions;
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
@@ -1370,7 +1371,21 @@ class PdfBookPage extends StatefulWidget {
 
 class _PdfBookPageState extends State<PdfBookPage> {
   PdfControllerPinch? controller;
+  String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  Future<void> _retryOpening() async {
+    final oldController = controller;
+    if (!mounted) return;
+    setState(() {
+      controller = null;
+      _openingError = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController?.dispose();
+      if (mounted) unawaited(_restoreProgress());
+    });
+  }
   final ReadingProgressStore _progressStore = const ReadingProgressStore();
   int? _visiblePage;
   int? _totalPages;
@@ -1440,27 +1455,35 @@ class _PdfBookPageState extends State<PdfBookPage> {
   }
 
   Future<void> _restoreProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedPage = prefs.getInt(_pdfProgressKey(widget.book)) ?? 1;
-    final pdfController = PdfControllerPinch(
-      document: PdfDocument.openFile(widget.book.path),
-      initialPage: savedPage < 1 ? 1 : savedPage,
-    );
-
-    if (!mounted) {
-      pdfController.dispose();
-      return;
-    }
-    setState(() {
-      controller = pdfController;
-      _visiblePage = savedPage < 1 ? 1 : savedPage;
-      final storedTotal = prefs.getInt(
-        ReadingProgressStore.pdfTotalKey(widget.book.path),
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPage = prefs.getInt(_pdfProgressKey(widget.book)) ?? 1;
+      final pdfController = PdfControllerPinch(
+        document: PdfDocument.openFile(widget.book.path),
+        initialPage: savedPage < 1 ? 1 : savedPage,
       );
-      _totalPages = storedTotal != null && storedTotal > 0
-          ? storedTotal
-          : null;
-    });
+      if (!mounted) {
+        pdfController.dispose();
+        return;
+      }
+      setState(() {
+        controller = pdfController;
+        _openingError = null;
+        _visiblePage = savedPage < 1 ? 1 : savedPage;
+        final storedTotal = prefs.getInt(
+          ReadingProgressStore.pdfTotalKey(widget.book.path),
+        );
+        _totalPages = storedTotal != null && storedTotal > 0
+            ? storedTotal
+            : null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _openingError =
+            'Selura could not prepare this PDF. Your existing library '
+            'and reading history are still saved.');
+      }
+    }
   }
 
   Future<void> _savePage(int page) async {
@@ -1517,10 +1540,34 @@ class _PdfBookPageState extends State<PdfBookPage> {
                 ),
               ),
             ),
-      body: activeController == null
-          ? const Center(child: CircularProgressIndicator())
-          : PdfViewPinch(
+      body: _openingError != null
+          ? SeluraLoadError(
+              title: 'Unable to open PDF',
+              message: _openingError!,
+              onRetry: _retryOpening,
+            )
+          : activeController == null
+              ? const SeluraLoadingView(
+                  title: 'Opening your document',
+                  subtitle: 'Restoring the last page you read',
+                )
+              : PdfViewPinch(
               controller: activeController,
+              builders: pdfx.PdfViewPinchBuilders<pdfx.DefaultBuilderOptions>(
+                options: const pdfx.DefaultBuilderOptions(),
+                documentLoaderBuilder: (_) => const SeluraLoadingView(
+                  title: 'Rendering PDF pages',
+                  subtitle: 'Preparing the document for smooth scrolling',
+                ),
+                pageLoaderBuilder: (_) => const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                errorBuilder: (_, error) => SeluraLoadError(
+                  title: 'Could not display PDF',
+                  message: 'The document may be damaged or unsupported.',
+                  onRetry: _retryOpening,
+                ),
+              ),
               onDocumentLoaded: (document) {
                 final total = document.pagesCount;
                 if (total > 0) {
