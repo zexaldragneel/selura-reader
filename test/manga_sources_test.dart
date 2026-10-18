@@ -244,7 +244,15 @@ void main() {
     expect(find.text('MangaDex'), findsOneWidget);
     expect(find.byKey(const Key('manga-extension-browse-mangadex')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('manga-extension-toggle-mangadex')));
+    final install = find.byKey(
+      const Key('manga-extension-toggle-mangadex'),
+    );
+    await tester.scrollUntilVisible(
+      install, 220,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(install);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('manga-extension-browse-mangadex')), findsOneWidget);
 
