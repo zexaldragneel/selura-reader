@@ -54,6 +54,36 @@ class NarrationText {
 
   static List<String> chapterUtterances(String html, {
     int maxCharacters = maxUtteranceCharacters,
+  }) => _chunkBlocks(
+        blocksFromHtml(html),
+        maxCharacters: maxCharacters,
+      );
+
+  /// Segment boundaries stay within each paragraph, allowing exact
+  /// paragraph starts and accessible previous/next paragraph controls.
+  static NarrationChapterPlan chapterPlan(String html) {
+    final paragraphs = blocksFromHtml(html);
+    final starts = <int>[];
+    final utterances = <String>[];
+    final segmentParagraphs = <int>[];
+
+    for (var index = 0; index < paragraphs.length; index++) {
+      starts.add(utterances.length);
+      final chunks = _chunkBlocks(<String>[paragraphs[index]]);
+      utterances.addAll(chunks);
+      segmentParagraphs.addAll(List<int>.filled(chunks.length, index));
+    }
+    return NarrationChapterPlan(
+      paragraphs: paragraphs,
+      utterances: utterances,
+      paragraphStarts: starts,
+      segmentParagraphs: segmentParagraphs,
+    );
+  }
+
+  static List<String> _chunkBlocks(
+    List<String> blocks, {
+    int maxCharacters = maxUtteranceCharacters,
   }) {
     if (maxCharacters < 80) {
       throw ArgumentError.value(maxCharacters, 'maxCharacters');
@@ -77,7 +107,7 @@ class NarrationText {
       buffer.write(phrase);
     }
 
-    for (final block in blocksFromHtml(html)) {
+    for (final block in blocks) {
       final sentences = block.split(_sentenceBreak);
       for (final sentence in sentences) {
         final normalized = normalize(sentence);
@@ -86,7 +116,7 @@ class NarrationText {
           addShort(normalized);
           continue;
         }
-        // Extremely long sentences and unbroken words are hard-split safely.
+        // Oversized sentences/words are split to fit Android TTS limits.
         final words = normalized.split(' ');
         var section = '';
         for (final word in words) {
@@ -119,6 +149,30 @@ class NarrationText {
     }
     flush();
     return utterances;
+  }
+}
+
+@immutable
+class NarrationChapterPlan {
+  const NarrationChapterPlan({
+    required this.paragraphs,
+    required this.utterances,
+    required this.paragraphStarts,
+    required this.segmentParagraphs,
+  });
+
+  final List<String> paragraphs;
+  final List<String> utterances;
+  final List<int> paragraphStarts;
+  final List<int> segmentParagraphs;
+
+  bool get isEmpty => utterances.isEmpty;
+
+  int segmentForParagraph(int index) {
+    if (paragraphs.isEmpty || index < 0 || index >= paragraphs.length) {
+      throw RangeError.index(index, paragraphs, 'paragraph');
+    }
+    return paragraphStarts[index];
   }
 }
 
