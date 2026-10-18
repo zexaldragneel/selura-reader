@@ -6,11 +6,12 @@ import 'package:epub_view/epub_view.dart' hide Image;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfx/pdfx.dart';
+import 'package:pdfx/pdfx.dart' hide DefaultBuilderOptions;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
 import 'cover_cache.dart';
+import 'reader_settings.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -892,6 +893,48 @@ class EpubBookPage extends StatefulWidget {
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+  EpubReadingSettings _readingSettings = const EpubReadingSettings();
+  bool _readingSettingsLoaded = false;
+  Future<void> _settingsWriteQueue = Future<void>.value();
+
+  Future<void> _restoreReadingSettings() async {
+    final settings = await EpubReadingSettings.load();
+    if (!mounted) return;
+    setState(() {
+      _readingSettings = settings;
+      _readingSettingsLoaded = true;
+    });
+  }
+
+  void _changeReadingSettings(EpubReadingSettings next) {
+    if (!mounted) return;
+    setState(() => _readingSettings = next);
+    // Serialize writes so rapid slider movement never saves an older setting last.
+    _settingsWriteQueue = _settingsWriteQueue.then((_) async {
+      final saved = await next.save();
+      if (!saved) throw const FileSystemException('Could not save settings');
+    }).catchError((Object _) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save reading settings')),
+        );
+      }
+    });
+  }
+
+  Future<void> _showReadingSettings() async {
+    if (!_readingSettingsLoaded) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => EpubReaderSettingsSheet(
+        settings: _readingSettings,
+        onChanged: _changeReadingSettings,
+      ),
+    );
+  }
+
 
   void _bookmarkMessage(String text) {
     if (!mounted) return;
@@ -939,6 +982,7 @@ class _EpubBookPageState extends State<EpubBookPage> {
   @override
   void initState() {
     super.initState();
+    _restoreReadingSettings();
     _restoreProgress();
   }
 
@@ -982,10 +1026,19 @@ class _EpubBookPageState extends State<EpubBookPage> {
   @override
   Widget build(BuildContext context) {
     final activeController = controller;
+    final palette = _readingSettings.theme.palette;
     return Scaffold(
+      backgroundColor: palette.background,
       appBar: AppBar(
+        backgroundColor: palette.background,
+        foregroundColor: palette.foreground,
         title: Text(widget.book.title),
         actions: [
+          IconButton(
+            tooltip: 'Reading appearance',
+            onPressed: _readingSettingsLoaded ? _showReadingSettings : null,
+            icon: const Icon(Icons.text_fields_rounded),
+          ),
           IconButton(
             tooltip: 'Add bookmark',
             onPressed: activeController == null ? null : _addBookmark,
@@ -1011,9 +1064,35 @@ class _EpubBookPageState extends State<EpubBookPage> {
         ],
       ),
       body: activeController == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: palette.accent))
           : EpubView(
               controller: activeController,
+              builders: EpubViewBuilders<DefaultBuilderOptions>(
+                options: DefaultBuilderOptions(
+                  textStyle: _readingSettings.textStyle,
+                  paragraphPadding: EdgeInsets.symmetric(
+                    horizontal: _readingSettings.horizontalMargin,
+                  ),
+                  chapterPadding: EdgeInsets.symmetric(
+                    horizontal: _readingSettings.horizontalMargin,
+                    vertical: 8,
+                  ),
+                ),
+                chapterDividerBuilder: (chapter) => Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                  color: palette.chapterBackground,
+                  child: Text(
+                    chapter.Title ?? '',
+                    style: TextStyle(
+                      color: palette.foreground,
+                      fontSize: _readingSettings.fontSize + 4,
+                      fontFamily: _readingSettings.font.family,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
               onChapterChanged: (_) {
                 _saveProgress();
               },
