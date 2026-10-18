@@ -29,11 +29,23 @@ android {
         versionName = flutter.versionName
     }
 
+    // A persistent upload key is decrypted only inside the trusted CI runner.
+    // Never put an Android signing password or plaintext keystore in source.
+    signingConfigs {
+        create("seluraRelease") {
+            val keystorePath = System.getenv("SELURA_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+            }
+            storePassword = System.getenv("SELURA_SIGNING_PASSWORD")
+            keyAlias = "selura-release"
+            keyPassword = System.getenv("SELURA_SIGNING_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("seluraRelease")
         }
     }
 }
