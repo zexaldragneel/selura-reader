@@ -1002,7 +1002,43 @@ class EpubBookPage extends StatefulWidget {
 
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
+  EpubChapter? _currentSpeechChapter;
+  final EpubNarrationController _narration = EpubNarrationController();
+  String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  Future<void> _showNarration() async {
+    final chapter = _currentSpeechChapter;
+    if (chapter == null) {
+      _bookmarkMessage('Wait for the chapter to load before listening.');
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => EpubNarrationSheet(
+        narration: _narration,
+        chapterHtml: chapter.HtmlContent,
+        chapterTitle: chapter.Title,
+      ),
+    );
+  }
+
+  Future<void> _retryOpening() async {
+    final oldController = controller;
+    if (!mounted) return;
+    setState(() {
+      controller = null;
+      _openingError = null;
+    });
+    // Detach the old document view before disposing its controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController?.dispose();
+      if (mounted) unawaited(_restoreProgress());
+    });
+  }
+
   final ReadingProgressStore _progressStore = const ReadingProgressStore();
   String? _chapterStatus;
   int? _lastChapterNumber;
@@ -1133,29 +1169,37 @@ class _EpubBookPageState extends State<EpubBookPage> {
   }
 
   Future<void> _restoreProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCfi = prefs.getString(_epubProgressKey(widget.book));
-    final savedSummary = _progressStore.read(
-      prefs,
-      path: widget.book.path,
-      type: 'epub',
-    );
-    final epubController = EpubController(
-      document: EpubDocument.openFile(File(widget.book.path)),
-      epubCfi: savedCfi,
-    );
-
-    if (!mounted) {
-      epubController.dispose();
-      return;
-    }
-    setState(() {
-      controller = epubController;
-      if (savedSummary.label != 'Not started' &&
-          savedSummary.label != 'Resume available') {
-        _chapterStatus = savedSummary.label;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCfi = prefs.getString(_epubProgressKey(widget.book));
+      final savedSummary = _progressStore.read(
+        prefs,
+        path: widget.book.path,
+        type: 'epub',
+      );
+      final epubController = EpubController(
+        document: EpubDocument.openFile(File(widget.book.path)),
+        epubCfi: savedCfi,
+      );
+      if (!mounted) {
+        epubController.dispose();
+        return;
       }
-    });
+      setState(() {
+        controller = epubController;
+        _openingError = null;
+        if (savedSummary.label != 'Not started' &&
+            savedSummary.label != 'Resume available') {
+          _chapterStatus = savedSummary.label;
+        }
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _openingError =
+            'Selura could not prepare this EPUB. Your saved progress '
+            'and bookmarks are still stored.');
+      }
+    }
   }
 
   Future<void> _saveProgress() async {
@@ -1167,6 +1211,7 @@ class _EpubBookPageState extends State<EpubBookPage> {
 
   @override
   void dispose() {
+    _narration.close();
     final activeController = controller;
     if (activeController != null) {
       final cfi = activeController.generateEpubCfi();
@@ -1191,6 +1236,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
         foregroundColor: palette.foreground,
         title: Text(widget.book.title),
         actions: [
+          IconButton(
+            tooltip: 'Listen to chapter',
+            onPressed: activeController == null ? null : _showNarration,
+            icon: const Icon(Icons.headphones_rounded),
+          ),
           IconButton(
             tooltip: 'Reading appearance',
             onPressed: _readingSettingsLoaded ? _showReadingSettings : null,
@@ -1240,11 +1290,30 @@ class _EpubBookPageState extends State<EpubBookPage> {
                 ),
               ),
             ),
-      body: activeController == null
-          ? Center(child: CircularProgressIndicator(color: palette.accent))
-          : EpubView(
+      body: _openingError != null
+          ? SeluraLoadError(
+              title: 'Unable to open EPUB',
+              message: _openingError!,
+              onRetry: _retryOpening,
+            )
+          : activeController == null
+              ? const SeluraLoadingView(
+                  title: 'Opening your story',
+                  subtitle: 'Preparing chapters and restoring your place',
+                )
+              : EpubView(
               controller: activeController,
               builders: EpubViewBuilders<DefaultBuilderOptions>(
+                loaderBuilder: (_) => const SeluraLoadingView(
+                  title: 'Preparing this book',
+                  subtitle: 'Formatting text for comfortable reading',
+                ),
+                errorBuilder: (_, error) => SeluraLoadError(
+                  title: 'This EPUB could not be loaded',
+                  message: 'The file may be damaged or unsupported. '
+                      'You can retry without losing your library.',
+                  onRetry: _retryOpening,
+                ),
                 options: DefaultBuilderOptions(
                   textStyle: _readingSettings.textStyle,
                   paragraphPadding: EdgeInsets.symmetric(
@@ -1271,6 +1340,14 @@ class _EpubBookPageState extends State<EpubBookPage> {
                 ),
               ),
               onChapterChanged: (value) {
+                final chapter = value?.chapter;
+                if (chapter != _currentSpeechChapter) {
+                  _currentSpeechChapter = chapter;
+                  if (_narration.status == NarrationStatus.playing ||
+                      _narration.status == NarrationStatus.paused) {
+                    unawaited(_narration.stop());
+                  }
+                }
                 _saveProgress();
                 _onReadingChapterChanged(
                   value?.chapterNumber,
