@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'manga_sources.dart';
+import 'nhentai_source.dart';
+import 'nhentai_ui.dart';
 
 /// Installable, curated sources—not APK plugins, executable downloads or
 /// third-party scripts. Installing just enables a reviewed API adapter.
 class MangaExtensionsPage extends StatefulWidget {
-  const MangaExtensionsPage({super.key, this.client});
+  const MangaExtensionsPage({super.key, this.client, this.nhentaiClient});
   final MangaDexClient? client;
+  final NhentaiSourceClient? nhentaiClient;
 
   @override
   State<MangaExtensionsPage> createState() => _MangaExtensionsPageState();
@@ -41,10 +44,42 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
     }
   }
 
+  Future<bool> _confirmAdultSource() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Adult source · 18+'),
+        content: const Text(
+          'nHentai hosts adult illustrated material. It is optional, '
+          'and its content is controlled by the source, not Selura. '
+          'Only continue if you are an adult and accessing this '
+          'material is legal where you live. This does not install '
+          'any third-party APK or bypass site restrictions.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('nhentai-age-confirm'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('I am 18 or older'),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   Future<void> _toggle(MangaExtension source) async {
     if (_updating) return;
-    setState(() => _updating = true);
     final next = !_installed.contains(source.id);
+    if (next && source.id == 'nhentai') {
+      if (!await _confirmAdultSource()) return;
+      if (!mounted) return;
+    }
+    setState(() => _updating = true);
     try {
       await _store.setInstalled(source.id, next);
       if (mounted) {
@@ -56,7 +91,7 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
           }
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(next ? 'MangaDex installed' : 'MangaDex removed'),
+          content: Text(source.name + (next ? ' installed' : ' removed')), 
         ));
       }
     } catch (_) {
@@ -145,7 +180,9 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
                               Text(source.name,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w800)),
-                              const Text('Reviewed source · English manga'),
+                              Text(source.id == 'nhentai'
+                                  ? 'Adult galleries · Explicit opt-in'
+                                  : 'Reviewed source · English manga'),
                             ],
                           ),
                         ),
@@ -154,9 +191,12 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
                       Text(source.description),
                       const SizedBox(height: 5),
                       Text(
-                        'MangaDex and scanlation groups retain credit for '
-                        'their content. Content availability and guest '
-                        'limits are controlled by MangaDex.',
+                        source.id == 'nhentai'
+                            ? '18+ · No gallery preview until selected. '
+                              'No CAPTCHA or access-check bypass.'
+                            : 'MangaDex and scanlation groups retain credit '
+                              'for their content. Access limits are '
+                              'controlled by MangaDex.',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -164,7 +204,7 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
                       const SizedBox(height: 14),
                       Row(children: [
                         OutlinedButton(
-                          key: const Key('manga-extension-toggle'),
+                          key: Key('manga-extension-toggle-' + source.id),
                           onPressed: _updating ? null : () => _toggle(source),
                           child: Text(_installed.contains(source.id)
                               ? 'Remove' : 'Install'),
@@ -173,13 +213,17 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
                         if (_installed.contains(source.id))
                           Expanded(
                             child: FilledButton.icon(
-                              key: const Key('manga-extension-browse'),
+                              key: Key('manga-extension-browse-' + source.id),
                               onPressed: () => Navigator.push(
                                 context,
                                 MaterialPageRoute<void>(
-                                  builder: (_) => MangaCatalogPage(
-                                    client: widget.client ?? MangaDexClient(),
-                                  ),
+                                  builder: (_) => source.id == 'nhentai'
+                                      ? NhentaiBrowserPage(
+                                          client: widget.nhentaiClient,
+                                        )
+                                      : MangaCatalogPage(
+                                          client: widget.client ?? MangaDexClient(),
+                                        ),
                                 ),
                               ),
                               icon: const Icon(Icons.search_rounded, size: 18),
@@ -193,9 +237,9 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
               ),
           const SizedBox(height: 16),
           Text(
-            'These are Selura source adapters. Mihon/Tachiyomi APK '
-            'extensions cannot be installed into Selura; no outside '
-            'executable code is downloaded or run.',
+            'These are reviewed Selura source adapters, not external '
+            'Mihon/Tachiyomi APKs. Adult sources remain opt-in and '
+            'online-only. No external executable code is installed.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurfaceVariant,
             ),
