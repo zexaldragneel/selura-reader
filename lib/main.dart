@@ -914,7 +914,7 @@ class _EmptyLibrary extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Build your Selura library',
+                'Your library begins here',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -922,7 +922,7 @@ class _EmptyLibrary extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Import EPUB and PDF books for private, offline reading.',
+                'Bring your favorite EPUB and PDF stories together. Your books stay private and available offline.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
@@ -930,7 +930,7 @@ class _EmptyLibrary extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onImport,
                 icon: const Icon(Icons.upload_file_rounded),
-                label: const Text('Import EPUB or PDF'),
+                label: const Text('Add your first book'),
               ),
             ],
           ),
