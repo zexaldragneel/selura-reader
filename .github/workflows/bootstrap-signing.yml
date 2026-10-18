@@ -4,6 +4,13 @@ name: Bootstrap Selura Signing Key
 # GitHub Actions repository secret. Never publish a plaintext keystore.
 on:
   workflow_dispatch:
+  # One-time setup may also be started by committing this exact trigger
+  # from the GitHub-connected development workflow. The key itself is created
+  # only when absent, and the workflow refuses to regenerate it.
+  push:
+    branches: [main]
+    paths:
+      - android/signing/START_SIGNING_SETUP
 
 permissions:
   contents: write
