@@ -281,13 +281,11 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                 OutlinedButton.icon(
                   onPressed: player.voices.isEmpty ? null : _chooseVoice,
                   icon: const Icon(Icons.record_voice_over_rounded),
-                  label: Flexible(
-                    child: Text(
-                      player.selectedVoice?.label ??
-                          'Android system voice',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
+                  label: Text(
+                    player.selectedVoice?.label ??
+                        'Android system voice',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
                 const SizedBox(height: 12),
