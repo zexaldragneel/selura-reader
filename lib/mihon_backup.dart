@@ -430,9 +430,13 @@ class MihonImportReport {
 }
 
 class MihonBackupStore {
-  const MihonBackupStore();
+  const MihonBackupStore({this.directory});
+
+  /// Tests supply an isolated directory; Android uses app-private storage.
+  final Directory? directory;
+
   Future<File> _file() async {
-    final dir = await getApplicationSupportDirectory();
+    final dir = directory ?? await getApplicationSupportDirectory();
     return File(dir.path + '/mihon_library_v1.json');
   }
   Future<MihonLibraryData> preview(File backup) =>
