@@ -459,8 +459,10 @@ class _LibraryPageState extends State<LibraryPage> {
     switch (action) {
       case _LibraryAction.backup:
         unawaited(_exportLibraryBackup());
+        break;
       case _LibraryAction.restore:
         unawaited(_restoreLibraryBackup());
+        break;
     }
   }
 
@@ -828,8 +830,8 @@ class _LibraryPageState extends State<LibraryPage> {
                     .colorScheme
                     .surface
                     .withValues(alpha: 0.94),
-                child: const SeluraLoadingView(
-                  key: Key('selura-import-loading'),
+                child: SeluraLoadingView(
+                  key: const Key('selura-import-loading'),
                   title: busyTitle,
                   subtitle: busySubtitle,
                   compact: true,
