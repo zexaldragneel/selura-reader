@@ -1208,6 +1208,17 @@ class PdfBookPage extends StatefulWidget {
 class _PdfBookPageState extends State<PdfBookPage> {
   PdfControllerPinch? controller;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+  final ReadingProgressStore _progressStore = const ReadingProgressStore();
+  int? _visiblePage;
+  int? _totalPages;
+
+  Future<void> _recordPdfPageCount(int total) async {
+    try {
+      await _progressStore.recordPdfTotal(widget.book.path, total);
+    } catch (_) {
+      // Missing optional metadata never blocks PDF reading.
+    }
+  }
 
   void _bookmarkMessage(String text) {
     if (!mounted) return;
@@ -1277,7 +1288,16 @@ class _PdfBookPageState extends State<PdfBookPage> {
       pdfController.dispose();
       return;
     }
-    setState(() => controller = pdfController);
+    setState(() {
+      controller = pdfController;
+      _visiblePage = savedPage < 1 ? 1 : savedPage;
+      final storedTotal = prefs.getInt(
+        ReadingProgressStore.pdfTotalKey(widget.book.path),
+      );
+      _totalPages = storedTotal != null && storedTotal > 0
+          ? storedTotal
+          : null;
+    });
   }
 
   Future<void> _savePage(int page) async {
@@ -1320,11 +1340,35 @@ class _PdfBookPageState extends State<PdfBookPage> {
           ),
         ],
       ),
+      bottomNavigationBar: activeController == null
+          ? null
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
+                child: _BookProgressIndicator(
+                  progress: ReadingProgressSummary.pdf(
+                    page: _visiblePage,
+                    totalPages: _totalPages,
+                  ),
+                ),
+              ),
+            ),
       body: activeController == null
           ? const Center(child: CircularProgressIndicator())
           : PdfViewPinch(
               controller: activeController,
+              onDocumentLoaded: (document) {
+                final total = document.pagesCount;
+                if (mounted && total > 0) {
+                  setState(() => _totalPages = total);
+                }
+                unawaited(_recordPdfPageCount(total));
+              },
               onPageChanged: (page) {
+                if (mounted && _visiblePage != page) {
+                  setState(() => _visiblePage = page);
+                }
                 _savePage(page);
               },
             ),
