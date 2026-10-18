@@ -276,18 +276,26 @@ class SeluraLibraryBanner extends StatelessWidget {
               const SizedBox(height: 19),
               Row(
                 children: [
-                  _ShelfMetric(
-                    value: bookCount.toString(),
-                    label: bookCount == 1 ? 'BOOK' : 'BOOKS',
-                    ink: ink,
+                  Expanded(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _ShelfMetric(
+                          value: bookCount.toString(),
+                          label: bookCount == 1 ? 'BOOK' : 'BOOKS',
+                          ink: ink,
+                        ),
+                        _ShelfMetric(
+                          value: favoriteCount.toString(),
+                          label: 'FAVORITES',
+                          ink: ink,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 13),
-                  _ShelfMetric(
-                    value: favoriteCount.toString(),
-                    label: 'FAVORITES',
-                    ink: ink,
-                  ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   IconButton.filled(
                     key: const Key('selura-banner-import'),
                     tooltip: 'Import EPUB or PDF',
