@@ -15,6 +15,7 @@ import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'comic_archive.dart';
 import 'comic_reader.dart';
+import 'manga_online_ui.dart';
 import 'cover_decode.dart';
 import 'library_backup.dart';
 import 'reader_settings.dart';
@@ -647,6 +648,17 @@ class _LibraryPageState extends State<LibraryPage> {
           ],
         ),
         actions: [
+          IconButton(
+            key: const Key('selura-manga-extensions'),
+            tooltip: 'Manga extensions',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const MangaExtensionsPage(),
+              ),
+            ),
+            icon: const Icon(Icons.extension_rounded),
+          ),
           PopupMenuButton<_LibrarySort>(
             tooltip: 'Sort library',
             initialValue: sort,
