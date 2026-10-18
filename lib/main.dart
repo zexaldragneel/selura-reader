@@ -921,6 +921,38 @@ class EpubBookPage extends StatefulWidget {
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+  final ReadingProgressStore _progressStore = const ReadingProgressStore();
+  String? _chapterStatus;
+  int? _lastChapterNumber;
+  String? _lastChapterTitle;
+  Future<void> _chapterWriteQueue = Future<void>.value();
+
+  void _onReadingChapterChanged(int? chapterNumber, String? chapterTitle) {
+    if (chapterNumber == null || chapterNumber < 1) return;
+    final title = ReadingProgressSummary.normalizedChapterTitle(chapterTitle);
+    if (_lastChapterNumber == chapterNumber && _lastChapterTitle == title) {
+      return;
+    }
+    _lastChapterNumber = chapterNumber;
+    _lastChapterTitle = title;
+    final currentLabel = ReadingProgressSummary.epub(
+      cfi: 'current-position',
+      chapterNumber: chapterNumber,
+      chapterTitle: title,
+    ).label;
+    if (mounted && _chapterStatus != currentLabel) {
+      setState(() => _chapterStatus = currentLabel);
+    }
+    _chapterWriteQueue = _chapterWriteQueue.then((_) {
+      return _progressStore.recordEpubChapter(
+        widget.book.path,
+        chapterNumber: chapterNumber,
+        chapterTitle: title,
+      );
+    }).catchError((Object _) {
+      // Metadata is supplementary: bookmark and reading resume still work.
+    });
+  }
   EpubReadingSettings _readingSettings = const EpubReadingSettings();
   bool _readingSettingsLoaded = false;
   Future<void> _settingsWriteQueue = Future<void>.value();
@@ -1017,6 +1049,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
   Future<void> _restoreProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final savedCfi = prefs.getString(_epubProgressKey(widget.book));
+    final savedSummary = _progressStore.read(
+      prefs,
+      path: widget.book.path,
+      type: 'epub',
+    );
     final epubController = EpubController(
       document: EpubDocument.openFile(File(widget.book.path)),
       epubCfi: savedCfi,
@@ -1026,7 +1063,13 @@ class _EpubBookPageState extends State<EpubBookPage> {
       epubController.dispose();
       return;
     }
-    setState(() => controller = epubController);
+    setState(() {
+      controller = epubController;
+      if (savedSummary.label != 'Not started' &&
+          savedSummary.label != 'Resume available') {
+        _chapterStatus = savedSummary.label;
+      }
+    });
   }
 
   Future<void> _saveProgress() async {
@@ -1091,6 +1134,26 @@ class _EpubBookPageState extends State<EpubBookPage> {
           ),
         ],
       ),
+      bottomNavigationBar: _chapterStatus == null
+          ? null
+          : ColoredBox(
+              color: palette.background,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+                  child: Text(
+                    _chapterStatus!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: palette.foreground.withValues(alpha: 0.75),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ),
       body: activeController == null
           ? Center(child: CircularProgressIndicator(color: palette.accent))
           : EpubView(
@@ -1121,8 +1184,12 @@ class _EpubBookPageState extends State<EpubBookPage> {
                   ),
                 ),
               ),
-              onChapterChanged: (_) {
+              onChapterChanged: (value) {
                 _saveProgress();
+                _onReadingChapterChanged(
+                  value?.chapterNumber,
+                  value?.chapter?.Title,
+                );
               },
             ),
     );
