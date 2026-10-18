@@ -64,13 +64,13 @@ List<int> _sampleBackup({
   ];
   final categoryOne = [
     ..._text(1, 'Favorites'),
-    ..._num(2, 2),
-    ..._num(3, 7),
+    ..._num(2, 7),
+    ..._num(3, 71),
   ];
   final categoryTwo = [
     ..._text(1, 'On Hold'),
-    ..._num(2, 3),
-    ..._num(3, 9),
+    ..._num(2, 9),
+    ..._num(3, 91),
   ];
   final sourceMeta = [
     ..._text(1, 'MangaDex'),
@@ -112,7 +112,7 @@ void main() {
     expect(book.sourceName, 'MangaDex');
     expect(book.favorite, isTrue);
     expect(book.dateAdded, 1729000000000);
-    expect(book.categoryIds, [7, 9]);
+    expect(book.categoryOrders, [7, 9]);
     expect(book.chapters.first.read, isTrue);
     expect(book.chapters.first.bookmarked, isTrue);
     expect(book.chapters.first.lastPageRead, 3);
