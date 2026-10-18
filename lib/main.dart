@@ -1190,49 +1190,71 @@ class _GridBookCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      color: colors.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(21),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.26),
+        ),
+      ),
+      child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _BookCover(book: book, coverPath: coverPath),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: IconButton.filledTonal(
-                      tooltip: book.favorite
-                          ? 'Remove from favorites'
-                          : 'Add to favorites',
-                      onPressed: onFavorite,
-                      icon: Icon(
-                        book.favorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _BookCover(
+                      book: book,
+                      coverPath: coverPath,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: IconButton.filledTonal(
+                        tooltip: book.favorite
+                            ? 'Remove from favorites'
+                            : 'Add to favorites',
+                        onPressed: onFavorite,
+                        icon: Icon(
+                          book.favorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              book.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 3),
-            _BookProgressIndicator(progress: progress),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                book.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w750,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              _BookProgressIndicator(progress: progress),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ListBookCard extends StatelessWidget {
