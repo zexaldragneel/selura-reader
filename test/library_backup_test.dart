@@ -187,4 +187,53 @@ void main() {
     );
     expect(prefs.getStringList('books'), isNull);
   });
+
+  test('CBZ backups retain manga originals, page progress and bookmarks', () async {
+    final manga = File(root.path + '/volume.cbz');
+    final writer = ZipFileEncoder();
+    writer.create(manga.path);
+    final imageFile = await File(root.path + '/page1.png')
+        .writeAsBytes(<int>[137, 80, 78, 71]);
+    await writer.addFile(imageFile, 'page1.png');
+    writer.closeSync();
+    await prefs.setInt(ReadingProgressStore.comicPageKey(manga.path), 13);
+    await prefs.setInt(ReadingProgressStore.comicTotalKey(manga.path), 99);
+    await prefs.setStringList('selura_bookmarks_v1:' + manga.path, [
+      jsonEncode({
+        'id': 'cbz-1',
+        'location': '13',
+        'label': 'Manga page 13',
+        'createdAt': 123,
+      }),
+    ]);
+    final output = File(root.path + '/manga-library.zip');
+    await const SeluraBackupService().export(
+      books: [BackupBook(path: manga.path, title: 'Volume 1', type: 'cbz')],
+      prefs: prefs,
+      output: output,
+    );
+    final result = await const SeluraBackupService().restore(
+      backup: output, documents: restored, prefs: prefs,
+    );
+    expect(result.imported, 0);
+    expect(result.skipped, 1);
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final otherPrefs = await SharedPreferences.getInstance();
+    final otherDir = Directory(root.path + '/another-device');
+    final recovered = await const SeluraBackupService().restore(
+      backup: output, documents: otherDir, prefs: otherPrefs,
+    );
+    expect(recovered.imported, 1);
+    final item = jsonDecode(otherPrefs.getStringList('books')!.single)
+        as Map<String, dynamic>;
+    expect(item['type'], 'cbz');
+    expect(item['title'], 'Volume 1');
+    final newPath = item['path'] as String;
+    expect(await File(newPath).readAsBytes(), await manga.readAsBytes());
+    expect(otherPrefs.getInt(ReadingProgressStore.comicPageKey(newPath)), 13);
+    expect(otherPrefs.getInt(ReadingProgressStore.comicTotalKey(newPath)), 99);
+    expect(otherPrefs.getStringList('selura_bookmarks_v1:' + newPath),
+        hasLength(1));
+  });
 }
