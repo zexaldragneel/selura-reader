@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'reader_settings.dart';
+import 'reading_progress.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -98,7 +99,7 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   List<Book> books = [];
-  final Map<String, String> progressLabels = {};
+  final Map<String, ReadingProgressSummary> progressLabels = {};
   final Map<String, String> coverPaths = {};
   final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
@@ -166,17 +167,14 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _refreshProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final next = <String, String>{};
+    const store = ReadingProgressStore();
+    final next = <String, ReadingProgressSummary>{};
     for (final book in books) {
-      if (book.type == 'pdf') {
-        final page = prefs.getInt(_pdfProgressKey(book));
-        next[book.path] = page == null ? 'Not started' : 'Page $page';
-      } else {
-        final cfi = prefs.getString(_epubProgressKey(book));
-        next[book.path] = cfi == null || cfi.isEmpty
-            ? 'Not started'
-            : 'Resume available';
-      }
+      next[book.path] = store.read(
+        prefs,
+        path: book.path,
+        type: book.type,
+      );
     }
     if (!mounted) return;
     setState(() {
@@ -448,7 +446,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         return _ContinueCard(
                           book: book,
                           coverPath: coverPaths[book.path],
-                          progress: progressLabels[book.path] ?? 'Not started',
+                          progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                           onTap: () => _openBook(book),
                         );
                       },
@@ -495,7 +493,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       return _GridBookCard(
                         book: book,
                         coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? 'Not started',
+                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                         onTap: () => _openBook(book),
                         onFavorite: () => _toggleFavorite(book),
                       );
@@ -512,7 +510,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       return _ListBookCard(
                         book: book,
                         coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? 'Not started',
+                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                         opened: _relativeOpened(book),
                         onTap: () => _openBook(book),
                         onFavorite: () => _toggleFavorite(book),
@@ -672,10 +670,43 @@ class _BookCover extends StatelessWidget {
   }
 }
 
+class _BookProgressIndicator extends StatelessWidget {
+  const _BookProgressIndicator({required this.progress});
+
+  final ReadingProgressSummary progress;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            progress.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (progress.pageFraction != null) ...[
+            const SizedBox(height: 5),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progress.pageFraction,
+                minHeight: 4,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest,
+              ),
+            ),
+          ],
+        ],
+      );
+}
+
 class _ContinueCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final VoidCallback onTap;
 
   const _ContinueCard({
@@ -718,7 +749,7 @@ class _ContinueCard extends StatelessWidget {
                               ),
                         ),
                         const SizedBox(height: 8),
-                        Text(progress),
+                        _BookProgressIndicator(progress: progress),
                         const Spacer(),
                         Row(
                           children: [
@@ -744,7 +775,7 @@ class _ContinueCard extends StatelessWidget {
 class _GridBookCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
 
@@ -796,12 +827,7 @@ class _GridBookCard extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 3),
-            Text(
-              progress,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            _BookProgressIndicator(progress: progress),
           ],
         ),
       );
@@ -810,7 +836,7 @@ class _GridBookCard extends StatelessWidget {
 class _ListBookCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final String opened;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
@@ -854,7 +880,9 @@ class _ListBookCard extends StatelessWidget {
                             ),
                       ),
                       const SizedBox(height: 7),
-                      Text('${book.type.toUpperCase()} • $progress'),
+                      Text(book.type.toUpperCase()),
+                      const SizedBox(height: 4),
+                      _BookProgressIndicator(progress: progress),
                       const SizedBox(height: 3),
                       Text(
                         opened,
