@@ -20,6 +20,48 @@ import 'selura_ui.dart';
 
 void main() => runApp(const SeluraApp());
 
+ThemeData _seluraTheme(Brightness brightness) {
+  final dark = brightness == Brightness.dark;
+  final colors = ColorScheme.fromSeed(
+    seedColor: dark ? const Color(0xFFB9A5ED) : const Color(0xFF8066B8),
+    brightness: brightness,
+  );
+  return ThemeData(
+    colorScheme: colors,
+    useMaterial3: true,
+    scaffoldBackgroundColor:
+        dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+    appBarTheme: AppBarTheme(
+      elevation: 0,
+      backgroundColor:
+          dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+      surfaceTintColor: Colors.transparent,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      color: colors.surfaceContainerLow,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+    ),
+  );
+}
+
 class SeluraApp extends StatelessWidget {
   const SeluraApp({super.key});
 
@@ -27,19 +69,8 @@ class SeluraApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Selura',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF8D75C9),
-          ),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFB7A2E9),
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
+        theme: _seluraTheme(Brightness.light),
+        darkTheme: _seluraTheme(Brightness.dark),
         themeMode: ThemeMode.system,
         home: const LibraryPage(),
       );
