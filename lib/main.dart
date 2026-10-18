@@ -204,15 +204,29 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _warmCovers(Iterable<Book> requestedBooks) async {
-    for (final book in requestedBooks) {
-      if (!mounted) return;
-      if (book.type != 'epub' || coverPaths.containsKey(book.path)) continue;
-      final cachedPath = await coverCache.load(book.path);
-      if (!mounted) return;
-      if (cachedPath != null) {
-        setState(() => coverPaths[book.path] = cachedPath);
+    final candidates = requestedBooks
+        .where(
+          (book) => book.type == 'epub' &&
+              !coverPaths.containsKey(book.path),
+        )
+        .toList();
+    var next = 0;
+
+    Future<void> worker() async {
+      while (mounted && next < candidates.length) {
+        // At most three background extraction jobs run concurrently.
+        final book = candidates[next++];
+        final cachedPath = await coverCache.load(book.path);
+        if (!mounted) return;
+        if (cachedPath != null &&
+            coverPaths[book.path] != cachedPath) {
+          setState(() => coverPaths[book.path] = cachedPath);
+        }
       }
     }
+
+    final count = candidates.length < 3 ? candidates.length : 3;
+    await Future.wait(List.generate(count, (_) => worker()));
   }
 
   Future<void> _saveBooks() async {
@@ -281,7 +295,33 @@ class _LibraryPageState extends State<LibraryPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import failed: $e')),
+          SnackBar(
+            content: const Text('Could not import this book.'),
+            action: SnackBarAction(
+              label: 'Details',
+              onPressed: () {
+                if (!mounted) return;
+                showDialog<void>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Import details'),
+                    content: SizedBox(
+                      width: double.maxFinite,
+                      child: SingleChildScrollView(
+                        child: SelectableText(e.toString()),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         );
       }
     } finally {
