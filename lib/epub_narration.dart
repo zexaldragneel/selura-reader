@@ -286,6 +286,7 @@ class EpubNarrationController extends ChangeNotifier {
   int _index = 0;
   List<String> _utterances = <String>[];
   NarrationChapterPlan? _plan;
+  String? _preparedChapterHtml;
   int _selectedParagraph = 0;
 
   NarrationStatus status = NarrationStatus.idle;
@@ -364,6 +365,9 @@ class EpubNarrationController extends ChangeNotifier {
   /// uses the resulting local speech plan without parsing XHTML again.
   Future<void> prepareChapter(String html, {String? title}) async {
     if (_closed) return;
+    // The controls are a modal: closing and reopening them must not restart
+    // an already-speaking chapter or throw away its selected paragraph.
+    if (_plan != null && _preparedChapterHtml == html) return;
     await initialize();
     if (!_ready || _closed) return;
 
@@ -377,6 +381,7 @@ class EpubNarrationController extends ChangeNotifier {
       final plan = await compute(NarrationText.chapterPlan, html);
       if (_closed || generation != _session) return;
       _plan = plan;
+      _preparedChapterHtml = html;
       _utterances = plan.utterances;
       chapterName = title?.trim().isNotEmpty == true
           ? title!.trim()
