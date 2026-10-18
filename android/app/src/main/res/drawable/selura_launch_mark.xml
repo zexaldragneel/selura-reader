@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:fillColor="@color/selura_launch_symbol"
+        android:pathData="M15,24 C26,18 39,19 48,27 C57,19 70,18 81,24 L81,72 C68,68 56,72 48,80 C40,72 28,68 15,72 Z" />
+    <path
+        android:strokeColor="@color/selura_launch_page"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M48,29 L48,76" />
+    <path
+        android:strokeColor="@color/selura_launch_page"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M24,32 C33,29 39,32 42,34 M54,34 C59,32 67,29 73,32 M24,44 C31,41 38,43 42,46 M54,46 C60,43 66,41 73,44" />
+</vector>
