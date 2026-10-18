@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selura_reader/epub_narration.dart';
+import 'package:selura_reader/epub_narration_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeNarrationEngine implements NarrationEngine {
@@ -117,7 +119,10 @@ void main() {
     await player.stop();
     await _pumpMicrotasks();
     expect(player.status, NarrationStatus.idle);
-    expect(player.totalParts, 0);
+    expect(player.totalParts, greaterThan(1));
+    // Stop retains the parsed chapter so playback can restart without
+    // reparsing large XHTML; the current paragraph remains selected.
+    expect(player.spokenParts, 0);
     expect(engine.stops, greaterThan(0));
 
     player.close();
@@ -152,4 +157,171 @@ void main() {
     expect(engine.spoken, isEmpty);
     player.close();
   });
+  test('paragraph plan preserves individual speech boundaries and offsets', () {
+    const html = '''
+      <html><body><h2>Chapter</h2><p>First paragraph.</p>
+      <p>Second paragraph has two sentences. Keep reading.</p>
+      <p>Final paragraph.</p></body></html>
+    ''';
+    final plan = NarrationText.chapterPlan(html);
+    expect(plan.paragraphs, hasLength(4));
+    expect(plan.paragraphs[2], contains('Second paragraph'));
+    expect(plan.paragraphStarts.length, 4);
+    for (var index = 0; index < plan.paragraphs.length; index++) {
+      final first = plan.segmentForParagraph(index);
+      final last = index == plan.paragraphs.length - 1
+          ? plan.utterances.length
+          : plan.segmentForParagraph(index + 1);
+      expect(first, lessThan(last));
+      for (var part = first; part < last; part++) {
+        expect(plan.segmentParagraphs[part], index);
+        expect(plan.utterances[part], isNotEmpty);
+        expect(plan.utterances[part].length,
+            lessThanOrEqualTo(NarrationText.maxUtteranceCharacters));
+      }
+    }
+    expect(() => plan.segmentForParagraph(-1), throwsRangeError);
+    expect(() => plan.segmentForParagraph(4), throwsRangeError);
+  });
+
+  test('seeking to a chosen paragraph skips prior speech text', () async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    await player.prepareChapter(
+      '<p>Start here.</p><p>Jump straight to this passage.</p>'
+      '<p>And finish here.</p>',
+      title: 'Chapter 2',
+    );
+    expect(player.status, NarrationStatus.idle);
+    expect(player.paragraphs, hasLength(3));
+    expect(engine.spoken, isEmpty);
+
+    await player.playFromParagraph(1);
+    await _pumpMicrotasks();
+    expect(player.currentParagraph, 1);
+    expect(engine.spoken, ['Jump straight to this passage.']);
+
+    await player.skipParagraph(1);
+    await _pumpMicrotasks();
+    expect(player.currentParagraph, 2);
+    expect(engine.spoken.last, 'And finish here.');
+
+    await player.pause();
+    player.resume();
+    await _pumpMicrotasks();
+    expect(engine.spoken.last, 'And finish here.');
+
+    await player.stop();
+    expect(player.paragraphs, hasLength(3));
+    expect(player.currentParagraph, 2);
+
+    // Stopped narration still has its cached plan.
+    await player.playFromParagraph(0);
+    await _pumpMicrotasks();
+    expect(engine.spoken.last, 'Start here.');
+    player.close();
+  });
+
+  test('invalid paragraph seeks are safely ignored', () async {
+    final engine = _FakeNarrationEngine();
+    final player = EpubNarrationController(engine: engine);
+    await player.prepareChapter('<p>Only paragraph.</p>');
+    await player.playFromParagraph(-1);
+    await player.playFromParagraph(99);
+    await player.skipParagraph(-1);
+    await player.skipParagraph(1);
+    expect(engine.spoken, isEmpty);
+    expect(player.currentParagraph, 0);
+    player.close();
+  });
+
+  test('long paragraphs remain seekable and resume inside their chunk', () async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    final longParagraph = List.filled(120, 'Read this sentence.').join(' ');
+    await player.prepareChapter(
+      '<p>Introduction.</p><p>$longParagraph</p><p>The end.</p>',
+    );
+    expect(player.paragraphs.length, 3);
+    await player.playFromParagraph(1);
+    await _pumpMicrotasks();
+    expect(player.currentParagraph, 1);
+    expect(engine.spoken.first, startsWith('Read this sentence.'));
+    expect(engine.spoken.first.length,
+        lessThanOrEqualTo(NarrationText.maxUtteranceCharacters));
+    await player.pause();
+    player.resume();
+    await _pumpMicrotasks();
+    expect(engine.spoken.last, engine.spoken.first);
+    player.close();
+  });
+
+  test('reopening the TTS panel retains the selected paragraph and playback', () async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    const html = '<p>Introduction.</p><p>Chosen narration passage.</p>';
+    await player.prepareChapter(html);
+    await player.playFromParagraph(1);
+    await _pumpMicrotasks();
+    final stoppedCount = engine.stops;
+    final spokenCount = engine.spoken.length;
+
+    // A second panel opening must reuse the already-prepared chapter.
+    await player.prepareChapter(html);
+    expect(player.status, NarrationStatus.playing);
+    expect(player.currentParagraph, 1);
+    expect(engine.stops, stoppedCount);
+    expect(engine.spoken, hasLength(spokenCount));
+
+    await player.prepareChapter('<p>Another chapter entirely.</p>');
+    expect(player.status, NarrationStatus.idle);
+    expect(player.currentParagraph, 0);
+    expect(player.paragraphs, ['Another chapter entirely.']);
+    player.close();
+  });
+
+  testWidgets('the paragraph picker starts speaking the selected passage',
+      (tester) async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    const html = '<p>First section.</p><p>Selected second section.</p>'
+        '<p>Last section.</p>';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EpubNarrationSheet(
+            narration: player,
+            chapterHtml: html,
+            chapterTitle: 'Sample chapter',
+          ),
+        ),
+      ),
+    );
+    // An isolate computes the chapter speech plan; wait for its completion.
+    for (var attempt = 0;
+        attempt < 40 && player.paragraphs.isEmpty;
+        attempt++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    expect(player.paragraphs, hasLength(3));
+    final choose = find.byKey(const Key('tts-choose-paragraph'));
+    await tester.ensureVisible(choose);
+    await tester.tap(choose);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tts-paragraph-picker')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('tts-paragraph-1')));
+    await tester.pumpAndSettle();
+    expect(player.currentParagraph, 1);
+    expect(engine.spoken, contains('Selected second section.'));
+    expect(find.byKey(const Key('tts-choose-paragraph')), findsOneWidget);
+
+    await player.stop();
+    await tester.pumpWidget(const SizedBox.shrink());
+    player.close();
+  });
+
 }

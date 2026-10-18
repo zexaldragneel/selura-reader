@@ -533,127 +533,153 @@ class _LibraryPageState extends State<LibraryPage> {
                       )
                     : books.isEmpty
                         ? _EmptyLibrary(onImport: busy ? null : _import)
-                        : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-              children: [
-                SeluraLibraryBanner(
-                  bookCount: books.length,
-                  onImport: busy ? null : _import,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: searchController,
-                  onChanged: (value) => setState(() => query = value),
-                  decoration: InputDecoration(
-                    hintText: 'Search your library',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: query.isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: 'Clear search',
-                            onPressed: _clearSearch,
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                if (continueReading.isNotEmpty) ...[
-                  const SizedBox(height: 28),
-                  Text(
-                    'Continue reading',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 158,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: continueReading.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final book = continueReading[index];
-                        return _ContinueCard(
-                          book: book,
-                          coverPath: coverPaths[book.path],
-                          progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
-                          onTap: () => _openBook(book),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 28),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Library',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
+                        : CustomScrollView(
+                        key: const PageStorageKey<String>('selura-library-scroll'),
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                            sliver: SliverToBoxAdapter(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SeluraLibraryBanner(
+                                    bookCount: books.length,
+                                    onImport: busy ? null : _import,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  TextField(
+                                    controller: searchController,
+                                    onChanged: (value) =>
+                                        setState(() => query = value),
+                                    decoration: InputDecoration(
+                                      hintText: 'Search your library',
+                                      prefixIcon: const Icon(Icons.search_rounded),
+                                      suffixIcon: query.isEmpty
+                                          ? null
+                                          : IconButton(
+                                              tooltip: 'Clear search',
+                                              onPressed: _clearSearch,
+                                              icon: const Icon(Icons.close_rounded),
+                                            ),
+                                      filled: true,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                    ),
+                                  ),
+                                  if (continueReading.isNotEmpty) ...[
+                                    const SizedBox(height: 28),
+                                    Text(
+                                      'Continue reading',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(fontWeight: FontWeight.w700),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      height: 158,
+                                      child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: continueReading.length,
+                                        separatorBuilder: (_, __) =>
+                                            const SizedBox(width: 12),
+                                        itemBuilder: (context, index) {
+                                          final book = continueReading[index];
+                                          return _ContinueCard(
+                                            book: book,
+                                            coverPath: coverPaths[book.path],
+                                            progress: progressLabels[book.path] ??
+                                                ReadingProgressSummary.notStarted,
+                                            onTap: () => _openBook(book),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 28),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Library',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${visibleBooks.length} ${visibleBooks.length == 1 ? 'book' : 'books'}',
+                                        style: Theme.of(context).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              ),
                             ),
+                          ),
+                          if (visibleBooks.isEmpty)
+                            const SliverPadding(
+                              padding: EdgeInsets.symmetric(vertical: 56),
+                              sliver: SliverToBoxAdapter(
+                                child: Center(
+                                  child: Text('No books match your search.'),
+                                ),
+                              ),
+                            )
+                          else if (gridView)
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                              sliver: SliverGrid.builder(
+                                itemCount: visibleBooks.length,
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      MediaQuery.sizeOf(context).width >= 700 ? 4 : 2,
+                                  crossAxisSpacing: 14,
+                                  mainAxisSpacing: 18,
+                                  childAspectRatio: 0.63,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final book = visibleBooks[index];
+                                  return _GridBookCard(
+                                    key: ValueKey(book.path),
+                                    book: book,
+                                    coverPath: coverPaths[book.path],
+                                    progress: progressLabels[book.path] ??
+                                        ReadingProgressSummary.notStarted,
+                                    onTap: () => _openBook(book),
+                                    onFavorite: () => _toggleFavorite(book),
+                                  );
+                                },
+                              ),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                              sliver: SliverList.separated(
+                                itemCount: visibleBooks.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 10),
+                                itemBuilder: (context, index) {
+                                  final book = visibleBooks[index];
+                                  return _ListBookCard(
+                                    key: ValueKey(book.path),
+                                    book: book,
+                                    coverPath: coverPaths[book.path],
+                                    progress: progressLabels[book.path] ??
+                                        ReadingProgressSummary.notStarted,
+                                    opened: _relativeOpened(book),
+                                    onTap: () => _openBook(book),
+                                    onFavorite: () => _toggleFavorite(book),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      '${visibleBooks.length} ${visibleBooks.length == 1 ? 'book' : 'books'}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (visibleBooks.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 56),
-                    child: Center(child: Text('No books match your search.')),
-                  )
-                else if (gridView)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: visibleBooks.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount:
-                          MediaQuery.sizeOf(context).width >= 700 ? 4 : 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 0.63,
-                    ),
-                    itemBuilder: (context, index) {
-                      final book = visibleBooks[index];
-                      return _GridBookCard(
-                        book: book,
-                        coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
-                        onTap: () => _openBook(book),
-                        onFavorite: () => _toggleFavorite(book),
-                      );
-                    },
-                  )
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: visibleBooks.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final book = visibleBooks[index];
-                      return _ListBookCard(
-                        book: book,
-                        coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
-                        opened: _relativeOpened(book),
-                        onTap: () => _openBook(book),
-                        onFavorite: () => _toggleFavorite(book),
-                      );
-                    },
-                  ),
-              ],
-            ),
           ),
           if (busy)
             Positioned.fill(
@@ -934,6 +960,7 @@ class _GridBookCard extends StatelessWidget {
   final VoidCallback onFavorite;
 
   const _GridBookCard({
+    super.key,
     required this.book,
     this.coverPath,
     required this.progress,
@@ -996,6 +1023,7 @@ class _ListBookCard extends StatelessWidget {
   final VoidCallback onFavorite;
 
   const _ListBookCard({
+    super.key,
     required this.book,
     this.coverPath,
     required this.progress,
