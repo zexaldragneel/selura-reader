@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Additional plaintext private signing formats must never be committed.
+**/*.p12
+**/*.pfx
+**/*.pem
