@@ -745,7 +745,15 @@ class _LibraryPageState extends State<LibraryPage> {
                         onRetry: _load,
                       )
                     : books.isEmpty
-                        ? _EmptyLibrary(onImport: busy ? null : _import)
+                        ? _EmptyLibrary(
+                             onImport: busy ? null : _import,
+                             onMihon: () => Navigator.push(
+                               context,
+                               MaterialPageRoute<void>(
+                                 builder: (_) => const MihonLibraryPage(),
+                               ),
+                             ),
+                           )
                         : CustomScrollView(
                         key: const PageStorageKey<String>('selura-library-scroll'),
                         slivers: [
@@ -938,8 +946,12 @@ class _LibraryPageState extends State<LibraryPage> {
 
 class _EmptyLibrary extends StatelessWidget {
   final VoidCallback? onImport;
+  final VoidCallback onMihon;
 
-  const _EmptyLibrary({required this.onImport});
+  const _EmptyLibrary({
+    required this.onImport,
+    required this.onMihon,
+  });
 
   @override
   Widget build(BuildContext context) => Center(
@@ -980,6 +992,13 @@ class _EmptyLibrary extends StatelessWidget {
                 onPressed: onImport,
                 icon: const Icon(Icons.upload_file_rounded),
                 label: const Text('Add your first book'),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                key: const Key('selura-empty-mihon-library'),
+                onPressed: onMihon,
+                icon: const Icon(Icons.collections_bookmark_outlined),
+                label: const Text('Restore or browse Mihon manga'),
               ),
             ],
           ),
