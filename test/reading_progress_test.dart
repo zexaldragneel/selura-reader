@@ -112,7 +112,7 @@ void main() {
       'Name Here',
     );
     expect(ReadingProgressSummary.normalizedChapterTitle('   '), isNull);
-    final longTitle = 'X' * 120;
+    final longTitle = List.filled(120, 'X').join();
     final shortened = ReadingProgressSummary.normalizedChapterTitle(longTitle);
     expect(shortened, isNotNull);
     expect(shortened!.runes.length, 56);
