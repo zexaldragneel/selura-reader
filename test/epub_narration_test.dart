@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:selura_reader/epub_narration.dart';
+import 'package:selura_reader/epub_narration_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeNarrationEngine implements NarrationEngine {
@@ -251,6 +253,74 @@ void main() {
     player.resume();
     await _pumpMicrotasks();
     expect(engine.spoken.last, engine.spoken.first);
+    player.close();
+  });
+
+  test('reopening the TTS panel retains the selected paragraph and playback', () async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    const html = '<p>Introduction.</p><p>Chosen narration passage.</p>';
+    await player.prepareChapter(html);
+    await player.playFromParagraph(1);
+    await _pumpMicrotasks();
+    final stoppedCount = engine.stops;
+    final spokenCount = engine.spoken.length;
+
+    // A second panel opening must reuse the already-prepared chapter.
+    await player.prepareChapter(html);
+    expect(player.status, NarrationStatus.playing);
+    expect(player.currentParagraph, 1);
+    expect(engine.stops, stoppedCount);
+    expect(engine.spoken, hasLength(spokenCount));
+
+    await player.prepareChapter('<p>Another chapter entirely.</p>');
+    expect(player.status, NarrationStatus.idle);
+    expect(player.currentParagraph, 0);
+    expect(player.paragraphs, ['Another chapter entirely.']);
+    player.close();
+  });
+
+  testWidgets('the paragraph picker starts speaking the selected passage',
+      (tester) async {
+    final engine = _FakeNarrationEngine()..blockSpeech = true;
+    final player = EpubNarrationController(engine: engine);
+    const html = '<p>First section.</p><p>Selected second section.</p>'
+        '<p>Last section.</p>';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EpubNarrationSheet(
+            narration: player,
+            chapterHtml: html,
+            chapterTitle: 'Sample chapter',
+          ),
+        ),
+      ),
+    );
+    // An isolate computes the chapter speech plan; wait for its completion.
+    for (var attempt = 0;
+        attempt < 40 && player.paragraphs.isEmpty;
+        attempt++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    expect(player.paragraphs, hasLength(3));
+    final choose = find.byKey(const Key('tts-choose-paragraph'));
+    await tester.ensureVisible(choose);
+    await tester.tap(choose);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tts-paragraph-picker')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('tts-paragraph-1')));
+    await tester.pumpAndSettle();
+    expect(player.currentParagraph, 1);
+    expect(engine.spoken, contains('Selected second section.'));
+    expect(find.byKey(const Key('tts-choose-paragraph')), findsOneWidget);
+
+    await player.stop();
+    await tester.pumpWidget(const SizedBox.shrink());
     player.close();
   });
 
