@@ -158,13 +158,11 @@ class SeluraBackupService {
       throw const FormatException('Backup file is missing or too large.');
     }
     final input = InputFileStream(backup.path);
-    late final Archive archive;
     try {
-      archive = ZipDecoder().decodeBuffer(input);
-    } finally {
-      input.close();
-    }
-    final entries = <String, ArchiveFile>{};
+      // Entries are decoded lazily from InputFileStream. Keep it open through
+      // extraction and verification rather than closing after ZIP indexing.
+      final archive = ZipDecoder().decodeBuffer(input);
+      final entries = <String, ArchiveFile>{};
     for (final entry in archive.files) {
       final name = entry.name;
       if (!entry.isFile || name == 'manifest.json' && entry.size > maxManifestBytes ||
@@ -363,6 +361,9 @@ class SeluraBackupService {
       rethrow;
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
+    }
+    } finally {
+      input.close();
     }
   }
 }
