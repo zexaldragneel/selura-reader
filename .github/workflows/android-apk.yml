@@ -35,6 +35,34 @@ jobs:
         run: flutter analyze
       - name: Test cover extraction
         run: flutter test
+      # Before the permanent signing key is initialized, prove that Gradle
+      # can compile a *release* build with a disposable key. This APK is
+      # explicitly never uploaded or published.
+      - name: Smoke-test Android release signing configuration
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          set -euo pipefail
+          if [ -f android/signing/selura-release.jks.asc ]; then
+            echo "Permanent signing material exists; no throwaway signer required."
+            exit 0
+          fi
+          export SELURA_SIGNING_PASSWORD
+          SELURA_SIGNING_PASSWORD="$(openssl rand -hex 32)"
+          export SELURA_KEYSTORE_PATH="$RUNNER_TEMP/selura-signing-smoke.jks"
+          trap 'rm -f "$SELURA_KEYSTORE_PATH"' EXIT
+          keytool -genkeypair -noprompt \
+            -keystore "$SELURA_KEYSTORE_PATH" -storetype PKCS12 \
+            -alias selura-release -keyalg RSA -keysize 3072 \
+            -validity 365 -dname "CN=Selura CI Smoke Test, O=Selura" \
+            -storepass:env SELURA_SIGNING_PASSWORD \
+            -keypass:env SELURA_SIGNING_PASSWORD >/dev/null
+          flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          APKSIGNER="$(find "$SDK_PATH/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify build/app/outputs/flutter-apk/app-release.apk
+          rm -f build/app/outputs/flutter-apk/app-release.apk
+          echo "::notice::Disposable signer release build passed. APK discarded, never published."
       # Fail closed until one permanent keystore has been created and
       # encrypted by .github/workflows/bootstrap-signing.yml.
       - name: Unlock persistent release signing key
