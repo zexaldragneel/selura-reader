@@ -43,7 +43,7 @@ class MihonChapter {
 class MihonManga {
   const MihonManga({
     required this.source, required this.url, required this.title,
-    required this.favorite, required this.chapters, required this.categoryIds,
+    required this.favorite, required this.chapters, required this.categoryOrders,
     this.description = '', this.author = '', this.artist = '',
     this.thumbnail = '', this.dateAdded = 0, this.sourceName = '',
   });
@@ -57,7 +57,8 @@ class MihonManga {
   final String sourceName;
   final bool favorite;
   final int dateAdded;
-  final List<int> categoryIds;
+  /// Mihon associates manga to BackupCategory.order, not BackupCategory.id.
+  final List<int> categoryOrders;
   final List<MihonChapter> chapters;
 
   String get key => source.toString() + ':' + url;
@@ -71,7 +72,7 @@ class MihonManga {
   }
   MihonManga named(String label) => MihonManga(
     source: source, url: url, title: title, favorite: favorite,
-    chapters: chapters, categoryIds: categoryIds, description: description,
+    chapters: chapters, categoryOrders: categoryOrders, description: description,
     author: author, artist: artist, thumbnail: thumbnail,
     dateAdded: dateAdded, sourceName: label,
   );
@@ -80,7 +81,7 @@ class MihonManga {
     'description': description, 'author': author, 'artist': artist,
     'thumbnail': thumbnail, 'sourceName': sourceName,
     'favorite': favorite, 'dateAdded': dateAdded,
-    'categories': categoryIds,
+    'categories': categoryOrders,
     'chapters': chapters.map((c) => c.toJson()).toList(),
   };
   factory MihonManga.fromJson(Map<String, dynamic> m) => MihonManga(
@@ -94,7 +95,7 @@ class MihonManga {
     sourceName: m['sourceName'] as String? ?? '',
     favorite: m['favorite'] == true,
     dateAdded: m['dateAdded'] as int? ?? 0,
-    categoryIds: (m['categories'] as List<dynamic>? ?? []).whereType<int>().toList(),
+    categoryOrders: (m['categories'] as List<dynamic>? ?? []).whereType<int>().toList(),
     chapters: (m['chapters'] as List<dynamic>? ?? [])
       .map((e) => MihonChapter.fromJson(Map<String, dynamic>.from(e as Map)))
       .toList(),
@@ -331,7 +332,7 @@ MihonManga _manga(Uint8List bytes) {
   }
   return MihonManga(
     source: source, url: url, title: title, favorite: favorite,
-    categoryIds: categories, description: description, author: author,
+    categoryOrders: categories, description: description, author: author,
     artist: artist, thumbnail: thumbnail, dateAdded: added,
     chapters: [
       for (final chapter in chapters)
