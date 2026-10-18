@@ -21,6 +21,13 @@ dependencies:
   html: 0.15.6
   pdfx: ^2.9.2
 
+# Android shared_preferences_android 2.5.0 switched to JNI/Pigeon and causes
+# NoSuchMethodError(SharedPreferencesApiRegistrar.getAll) in release-signed
+# Selura builds on Android. Keep the pre-JNI implementation until a fixed
+# version has passed device testing. This is an intentional temporary pin.
+dependency_overrides:
+  shared_preferences_android: 2.4.28
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
