@@ -1063,6 +1063,8 @@ class _ListBookCard extends StatelessWidget {
       );
 }
 
+enum _EpubReaderTool { addBookmark, bookmarks, chapters }
+
 class EpubBookPage extends StatefulWidget {
   final Book book;
 
@@ -1306,7 +1308,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
       appBar: AppBar(
         backgroundColor: palette.background,
         foregroundColor: palette.foreground,
-        title: Text(widget.book.title),
+        title: Text(
+          widget.book.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: 'Listen to chapter',
@@ -1318,27 +1324,61 @@ class _EpubBookPageState extends State<EpubBookPage> {
             onPressed: _readingSettingsLoaded ? _showReadingSettings : null,
             icon: const Icon(Icons.text_fields_rounded),
           ),
-          IconButton(
-            tooltip: 'Add bookmark',
-            onPressed: activeController == null ? null : _addBookmark,
-            icon: const Icon(Icons.bookmark_add_outlined),
-          ),
-          IconButton(
-            tooltip: 'View bookmarks',
-            onPressed: activeController == null ? null : _showBookmarks,
-            icon: const Icon(Icons.bookmarks_outlined),
-          ),
-          IconButton(
-            tooltip: 'Chapters',
-            icon: const Icon(Icons.list),
-            onPressed: activeController == null
-                ? null
-                : () => showModalBottomSheet(
-                      context: context,
-                      builder: (_) => EpubViewTableOfContents(
-                        controller: activeController,
-                      ),
+          PopupMenuButton<_EpubReaderTool>(
+            tooltip: 'More reading tools',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (tool) {
+              if (activeController == null) return;
+              switch (tool) {
+                case _EpubReaderTool.addBookmark:
+                  unawaited(_addBookmark());
+                case _EpubReaderTool.bookmarks:
+                  unawaited(_showBookmarks());
+                case _EpubReaderTool.chapters:
+                  showModalBottomSheet<void>(
+                    context: context,
+                    showDragHandle: true,
+                    builder: (_) => EpubViewTableOfContents(
+                      controller: activeController,
                     ),
+                  );
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _EpubReaderTool.addBookmark,
+                enabled: activeController != null,
+                child: const Row(
+                  children: [
+                    Icon(Icons.bookmark_add_outlined),
+                    SizedBox(width: 14),
+                    Text('Add bookmark'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _EpubReaderTool.bookmarks,
+                enabled: activeController != null,
+                child: const Row(
+                  children: [
+                    Icon(Icons.bookmarks_outlined),
+                    SizedBox(width: 14),
+                    Text('Saved bookmarks'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _EpubReaderTool.chapters,
+                enabled: activeController != null,
+                child: const Row(
+                  children: [
+                    Icon(Icons.list_rounded),
+                    SizedBox(width: 14),
+                    Text('Chapters'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
