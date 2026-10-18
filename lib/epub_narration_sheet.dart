@@ -23,7 +23,81 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
   @override
   void initState() {
     super.initState();
-    widget.narration.initialize();
+    final html = widget.chapterHtml;
+    if (html != null && html.trim().isNotEmpty) {
+      widget.narration.prepareChapter(html, title: widget.chapterTitle);
+    } else {
+      widget.narration.initialize();
+    }
+  }
+
+  Future<void> _chooseStartingParagraph() async {
+    final player = widget.narration;
+    if (player.paragraphs.isEmpty) return;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        top: false,
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.76,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.format_list_numbered_rounded),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Start reading from…',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close paragraph picker',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  key: const Key('tts-paragraph-picker'),
+                  itemCount: player.paragraphs.length,
+                  itemBuilder: (context, index) {
+                    final selectedNow = index == player.currentParagraph;
+                    return ListTile(
+                      key: Key('tts-paragraph-$index'),
+                      leading: CircleAvatar(
+                        radius: 18,
+                        child: Text('${index + 1}'),
+                      ),
+                      title: Text(
+                        player.paragraphs[index],
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      selected: selectedNow,
+                      trailing: selectedNow
+                          ? const Icon(Icons.volume_up_rounded)
+                          : const Icon(Icons.play_arrow_rounded),
+                      onTap: () => Navigator.of(context).pop(index),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null && mounted) {
+      await player.playFromParagraph(selected);
+    }
   }
 
   Future<void> _chooseVoice() async {
@@ -195,9 +269,40 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                   ),
                 ],
                 const SizedBox(height: 18),
+                OutlinedButton.icon(
+                  key: const Key('tts-choose-paragraph'),
+                  onPressed: !busy && player.paragraphs.isNotEmpty
+                      ? _chooseStartingParagraph
+                      : null,
+                  icon: const Icon(Icons.format_list_numbered_rounded),
+                  label: Text(
+                    player.paragraphs.isEmpty
+                        ? 'Preparing paragraphs…'
+                        : 'Paragraph ${player.currentParagraph + 1} of '
+                            '${player.paragraphs.length} · Choose start',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    IconButton.outlined(
+                      key: const Key('tts-previous-paragraph'),
+                      tooltip: 'Previous paragraph',
+                      onPressed: !busy &&
+                              player.paragraphs.isNotEmpty &&
+                              player.currentParagraph > 0
+                          ? () => player.skipParagraph(-1)
+                          : null,
+                      icon: const Icon(Icons.skip_previous_rounded),
+                      iconSize: 26,
+                    ),
+                    const SizedBox(width: 8),
                     IconButton.outlined(
                       tooltip: 'Stop narration',
                       onPressed: isPlaying || isPaused
@@ -216,6 +321,10 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                                 player.pause();
                               } else if (isPaused) {
                                 player.resume();
+                              } else if (player.paragraphs.isNotEmpty) {
+                                player.playFromParagraph(
+                                  player.currentParagraph,
+                                );
                               } else {
                                 player.readChapter(
                                   html!,
@@ -244,6 +353,19 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                           vertical: 16,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.outlined(
+                      key: const Key('tts-next-paragraph'),
+                      tooltip: 'Next paragraph',
+                      onPressed: !busy &&
+                              player.paragraphs.isNotEmpty &&
+                              player.currentParagraph <
+                                  player.paragraphs.length - 1
+                          ? () => player.skipParagraph(1)
+                          : null,
+                      icon: const Icon(Icons.skip_next_rounded),
+                      iconSize: 26,
                     ),
                   ],
                 ),
@@ -292,8 +414,10 @@ class _EpubNarrationSheetState extends State<EpubNarrationSheet> {
                 Text(
                   'Narration uses the voices installed on your phone. '
                   'For offline listening, install an offline voice in Android '
-                  'Text-to-speech settings. Playback reads this chapter from '
-                  'its beginning and stops when you close the reader.',
+                  'Text-to-speech settings. Choose any chapter paragraph '
+                  'or use previous/next to change the starting point. '
+                  'Pause/resume restarts only an interrupted short segment. '
+                  'Narration stops when you close the reader.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
