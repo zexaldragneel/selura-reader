@@ -218,7 +218,15 @@ CI status:
 - **Signed PR Build #113** (run `39126079596`) passed `flutter analyze`, 53 widget/unit tests, native plugin version guard, release APK compilation and signing, package/version/certificate checks and GitHub direct APK publishing.
 - Published Android test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-20-run-113/selura.apk (60,921,317 bytes, SHA-256 `78dcd5a42099156c6e360504b50020af1e693551c1add6b53abb9b7927aa2ffb`), application ID `com.selura.reader`, versionCode 113, permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged.
 - **Device testing:** user confirmed Build #113 works. This does not independently establish every edge case of backup restoration, rare EPUB/PDF formats, or performance on very large libraries.
-- **Post-merge main Build #114** (run `39127248456`) triggered for merge commit `f9414f3ca7326ba0a36ea1e49289670f514f76fd`; confirm final CI/signing/release asset independently before claiming it passed.
+- **Post-merge main Build #114** (run `39127248456`) **succeeded** for merge commit `f9414f3ca7326ba0a36ea1e49289670f514f76fd`, including CI, signing and direct APK publishing at https://github.com/john-selwyn/selura-reader/releases/download/dev-114/selura.apk (60,921,317 bytes, SHA-256 `0aecd540dc166c474f520c8d99031fca92009a0f018046e2c559bc27db001919`). User confirmed PR test Build #113; post-merge Build #114 not independently phone-tested.
+
+## Pending milestone — Offline CBZ manga reader (PR #21)
+- Open PR #21 (`feature/offline-cbz-manga-reader`, implementation commit `91f39b7ec417f86e9a81e1268cb69ba9fa065265`) introduces **offline CBZ** import into the existing bookshelf, a real Manga filter, bounded cover thumbnails, vertical or horizontal one-page-at-a-time navigation, pinch-to-zoom, local page resume and per-book bookmarks. **CBR/RAR and continuous webtoon scrolling are not implemented.**
+- Imports keep original CBZ files inside app-private storage; ZIP image entries are scanned using streaming archive inputs on worker isolates, naturally sorted by numeric filename, validated for unsafe paths/size limits, and individual page extraction is bounded to a nearby temporary cache. CBZ limit 512 MiB, 2000 image pages, individual images 32 MiB. Existing EPUB/PDF readers and all local data are kept independent.
+- Existing Selura ZIP backup/export and restore can include CBZ originals, page progress, total page count and bookmarks. Unit tests cover file order, extraction, malicious/invalid ZIP rejection, reading state, Manga filter, CBZ backup round trip and idempotent restore.
+- **Signed PR Build #120** (run `39128684570`) passed `flutter analyze`, all **60 Flutter tests**, unchanged `shared_preferences_android 2.4.28` pin, signed release APK compilation, certificate/package/version checks, artifact upload and direct release publishing.
+- Direct APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-21-run-120/selura.apk (61,151,057 bytes, SHA-256 `559adf293738269b43238cea58d32b9a67f1d1706ec3827207aaef559315d687`, package `com.selura.reader`, versionCode 120, original cert SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged).
+- **NOT YET MERGED OR DEVICE-VERIFIED.** User must install over existing release, test import and rendering of a real CBZ, image order/zoom/scroll, resume/bookmarks, Manga filter/cover, and CBZ backup/restore before merge. Earlier CI Builds #115/#118/#119 found syntax, analyzer and test issues; corrected before #120.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -228,10 +236,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` Build #114 (run `39127248456`) including APK package ID, permanent signing certificate, CI tests and published download asset. Do not assume the post-merge APK was separately device-tested.
-2. Continue incremental premium reading UI polish, accessibility and measured performance improvements. Retain working import, bookshelf, EPUB/PDF navigation, TTS, progress, bookmarks, backup/restore and Focus Mode.
-3. Consider an optional offline TTS sleep timer/mini player in a dedicated future PR, with signed test APK and owner verification before merging.
-4. Keep `shared_preferences_android 2.4.28` pinned until any upgrade has passed physical Android tests, and maintain off-device backups. Highlights/annotations are out of scope at owner's request.
+1. Have the owner install signed PR #21 Build #120 **over their existing Selura without uninstalling**, then verify real CBZ import, correct covers/pages, vertical/horizontal swipe, pinch zoom, saved progress/bookmarks, Manga shelf filtering and CBZ backup/restore. Do not merge until Android functionality is confirmed.
+2. If CBZ passes physical Android testing, squash-merge PR #21 into `main`, update `PROGRESS.md` with the device result and verify the post-merge APK/signature.
+3. Consider separate follow-up milestones for CBR/RAR import and continuous webtoon scrolling if requested; neither is supported by PR #21. Continue accessible premium visual polish without altering EPUB/PDF.
+4. Retain permanent APK certificate, app ID `com.selura.reader`, and the tested `shared_preferences_android 2.4.28` dependency pin. Keep Selura ZIP backups off-device. Owner declined highlights/annotations.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
