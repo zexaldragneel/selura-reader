@@ -13,6 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
 import 'cover_cache.dart';
+import 'comic_archive.dart';
+import 'comic_reader.dart';
+import 'manga_online_ui.dart';
+import 'mihon_library_ui.dart';
 import 'cover_decode.dart';
 import 'library_backup.dart';
 import 'reader_settings.dart';
@@ -130,7 +134,7 @@ String _epubProgressKey(Book book) => 'reading_epub_cfi:${book.path}';
 String _pdfProgressKey(Book book) => 'reading_pdf_page:${book.path}';
 
 enum _LibrarySort { recent, title, favorites, format }
-enum _LibraryAction { backup, restore }
+enum _LibraryAction { backup, restore, mihon }
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -144,6 +148,7 @@ class _LibraryPageState extends State<LibraryPage> {
   final Map<String, ReadingProgressSummary> progressLabels = {};
   final Map<String, String> coverPaths = {};
   final EpubCoverCache coverCache = EpubCoverCache();
+  final ComicCoverCache comicCoverCache = ComicCoverCache();
   final TextEditingController searchController = TextEditingController();
   bool busy = false;
   String busyTitle = 'Adding your book';
@@ -216,7 +221,7 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _warmCovers(Iterable<Book> requestedBooks) async {
     final candidates = requestedBooks
         .where(
-          (book) => book.type == 'epub' &&
+          (book) => (book.type == 'epub' || book.type == 'cbz') &&
               !coverPaths.containsKey(book.path),
         )
         .toList();
@@ -226,7 +231,9 @@ class _LibraryPageState extends State<LibraryPage> {
       while (mounted && next < candidates.length) {
         // At most three background extraction jobs run concurrently.
         final book = candidates[next++];
-        final cachedPath = await coverCache.load(book.path);
+        final cachedPath = book.type == 'cbz'
+            ? await comicCoverCache.load(book.path)
+            : await coverCache.load(book.path);
         if (!mounted) return;
         if (cachedPath != null &&
             coverPaths[book.path] != cachedPath) {
@@ -276,7 +283,7 @@ class _LibraryPageState extends State<LibraryPage> {
     try {
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['epub', 'pdf'],
+        allowedExtensions: ['epub', 'pdf', 'cbz'],
       );
       if (files.isEmpty) return;
 
@@ -285,15 +292,28 @@ class _LibraryPageState extends State<LibraryPage> {
       for (final file in files) {
         if (file.path == null) continue;
         final extension = file.extension?.toLowerCase() ?? '';
-        if (extension != 'epub' && extension != 'pdf') continue;
+        if (extension != 'epub' && extension != 'pdf' && extension != 'cbz') continue;
 
         final dest =
             '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${books.length}.$extension';
         await File(file.path!).copy(dest);
+        if (extension == 'cbz') {
+          try {
+            final comic = await ComicArchive.open(dest);
+            await const ReadingProgressStore()
+                .recordComicTotal(dest, comic.pages.length);
+          } catch (_) {
+            if (await File(dest).exists()) await File(dest).delete();
+            throw const FormatException(
+              'The selected CBZ could not be imported. Check that it is '
+              'a ZIP archive containing supported image pages.',
+            );
+          }
+        }
         final newBook = Book(
           dest,
           file.name.replaceFirst(
-            RegExp(r'\.(epub|pdf)$', caseSensitive: false),
+            RegExp(r'\.(epub|pdf|cbz)$', caseSensitive: false),
             '',
           ),
           extension,
@@ -467,6 +487,14 @@ class _LibraryPageState extends State<LibraryPage> {
       case _LibraryAction.restore:
         unawaited(_restoreLibraryBackup());
         break;
+      case _LibraryAction.mihon:
+        unawaited(Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => const MihonLibraryPage(),
+          ),
+        ));
+        break;
     }
   }
 
@@ -494,9 +522,11 @@ class _LibraryPageState extends State<LibraryPage> {
     await Navigator.push(
       context,
       seluraReaderRoute(
-        child: book.type == 'pdf'
-            ? PdfBookPage(book: book)
-            : EpubBookPage(book: book),
+        child: book.type == 'cbz'
+            ? ComicReaderPage(bookPath: book.path, bookTitle: book.title)
+            : book.type == 'pdf'
+                ? PdfBookPage(book: book)
+                : EpubBookPage(book: book),
       ),
     );
     await _refreshProgress();
@@ -627,6 +657,17 @@ class _LibraryPageState extends State<LibraryPage> {
           ],
         ),
         actions: [
+          IconButton(
+            key: const Key('selura-manga-extensions'),
+            tooltip: 'Manga extensions',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const MangaExtensionsPage(),
+              ),
+            ),
+            icon: const Icon(Icons.extension_rounded),
+          ),
           PopupMenuButton<_LibrarySort>(
             tooltip: 'Sort library',
             initialValue: sort,
@@ -667,7 +708,15 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.settings_backup_restore_rounded),
-                  title: Text('Restore backup'),
+                  title: Text('Restore Selura backup'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _LibraryAction.mihon,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.import_contacts_outlined),
+                  title: Text('Mihon library & backup'),
                 ),
               ),
             ],
@@ -696,7 +745,15 @@ class _LibraryPageState extends State<LibraryPage> {
                         onRetry: _load,
                       )
                     : books.isEmpty
-                        ? _EmptyLibrary(onImport: busy ? null : _import)
+                        ? _EmptyLibrary(
+                             onImport: busy ? null : _import,
+                             onMihon: () => Navigator.push(
+                               context,
+                               MaterialPageRoute<void>(
+                                 builder: (_) => const MihonLibraryPage(),
+                               ),
+                             ),
+                           )
                         : CustomScrollView(
                         key: const PageStorageKey<String>('selura-library-scroll'),
                         slivers: [
@@ -754,7 +811,7 @@ class _LibraryPageState extends State<LibraryPage> {
                                         setState(() => query = value),
                                     textInputAction: TextInputAction.search,
                                     decoration: InputDecoration(
-                                      hintText: 'Find a book or format',
+                                      hintText: 'Find a book, manga or format',
                                       prefixIcon: const Icon(Icons.search_rounded),
                                       suffixIcon: query.isEmpty
                                           ? null
@@ -889,8 +946,12 @@ class _LibraryPageState extends State<LibraryPage> {
 
 class _EmptyLibrary extends StatelessWidget {
   final VoidCallback? onImport;
+  final VoidCallback onMihon;
 
-  const _EmptyLibrary({required this.onImport});
+  const _EmptyLibrary({
+    required this.onImport,
+    required this.onMihon,
+  });
 
   @override
   Widget build(BuildContext context) => Center(
@@ -931,6 +992,13 @@ class _EmptyLibrary extends StatelessWidget {
                 onPressed: onImport,
                 icon: const Icon(Icons.upload_file_rounded),
                 label: const Text('Add your first book'),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                key: const Key('selura-empty-mihon-library'),
+                onPressed: onMihon,
+                icon: const Icon(Icons.collections_bookmark_outlined),
+                label: const Text('Restore or browse Mihon manga'),
               ),
             ],
           ),
@@ -1005,7 +1073,9 @@ class _BookCover extends StatelessWidget {
               child: Icon(
                 book.type == 'pdf'
                     ? Icons.picture_as_pdf_rounded
-                    : Icons.auto_stories_rounded,
+                    : book.type == 'cbz'
+                        ? Icons.collections_bookmark_outlined
+                        : Icons.auto_stories_rounded,
                 size: 46,
                 color: scheme.onPrimaryContainer,
               ),

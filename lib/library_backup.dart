@@ -59,6 +59,8 @@ class SeluraBackupService {
         'epubCfi': prefs.getString(ReadingProgressStore.epubCfiKey(path)),
         'pdfPage': prefs.getInt(ReadingProgressStore.pdfPageKey(path)),
         'pdfTotal': prefs.getInt(ReadingProgressStore.pdfTotalKey(path)),
+        'comicPage': prefs.getInt(ReadingProgressStore.comicPageKey(path)),
+        'comicTotal': prefs.getInt(ReadingProgressStore.comicTotalKey(path)),
         'chapter': prefs.getInt(ReadingProgressStore.epubChapterKey(path)),
         'chapterTitle': prefs.getString(ReadingProgressStore.epubTitleKey(path)),
         'bookmarks': prefs.getStringList('selura_bookmarks_v1:' + path) ?? <String>[],
@@ -82,7 +84,7 @@ class SeluraBackupService {
     var total = 0;
     for (var i = 0; i < books.length; i++) {
       final book = books[i];
-      if (book.type != 'epub' && book.type != 'pdf') {
+      if (book.type != 'epub' && book.type != 'pdf' && book.type != 'cbz') {
         throw const FormatException('Unsupported book format.');
       }
       final file = File(book.path);
@@ -167,7 +169,7 @@ class SeluraBackupService {
       final name = entry.name;
       if (!entry.isFile || name == 'manifest.json' && entry.size > maxManifestBytes ||
           name != 'manifest.json' &&
-          !RegExp(r'^books/[0-9]+\.(epub|pdf)$').hasMatch(name) ||
+          !RegExp(r'^books/[0-9]+\.(epub|pdf|cbz)$').hasMatch(name) ||
           entries.containsKey(name)) {
         throw const FormatException('Unsafe or unsupported backup entry.');
       }
@@ -214,7 +216,7 @@ class SeluraBackupService {
       final digest = row['sha256'];
       final title = row['title'];
       final reading = row['reading'];
-      if ((type != 'epub' && type != 'pdf') ||
+      if ((type != 'epub' && type != 'pdf' && type != 'cbz') ||
           entry != 'books/' + i.toString() + '.' + type.toString() ||
           title is! String || title.length > 512 ||
           row['favorite'] is! bool || row['lastOpened'] is! int ||
@@ -230,12 +232,14 @@ class SeluraBackupService {
       final values = Map<String, dynamic>.from(reading);
       if (values.keys.any((key) => !const <String>{
             'epubCfi', 'pdfPage', 'pdfTotal', 'chapter',
-            'chapterTitle', 'bookmarks',
+            'chapterTitle', 'bookmarks', 'comicPage', 'comicTotal',
           }.contains(key)) ||
           (values['epubCfi'] != null && values['epubCfi'] is! String) ||
           (values['chapterTitle'] != null && values['chapterTitle'] is! String) ||
           (values['pdfPage'] != null && values['pdfPage'] is! int) ||
           (values['pdfTotal'] != null && values['pdfTotal'] is! int) ||
+          (values['comicPage'] != null && values['comicPage'] is! int) ||
+          (values['comicTotal'] != null && values['comicTotal'] is! int) ||
           (values['chapter'] != null && values['chapter'] is! int) ||
           values['bookmarks'] is! List ||
           (values['bookmarks'] as List).any((v) => v is! String)) {
@@ -326,6 +330,12 @@ class SeluraBackupService {
         }
         if (v['pdfTotal'] is int) {
           await prefs.setInt(ReadingProgressStore.pdfTotalKey(path), v['pdfTotal'] as int);
+        }
+        if (v['comicPage'] is int) {
+          await prefs.setInt(ReadingProgressStore.comicPageKey(path), v['comicPage'] as int);
+        }
+        if (v['comicTotal'] is int) {
+          await prefs.setInt(ReadingProgressStore.comicTotalKey(path), v['comicTotal'] as int);
         }
         if (v['chapter'] is int) {
           await prefs.setInt(ReadingProgressStore.epubChapterKey(path), v['chapter'] as int);

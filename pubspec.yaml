@@ -16,6 +16,7 @@ dependencies:
   epub_view: ^3.2.0
   flutter_tts: ^4.2.5
   flutter_file_dialog: ^3.3.3
+  url_launcher: ^6.3.2
   image: ^3.3.0
   archive: ^3.6.1
   xml: ^6.6.1
