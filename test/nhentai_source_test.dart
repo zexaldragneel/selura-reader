@@ -151,7 +151,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
     final nh = find.byKey(const Key('manga-extension-toggle-nhentai'));
-    await tester.ensureVisible(nh);
+    await tester.scrollUntilVisible(
+      nh, 230,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(nh);
     await tester.pumpAndSettle();
     expect(find.text('Adult source · 18+'), findsOneWidget);
@@ -159,7 +163,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(await const MangaExtensionStore().installed(), isEmpty);
 
-    await tester.ensureVisible(nh);
+    await tester.scrollUntilVisible(
+      nh, 230,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(nh);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('nhentai-age-confirm')));
