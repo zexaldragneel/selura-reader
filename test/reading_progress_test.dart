@@ -118,4 +118,20 @@ void main() {
     expect(shortened!.runes.length, 56);
     expect(shortened.endsWith('…'), isTrue);
   });
+
+  test('CBZ reading progress is independent of EPUB/PDF and survives reload', () async {
+    const path = '/books/chapter01.cbz';
+    final prefs = await SharedPreferences.getInstance();
+    expect(store.read(prefs, path: path, type: 'cbz').label, 'Not started');
+    expect(await store.recordComicTotal(path, 0), isFalse);
+    expect(await store.recordComicTotal(path, 42), isTrue);
+    await prefs.setInt(ReadingProgressStore.comicPageKey(path), 8);
+    final progress = store.read(prefs, path: path, type: 'cbz');
+    expect(progress.label, 'Page 8 of 42');
+    expect(progress.pageFraction, closeTo(8 / 42, 0.0001));
+    expect(prefs.getInt(ReadingProgressStore.pdfPageKey(path)), isNull);
+    expect(prefs.getString(ReadingProgressStore.epubCfiKey(path)), isNull);
+    await prefs.setInt(ReadingProgressStore.comicPageKey(path), 99);
+    expect(store.read(prefs, path: path, type: 'cbz').label, 'Page 42 of 42');
+  });
 }
