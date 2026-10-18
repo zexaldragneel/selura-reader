@@ -940,9 +940,13 @@ class _EpubBookPageState extends State<EpubBookPage> {
       chapterNumber: chapterNumber,
       chapterTitle: title,
     ).label;
-    if (mounted && _chapterStatus != currentLabel) {
-      setState(() => _chapterStatus = currentLabel);
-    }
+    // The EPUB position listener can notify during layout; avoid calling
+    // setState synchronously during the descendant's build phase.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _chapterStatus != currentLabel) {
+        setState(() => _chapterStatus = currentLabel);
+      }
+    });
     _chapterWriteQueue = _chapterWriteQueue.then((_) {
       return _progressStore.recordEpubChapter(
         widget.book.path,
@@ -1360,15 +1364,21 @@ class _PdfBookPageState extends State<PdfBookPage> {
               controller: activeController,
               onDocumentLoaded: (document) {
                 final total = document.pagesCount;
-                if (mounted && total > 0) {
-                  setState(() => _totalPages = total);
+                if (total > 0) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _totalPages != total) {
+                      setState(() => _totalPages = total);
+                    }
+                  });
                 }
                 unawaited(_recordPdfPageCount(total));
               },
               onPageChanged: (page) {
-                if (mounted && _visiblePage != page) {
-                  setState(() => _visiblePage = page);
-                }
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && _visiblePage != page) {
+                    setState(() => _visiblePage = page);
+                  }
+                });
                 _savePage(page);
               },
             ),
