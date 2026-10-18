@@ -228,6 +228,14 @@ CI status:
 - Direct APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-21-run-120/selura.apk (61,151,057 bytes, SHA-256 `559adf293738269b43238cea58d32b9a67f1d1706ec3827207aaef559315d687`, package `com.selura.reader`, versionCode 120, original cert SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged).
 - **NOT YET MERGED OR DEVICE-VERIFIED.** User must install over existing release, test import and rendering of a real CBZ, image order/zoom/scroll, resume/bookmarks, Manga filter/cover, and CBZ backup/restore before merge. Earlier CI Builds #115/#118/#119 found syntax, analyzer and test issues; corrected before #120.
 
+## Pending milestone — Installable online manga source (PR #21)
+- User requested manga extensions because they have no local manga to import. Existing open PR #21 (`feature/offline-cbz-manga-reader`) was extended to include a **reviewed, installable MangaDex source adapter** and functional online manga browser. This is **not** compatible with third-party Mihon/Tachiyomi extension APKs; no remote executable code is installed.
+- A Manga extensions button is accessible from the Selura bookshelf even if there are zero local books. Users can Install/Remove the MangaDex adapter (saved in SharedPreferences) and Browse manga, search titles, select English chapters, and read image pages with vertical swipes, pinch-zoom, focus mode and locally saved online chapter/page position. Explicit source and scanlation group credits are displayed; content and guest limits are controlled by MangaDex.
+- Added restricted HTTPS MangaDex JSON API access, safe-rated English listings, bounded JSON decoding and timeout handling, protected MangaDex CDN hosts, responsive online catalogue/detail/reader screens and release INTERNET permission. All offline EPUB/PDF/CBZ readers remain independent. MangaDex terms prohibit paid services or advertising based on their API; the adapter is intended for the owner's personal app.
+- **PR online-source Build #126** (run `39130225014`, commit `3683e1786964b8e6648b3095c2ea9fb0bcd09609`) passed Flutter analysis, **66 automated tests**, Android storage plugin compatibility, signed APK compilation, permanent signer/package/version checks, and direct GitHub Release publication.
+- Direct test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-21-run-126/selura.apk (61,430,049 bytes; SHA-256 `96c6e167a8ffd604af7a656661765a99b6a7866b1acebaa68d1699ac259b8473`; Android `com.selura.reader` versionCode 126; signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged). Testing of source API uses local JSON fixtures, not a real MangaDex connection.
+- **Still open and NOT phone-verified.** User should install Build #126 over existing Selura without uninstalling, then test **Manga extensions -> Install MangaDex -> Browse manga -> search a title -> English chapter -> images/zoom/swipes -> resume**. Test existing EPUB/PDF import/resume. Real MangaDex reachability, provider guest restrictions and image CDN availability remain unverified; do not merge before user's test.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -236,10 +244,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Have the owner install signed PR #21 Build #120 **over their existing Selura without uninstalling**, then verify real CBZ import, correct covers/pages, vertical/horizontal swipe, pinch zoom, saved progress/bookmarks, Manga shelf filtering and CBZ backup/restore. Do not merge until Android functionality is confirmed.
-2. If CBZ passes physical Android testing, squash-merge PR #21 into `main`, update `PROGRESS.md` with the device result and verify the post-merge APK/signature.
-3. Consider separate follow-up milestones for CBR/RAR import and continuous webtoon scrolling if requested; neither is supported by PR #21. Continue accessible premium visual polish without altering EPUB/PDF.
-4. Retain permanent APK certificate, app ID `com.selura.reader`, and the tested `shared_preferences_android 2.4.28` dependency pin. Keep Selura ZIP backups off-device. Owner declined highlights/annotations.
+1. Have the owner install signed PR #21 **Build #126** over the existing installation, then test the real online MangaDex source: open Manga extensions, install MangaDex, browse/search, open English chapter, read/swipe/zoom, reopen and verify progress. Confirm old offline EPUB/PDF still work. The user has no local CBZ; CI covers CBZ file logic, but physical CBZ runtime remains unverified.
+2. If the live online source fails due MangaDex guest rate limits or access restrictions, diagnose on PR #21 without changing old reader behavior; keep the PR open. It is **not** a Mihon APK plugin manager.
+3. Only after user confirmation, merge PR #21, update documentation with device results and verify the post-merge signed APK. Future sources require individually reviewed adapters and attribution/terms checks.
+4. Maintain app ID `com.selura.reader`, permanent certificate, and the tested `shared_preferences_android 2.4.28` pin. Keep offline ZIP backups off-device; no highlights/annotations, per owner's request.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
