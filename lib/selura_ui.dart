@@ -248,12 +248,16 @@ class SeluraLibraryBanner extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 9),
-                  Text(
-                    'YOUR PRIVATE LIBRARY',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: ink,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.65,
+                  Expanded(
+                    child: Text(
+                      'YOUR PRIVATE LIBRARY',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: ink,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
                 ],
