@@ -31,6 +31,26 @@ jobs:
           grep -q 'android:label="Selura"' android/app/src/main/AndroidManifest.xml
       - name: Resolve dependencies
         run: flutter pub get
+      - name: Verify Android storage plugin regression pin
+        run: |
+          set -euo pipefail
+          flutter pub deps --json > "$RUNNER_TEMP/selura-deps.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          deps = json.loads((Path(os.environ["RUNNER_TEMP"]) / "selura-deps.json").read_text())
+          installed = {package["name"]: package["version"]
+                       for package in deps["packages"]}
+          actual = installed.get("shared_preferences_android")
+          expected = "2.4.28"
+          print(f"Selura Android shared preferences implementation: {actual}")
+          if actual != expected:
+              raise SystemExit(
+                  f"Blocked known JNI regression: expected {expected}, resolved {actual}"
+              )
+          PY
       - name: Analyze source
         run: flutter analyze
       - name: Test cover extraction
