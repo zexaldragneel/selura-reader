@@ -14,6 +14,7 @@ import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
+import 'reader_navigation.dart';
 import 'epub_narration.dart';
 import 'epub_narration_sheet.dart';
 import 'selura_ui.dart';
@@ -352,28 +353,10 @@ class _LibraryPageState extends State<LibraryPage> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      PageRouteBuilder<void>(
-        transitionDuration: const Duration(milliseconds: 260),
-        reverseTransitionDuration: const Duration(milliseconds: 190),
-        pageBuilder: (_, __, ___) => book.type == 'pdf'
+      seluraReaderRoute(
+        child: book.type == 'pdf'
             ? PdfBookPage(book: book)
             : EpubBookPage(book: book),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final fade = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          );
-          return FadeTransition(
-            opacity: fade,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.025),
-                end: Offset.zero,
-              ).animate(fade),
-              child: child,
-            ),
-          );
-        },
       ),
     );
     await _refreshProgress();
