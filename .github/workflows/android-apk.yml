@@ -38,6 +38,7 @@ jobs:
       # Fail closed until one permanent keystore has been created and
       # encrypted by .github/workflows/bootstrap-signing.yml.
       - name: Unlock persistent release signing key
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
         run: |
@@ -61,10 +62,12 @@ jobs:
             -alias selura-release -storepass:env SELURA_SIGNING_PASSWORD >/dev/null
           echo "SELURA_KEYSTORE_PATH=$RUNNER_TEMP/selura-signing/selura-release.jks" >> "$GITHUB_ENV"
       - name: Build signed release APK
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
         run: flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
       - name: Verify APK certificate, package and version code
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         run: |
           set -euo pipefail
           SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -78,6 +81,7 @@ jobs:
           "$AAPT" dump badging "$APK" |
             grep -m1 -F "package: name='com.selura.reader' versionCode='$GITHUB_RUN_NUMBER'"
       - name: Upload signed APK
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v4
         with:
           name: selura-signed-apk
