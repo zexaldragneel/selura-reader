@@ -28,7 +28,14 @@ class MangaExtensionRegistry {
     credit: 'Manga and images are supplied by MangaDex and their scanlation '
         'groups. Internet access required.',
   );
-  static const available = <MangaExtension>[mangadex];
+  static const nhentai = MangaExtension(
+    id: 'nhentai',
+    name: 'nHentai',
+    description: 'Optional 18+ illustrated galleries from nHentai.',
+    credit: 'Adult gallery source. Content and media are provided by '
+        'nHentai and their uploaders. Internet and explicit opt-in required.',
+  );
+  static const available = <MangaExtension>[mangadex, nhentai];
 }
 
 class MangaExtensionStore {
