@@ -57,7 +57,7 @@ class ReadingProgressSummary {
 
   static String? normalizedChapterTitle(String? raw) {
     if (raw == null) return null;
-    final text = raw.replaceAll(RegExp(r'\\s+'), ' ').trim();
+    final text = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (text.isEmpty) return null;
     // Avoid unbounded metadata strings in the small bookshelf cards.
     final characters = text.runes.toList();
