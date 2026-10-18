@@ -13,6 +13,9 @@ import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
+import 'epub_narration.dart';
+import 'epub_narration_sheet.dart';
+import 'selura_ui.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -104,6 +107,8 @@ class _LibraryPageState extends State<LibraryPage> {
   final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
   bool busy = false;
+  bool loadingLibrary = true;
+  String? libraryLoadError;
   bool gridView = true;
   String query = '';
   _LibrarySort sort = _LibrarySort.recent;
@@ -121,28 +126,49 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList('books') ?? [];
-    final loadedBooks = raw
-        .map(
-          (e) => Book.fromJson(
-            jsonDecode(e) as Map<String, dynamic>,
-          ),
-        )
-        .where((book) => File(book.path).existsSync())
-        .toList();
-    final savedSort = prefs.getInt('library_sort') ?? 0;
-    final sortIndex = savedSort.clamp(0, _LibrarySort.values.length - 1).toInt();
-
     if (!mounted) return;
     setState(() {
-      books = loadedBooks;
-      gridView = prefs.getBool('library_grid') ?? true;
-      sort = _LibrarySort.values[sortIndex];
+      loadingLibrary = true;
+      libraryLoadError = null;
     });
-    await _refreshProgress();
-    // Cache old imports lazily without delaying library presentation.
-    unawaited(_warmCovers(loadedBooks));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList('books') ?? [];
+      // A broken entry should not prevent other books from appearing.
+      final loadedBooks = <Book>[];
+      for (final entry in raw) {
+        try {
+          final book = Book.fromJson(
+            jsonDecode(entry) as Map<String, dynamic>,
+          );
+          if (await File(book.path).exists()) loadedBooks.add(book);
+        } catch (_) {
+          // Ignore only the malformed entry, not the whole local library.
+        }
+      }
+      final savedSort = prefs.getInt('library_sort') ?? 0;
+      final sortIndex = savedSort.clamp(
+        0,
+        _LibrarySort.values.length - 1,
+      ).toInt();
+      if (!mounted) return;
+      setState(() {
+        books = loadedBooks;
+        gridView = prefs.getBool('library_grid') ?? true;
+        sort = _LibrarySort.values[sortIndex];
+      });
+      await _refreshProgress();
+      // Covers resolve asynchronously and are cached for future launches.
+      unawaited(_warmCovers(loadedBooks));
+    } catch (_) {
+      if (mounted) {
+        setState(() => libraryLoadError =
+            'Selura could not open its local library. Your book files '
+            'have not been deleted.');
+      }
+    } finally {
+      if (mounted) setState(() => loadingLibrary = false);
+    }
   }
 
   Future<void> _warmCovers(Iterable<Book> requestedBooks) async {
@@ -254,10 +280,28 @@ class _LibraryPageState extends State<LibraryPage> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => book.type == 'pdf'
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 260),
+        reverseTransitionDuration: const Duration(milliseconds: 190),
+        pageBuilder: (_, __, ___) => book.type == 'pdf'
             ? PdfBookPage(book: book)
             : EpubBookPage(book: book),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.025),
+                end: Offset.zero,
+              ).animate(fade),
+              child: child,
+            ),
+          );
+        },
       ),
     );
     await _refreshProgress();
@@ -401,11 +445,30 @@ class _LibraryPageState extends State<LibraryPage> {
           ),
         ],
       ),
-      body: books.isEmpty
-          ? _EmptyLibrary(onImport: busy ? null : _import)
-          : ListView(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: loadingLibrary
+                ? const SeluraLoadingView(
+                    title: 'Preparing your library',
+                    subtitle: 'Your stories stay private and offline',
+                  )
+                : libraryLoadError != null
+                    ? SeluraLoadError(
+                        title: 'Library unavailable',
+                        message: libraryLoadError!,
+                        onRetry: _load,
+                      )
+                    : books.isEmpty
+                        ? _EmptyLibrary(onImport: busy ? null : _import)
+                        : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
+                SeluraLibraryBanner(
+                  bookCount: books.length,
+                  onImport: busy ? null : _import,
+                ),
+                const SizedBox(height: 24),
                 TextField(
                   controller: searchController,
                   onChanged: (value) => setState(() => query = value),
@@ -519,7 +582,26 @@ class _LibraryPageState extends State<LibraryPage> {
                   ),
               ],
             ),
-      floatingActionButton: books.isEmpty
+          ),
+          if (busy)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.94),
+                child: const SeluraLoadingView(
+                  key: Key('selura-import-loading'),
+                  title: 'Adding your book',
+                  subtitle: 'Copying your file into your offline library',
+                  compact: true,
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: loadingLibrary || libraryLoadError != null ||
+              books.isEmpty
           ? null
           : FloatingActionButton.extended(
               onPressed: busy ? null : _import,
