@@ -4,6 +4,15 @@ import 'package:selura_reader/bookshelf_design.dart';
 import 'package:selura_reader/selura_ui.dart';
 
 void main() {
+  test('manga filter selects CBZ and excludes EPUB/PDF without losing favorites', () {
+    expect(SeluraShelfFilter.manga.label, 'Manga');
+    expect(SeluraShelfFilter.manga.accepts(format: 'cbz', favorite: false), isTrue);
+    expect(SeluraShelfFilter.manga.accepts(format: 'CBZ', favorite: true), isTrue);
+    expect(SeluraShelfFilter.manga.accepts(format: 'epub', favorite: true), isFalse);
+    expect(SeluraShelfFilter.manga.accepts(format: 'pdf', favorite: false), isFalse);
+    expect(SeluraShelfFilter.favorites.accepts(format: 'cbz', favorite: true), isTrue);
+  });
+
   test('shelf filters match the actual local book attributes', () {
     expect(
       SeluraShelfFilter.all.accepts(format: 'epub', favorite: false),

@@ -13,8 +13,8 @@ const int maxCoverEpubBytes = 128 * 1024 * 1024;
 const int maxCoverImageBytes = 16 * 1024 * 1024;
 const int coverThumbnailLongestSide = 720;
 
-/// Create a bounded, compressed JPEG for the bookshelf, never a full-size image.
-@visibleForTesting
+/// Create a bounded, compressed JPEG for EPUB and CBZ bookshelf covers.
+/// Shared by both offline cover extractors; never persist full-size images.
 List<int> encodeCoverThumbnail(image.Image cover) {
   final longestSide = cover.width > cover.height ? cover.width : cover.height;
   if (longestSide < 1) return <int>[];
