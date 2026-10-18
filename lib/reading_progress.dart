@@ -36,6 +36,11 @@ class ReadingProgressSummary {
     );
   }
 
+  static ReadingProgressSummary comic({int? page, int? totalPages}) {
+    final summary = pdf(page: page, totalPages: totalPages);
+    return summary;
+  }
+
   static ReadingProgressSummary epub({
     String? cfi,
     int? chapterNumber,
@@ -74,6 +79,8 @@ class ReadingProgressStore {
   static String epubCfiKey(String path) => 'reading_epub_cfi:$path';
   static String pdfPageKey(String path) => 'reading_pdf_page:$path';
   static String pdfTotalKey(String path) => 'reading_pdf_total_pages:$path';
+  static String comicPageKey(String path) => 'reading_comic_page:$path';
+  static String comicTotalKey(String path) => 'reading_comic_total:$path';
   static String epubChapterKey(String path) => 'reading_epub_chapter_number:$path';
   static String epubTitleKey(String path) => 'reading_epub_chapter_title:$path';
 
@@ -82,6 +89,12 @@ class ReadingProgressStore {
     required String path,
     required String type,
   }) {
+    if (type == 'cbz') {
+      return ReadingProgressSummary.comic(
+        page: prefs.getInt(comicPageKey(path)),
+        totalPages: prefs.getInt(comicTotalKey(path)),
+      );
+    }
     if (type == 'pdf') {
       return ReadingProgressSummary.pdf(
         page: prefs.getInt(pdfPageKey(path)),
@@ -93,6 +106,12 @@ class ReadingProgressStore {
       chapterNumber: prefs.getInt(epubChapterKey(path)),
       chapterTitle: prefs.getString(epubTitleKey(path)),
     );
+  }
+
+  Future<bool> recordComicTotal(String path, int totalPages) async {
+    if (totalPages < 1) return false;
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(comicTotalKey(path), totalPages);
   }
 
   Future<bool> recordPdfTotal(String path, int totalPages) async {

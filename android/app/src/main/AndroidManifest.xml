@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only the opt-in manga source browser needs internet; local books remain offline. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Android 11+ package visibility for on-device voice engines. -->
     <queries>
         <intent>

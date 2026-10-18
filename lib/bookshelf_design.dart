@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 /// Visual filters are backed by the existing local library; no books are moved
 /// or deleted when a filter changes.
-enum SeluraShelfFilter { all, epub, pdf, favorites }
+enum SeluraShelfFilter { all, epub, pdf, manga, favorites }
 
 extension SeluraShelfFilterDetails on SeluraShelfFilter {
   String get label => switch (this) {
         SeluraShelfFilter.all => 'All books',
         SeluraShelfFilter.epub => 'EPUB',
         SeluraShelfFilter.pdf => 'PDF',
+        SeluraShelfFilter.manga => 'Manga',
         SeluraShelfFilter.favorites => 'Favorites',
       };
 
@@ -17,6 +18,7 @@ extension SeluraShelfFilterDetails on SeluraShelfFilter {
         SeluraShelfFilter.all => true,
         SeluraShelfFilter.epub => format.toLowerCase() == 'epub',
         SeluraShelfFilter.pdf => format.toLowerCase() == 'pdf',
+        SeluraShelfFilter.manga => format.toLowerCase() == 'cbz',
         SeluraShelfFilter.favorites => favorite,
       };
 }
