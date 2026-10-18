@@ -17,6 +17,7 @@ import 'library_backup.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
 import 'reader_navigation.dart';
+import 'reader_chrome.dart';
 import 'epub_narration.dart';
 import 'epub_narration_sheet.dart';
 import 'selura_ui.dart';
@@ -1251,6 +1252,8 @@ class _EpubBookPageState extends State<EpubBookPage> {
   String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
 
+  void _toggleFocusMode() => setState(() => _focusMode = !_focusMode);
+
   Future<void> _showNarration() async {
     final chapter = _currentSpeechChapter;
     if (chapter == null) {
@@ -1319,6 +1322,7 @@ class _EpubBookPageState extends State<EpubBookPage> {
       // Metadata is supplementary: bookmark and reading resume still work.
     });
   }
+  bool _focusMode = false;
   EpubReadingSettings _readingSettings = const EpubReadingSettings();
   bool _readingSettingsLoaded = false;
   Future<void> _settingsWriteQueue = Future<void>.value();
@@ -1473,8 +1477,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
   Widget build(BuildContext context) {
     final activeController = controller;
     final palette = _readingSettings.theme.palette;
-    return Scaffold(
+    return ReaderFrame(
+      focusMode: _focusMode,
+      onExitFocus: _toggleFocusMode,
       backgroundColor: palette.background,
+      foregroundColor: palette.foreground,
       appBar: AppBar(
         backgroundColor: palette.background,
         foregroundColor: palette.foreground,
@@ -1488,6 +1495,12 @@ class _EpubBookPageState extends State<EpubBookPage> {
             tooltip: 'Listen to chapter',
             onPressed: activeController == null ? null : _showNarration,
             icon: const Icon(Icons.headphones_rounded),
+          ),
+          IconButton(
+            key: const Key('epub-focus-toggle'),
+            tooltip: 'Enter focus mode',
+            onPressed: _toggleFocusMode,
+            icon: const Icon(Icons.fullscreen_rounded),
           ),
           IconButton(
             tooltip: 'Reading appearance',
@@ -1555,24 +1568,22 @@ class _EpubBookPageState extends State<EpubBookPage> {
           ),
         ],
       ),
-      bottomNavigationBar: _chapterStatus == null
+      bottomBar: _chapterStatus == null
           ? null
-          : ColoredBox(
-              color: palette.background,
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-                  child: Text(
-                    _chapterStatus!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: palette.foreground.withValues(alpha: 0.75),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+          : ReaderChromeFooter(
+              category: 'CURRENT CHAPTER',
+              label: _chapterStatus!,
+              leadingIcon: Icons.auto_stories_rounded,
+              backgroundColor: palette.background,
+              foregroundColor: palette.foreground,
+              trailing: ReaderFontSizeControls(
+                fontSize: _readingSettings.fontSize,
+                foregroundColor: palette.foreground,
+                onChanged: _readingSettingsLoaded
+                    ? (size) => _changeReadingSettings(
+                          _readingSettings.copyWith(fontSize: size),
+                        )
+                    : null,
               ),
             ),
       body: _openingError != null
@@ -1654,6 +1665,9 @@ class PdfBookPage extends StatefulWidget {
 }
 
 class _PdfBookPageState extends State<PdfBookPage> {
+  bool _focusMode = false;
+  void _toggleFocusMode() => setState(() => _focusMode = !_focusMode);
+
   PdfControllerPinch? controller;
   String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
@@ -1794,10 +1808,20 @@ class _PdfBookPageState extends State<PdfBookPage> {
   @override
   Widget build(BuildContext context) {
     final activeController = controller;
-    return Scaffold(
+    return ReaderFrame(
+      focusMode: _focusMode,
+      onExitFocus: _toggleFocusMode,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
       appBar: AppBar(
         title: Text(widget.book.title),
         actions: [
+          IconButton(
+            key: const Key('pdf-focus-toggle'),
+            tooltip: 'Enter focus mode',
+            onPressed: _toggleFocusMode,
+            icon: const Icon(Icons.fullscreen_rounded),
+          ),
           IconButton(
             tooltip: 'Add bookmark',
             onPressed: activeController == null ? null : _addBookmark,
@@ -1810,19 +1834,21 @@ class _PdfBookPageState extends State<PdfBookPage> {
           ),
         ],
       ),
-      bottomNavigationBar: activeController == null
+      bottomBar: activeController == null
           ? null
-          : SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
-                child: _BookProgressIndicator(
-                  progress: ReadingProgressSummary.pdf(
-                    page: _visiblePage,
-                    totalPages: _totalPages,
-                  ),
-                ),
-              ),
+          : ReaderChromeFooter(
+              category: 'READING POSITION',
+              label: ReadingProgressSummary.pdf(
+                page: _visiblePage,
+                totalPages: _totalPages,
+              ).label,
+              progressFraction: ReadingProgressSummary.pdf(
+                page: _visiblePage,
+                totalPages: _totalPages,
+              ).pageFraction,
+              leadingIcon: Icons.picture_as_pdf_rounded,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
       body: _openingError != null
           ? SeluraLoadError(
