@@ -32,7 +32,16 @@ class NarrationText {
       'h1, h2, h3, h4, h5, h6, p, li, blockquote, pre',
     )) {
       // Example: <li><p>Text</p></li> must not be spoken twice.
-      if (element.ancestors.any(accepted.contains)) continue;
+      var parent = element.parentNode;
+      var alreadyNested = false;
+      while (parent != null) {
+        if (parent is dom.Element && accepted.contains(parent)) {
+          alreadyNested = true;
+          break;
+        }
+        parent = parent.parentNode;
+      }
+      if (alreadyNested) continue;
       final text = normalize(element.text);
       if (text.isEmpty) continue;
       accepted.add(element);
