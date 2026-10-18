@@ -7,14 +7,60 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart' hide DefaultBuilderOptions;
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
+import 'epub_narration.dart';
+import 'epub_narration_sheet.dart';
+import 'selura_ui.dart';
 
 void main() => runApp(const SeluraApp());
+
+ThemeData _seluraTheme(Brightness brightness) {
+  final dark = brightness == Brightness.dark;
+  final colors = ColorScheme.fromSeed(
+    seedColor: dark ? const Color(0xFFB9A5ED) : const Color(0xFF8066B8),
+    brightness: brightness,
+  );
+  return ThemeData(
+    colorScheme: colors,
+    useMaterial3: true,
+    scaffoldBackgroundColor:
+        dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+    appBarTheme: AppBarTheme(
+      elevation: 0,
+      backgroundColor:
+          dark ? const Color(0xFF14121D) : const Color(0xFFFCFAFF),
+      surfaceTintColor: Colors.transparent,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      color: colors.surfaceContainerLow,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+    ),
+  );
+}
 
 class SeluraApp extends StatelessWidget {
   const SeluraApp({super.key});
@@ -23,19 +69,8 @@ class SeluraApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Selura',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF8D75C9),
-          ),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFB7A2E9),
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
+        theme: _seluraTheme(Brightness.light),
+        darkTheme: _seluraTheme(Brightness.dark),
         themeMode: ThemeMode.system,
         home: const LibraryPage(),
       );
@@ -104,6 +139,8 @@ class _LibraryPageState extends State<LibraryPage> {
   final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
   bool busy = false;
+  bool loadingLibrary = true;
+  String? libraryLoadError;
   bool gridView = true;
   String query = '';
   _LibrarySort sort = _LibrarySort.recent;
@@ -121,28 +158,49 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList('books') ?? [];
-    final loadedBooks = raw
-        .map(
-          (e) => Book.fromJson(
-            jsonDecode(e) as Map<String, dynamic>,
-          ),
-        )
-        .where((book) => File(book.path).existsSync())
-        .toList();
-    final savedSort = prefs.getInt('library_sort') ?? 0;
-    final sortIndex = savedSort.clamp(0, _LibrarySort.values.length - 1).toInt();
-
     if (!mounted) return;
     setState(() {
-      books = loadedBooks;
-      gridView = prefs.getBool('library_grid') ?? true;
-      sort = _LibrarySort.values[sortIndex];
+      loadingLibrary = true;
+      libraryLoadError = null;
     });
-    await _refreshProgress();
-    // Cache old imports lazily without delaying library presentation.
-    unawaited(_warmCovers(loadedBooks));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList('books') ?? [];
+      // A broken entry should not prevent other books from appearing.
+      final loadedBooks = <Book>[];
+      for (final entry in raw) {
+        try {
+          final book = Book.fromJson(
+            jsonDecode(entry) as Map<String, dynamic>,
+          );
+          if (await File(book.path).exists()) loadedBooks.add(book);
+        } catch (_) {
+          // Ignore only the malformed entry, not the whole local library.
+        }
+      }
+      final savedSort = prefs.getInt('library_sort') ?? 0;
+      final sortIndex = savedSort.clamp(
+        0,
+        _LibrarySort.values.length - 1,
+      ).toInt();
+      if (!mounted) return;
+      setState(() {
+        books = loadedBooks;
+        gridView = prefs.getBool('library_grid') ?? true;
+        sort = _LibrarySort.values[sortIndex];
+      });
+      await _refreshProgress();
+      // Covers resolve asynchronously and are cached for future launches.
+      unawaited(_warmCovers(loadedBooks));
+    } catch (_) {
+      if (mounted) {
+        setState(() => libraryLoadError =
+            'Selura could not open its local library. Your book files '
+            'have not been deleted.');
+      }
+    } finally {
+      if (mounted) setState(() => loadingLibrary = false);
+    }
   }
 
   Future<void> _warmCovers(Iterable<Book> requestedBooks) async {
@@ -254,10 +312,28 @@ class _LibraryPageState extends State<LibraryPage> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => book.type == 'pdf'
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 260),
+        reverseTransitionDuration: const Duration(milliseconds: 190),
+        pageBuilder: (_, __, ___) => book.type == 'pdf'
             ? PdfBookPage(book: book)
             : EpubBookPage(book: book),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.025),
+                end: Offset.zero,
+              ).animate(fade),
+              child: child,
+            ),
+          );
+        },
       ),
     );
     await _refreshProgress();
@@ -401,11 +477,30 @@ class _LibraryPageState extends State<LibraryPage> {
           ),
         ],
       ),
-      body: books.isEmpty
-          ? _EmptyLibrary(onImport: busy ? null : _import)
-          : ListView(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: loadingLibrary
+                ? const SeluraLoadingView(
+                    title: 'Preparing your library',
+                    subtitle: 'Your stories stay private and offline',
+                  )
+                : libraryLoadError != null
+                    ? SeluraLoadError(
+                        title: 'Library unavailable',
+                        message: libraryLoadError!,
+                        onRetry: _load,
+                      )
+                    : books.isEmpty
+                        ? _EmptyLibrary(onImport: busy ? null : _import)
+                        : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
+                SeluraLibraryBanner(
+                  bookCount: books.length,
+                  onImport: busy ? null : _import,
+                ),
+                const SizedBox(height: 24),
                 TextField(
                   controller: searchController,
                   onChanged: (value) => setState(() => query = value),
@@ -519,7 +614,26 @@ class _LibraryPageState extends State<LibraryPage> {
                   ),
               ],
             ),
-      floatingActionButton: books.isEmpty
+          ),
+          if (busy)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.94),
+                child: const SeluraLoadingView(
+                  key: Key('selura-import-loading'),
+                  title: 'Adding your book',
+                  subtitle: 'Copying your file into your offline library',
+                  compact: true,
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: loadingLibrary || libraryLoadError != null ||
+              books.isEmpty
           ? null
           : FloatingActionButton.extended(
               onPressed: busy ? null : _import,
@@ -920,7 +1034,43 @@ class EpubBookPage extends StatefulWidget {
 
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
+  EpubChapter? _currentSpeechChapter;
+  final EpubNarrationController _narration = EpubNarrationController();
+  String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  Future<void> _showNarration() async {
+    final chapter = _currentSpeechChapter;
+    if (chapter == null) {
+      _bookmarkMessage('Wait for the chapter to load before listening.');
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => EpubNarrationSheet(
+        narration: _narration,
+        chapterHtml: chapter.HtmlContent,
+        chapterTitle: chapter.Title,
+      ),
+    );
+  }
+
+  Future<void> _retryOpening() async {
+    final oldController = controller;
+    if (!mounted) return;
+    setState(() {
+      controller = null;
+      _openingError = null;
+    });
+    // Detach the old document view before disposing its controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController?.dispose();
+      if (mounted) unawaited(_restoreProgress());
+    });
+  }
+
   final ReadingProgressStore _progressStore = const ReadingProgressStore();
   String? _chapterStatus;
   int? _lastChapterNumber;
@@ -1051,29 +1201,37 @@ class _EpubBookPageState extends State<EpubBookPage> {
   }
 
   Future<void> _restoreProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCfi = prefs.getString(_epubProgressKey(widget.book));
-    final savedSummary = _progressStore.read(
-      prefs,
-      path: widget.book.path,
-      type: 'epub',
-    );
-    final epubController = EpubController(
-      document: EpubDocument.openFile(File(widget.book.path)),
-      epubCfi: savedCfi,
-    );
-
-    if (!mounted) {
-      epubController.dispose();
-      return;
-    }
-    setState(() {
-      controller = epubController;
-      if (savedSummary.label != 'Not started' &&
-          savedSummary.label != 'Resume available') {
-        _chapterStatus = savedSummary.label;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCfi = prefs.getString(_epubProgressKey(widget.book));
+      final savedSummary = _progressStore.read(
+        prefs,
+        path: widget.book.path,
+        type: 'epub',
+      );
+      final epubController = EpubController(
+        document: EpubDocument.openFile(File(widget.book.path)),
+        epubCfi: savedCfi,
+      );
+      if (!mounted) {
+        epubController.dispose();
+        return;
       }
-    });
+      setState(() {
+        controller = epubController;
+        _openingError = null;
+        if (savedSummary.label != 'Not started' &&
+            savedSummary.label != 'Resume available') {
+          _chapterStatus = savedSummary.label;
+        }
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _openingError =
+            'Selura could not prepare this EPUB. Your saved progress '
+            'and bookmarks are still stored.');
+      }
+    }
   }
 
   Future<void> _saveProgress() async {
@@ -1085,6 +1243,7 @@ class _EpubBookPageState extends State<EpubBookPage> {
 
   @override
   void dispose() {
+    _narration.close();
     final activeController = controller;
     if (activeController != null) {
       final cfi = activeController.generateEpubCfi();
@@ -1109,6 +1268,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
         foregroundColor: palette.foreground,
         title: Text(widget.book.title),
         actions: [
+          IconButton(
+            tooltip: 'Listen to chapter',
+            onPressed: activeController == null ? null : _showNarration,
+            icon: const Icon(Icons.headphones_rounded),
+          ),
           IconButton(
             tooltip: 'Reading appearance',
             onPressed: _readingSettingsLoaded ? _showReadingSettings : null,
@@ -1158,11 +1322,30 @@ class _EpubBookPageState extends State<EpubBookPage> {
                 ),
               ),
             ),
-      body: activeController == null
-          ? Center(child: CircularProgressIndicator(color: palette.accent))
-          : EpubView(
+      body: _openingError != null
+          ? SeluraLoadError(
+              title: 'Unable to open EPUB',
+              message: _openingError!,
+              onRetry: _retryOpening,
+            )
+          : activeController == null
+              ? const SeluraLoadingView(
+                  title: 'Opening your story',
+                  subtitle: 'Preparing chapters and restoring your place',
+                )
+              : EpubView(
               controller: activeController,
               builders: EpubViewBuilders<DefaultBuilderOptions>(
+                loaderBuilder: (_) => const SeluraLoadingView(
+                  title: 'Preparing this book',
+                  subtitle: 'Formatting text for comfortable reading',
+                ),
+                errorBuilder: (_, error) => SeluraLoadError(
+                  title: 'This EPUB could not be loaded',
+                  message: 'The file may be damaged or unsupported. '
+                      'You can retry without losing your library.',
+                  onRetry: _retryOpening,
+                ),
                 options: DefaultBuilderOptions(
                   textStyle: _readingSettings.textStyle,
                   paragraphPadding: EdgeInsets.symmetric(
@@ -1189,6 +1372,14 @@ class _EpubBookPageState extends State<EpubBookPage> {
                 ),
               ),
               onChapterChanged: (value) {
+                final chapter = value?.chapter;
+                if (chapter != _currentSpeechChapter) {
+                  _currentSpeechChapter = chapter;
+                  if (_narration.status == NarrationStatus.playing ||
+                      _narration.status == NarrationStatus.paused) {
+                    unawaited(_narration.stop());
+                  }
+                }
                 _saveProgress();
                 _onReadingChapterChanged(
                   value?.chapterNumber,
@@ -1211,7 +1402,21 @@ class PdfBookPage extends StatefulWidget {
 
 class _PdfBookPageState extends State<PdfBookPage> {
   PdfControllerPinch? controller;
+  String? _openingError;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+
+  Future<void> _retryOpening() async {
+    final oldController = controller;
+    if (!mounted) return;
+    setState(() {
+      controller = null;
+      _openingError = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController?.dispose();
+      if (mounted) unawaited(_restoreProgress());
+    });
+  }
   final ReadingProgressStore _progressStore = const ReadingProgressStore();
   int? _visiblePage;
   int? _totalPages;
@@ -1281,27 +1486,35 @@ class _PdfBookPageState extends State<PdfBookPage> {
   }
 
   Future<void> _restoreProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedPage = prefs.getInt(_pdfProgressKey(widget.book)) ?? 1;
-    final pdfController = PdfControllerPinch(
-      document: PdfDocument.openFile(widget.book.path),
-      initialPage: savedPage < 1 ? 1 : savedPage,
-    );
-
-    if (!mounted) {
-      pdfController.dispose();
-      return;
-    }
-    setState(() {
-      controller = pdfController;
-      _visiblePage = savedPage < 1 ? 1 : savedPage;
-      final storedTotal = prefs.getInt(
-        ReadingProgressStore.pdfTotalKey(widget.book.path),
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPage = prefs.getInt(_pdfProgressKey(widget.book)) ?? 1;
+      final pdfController = PdfControllerPinch(
+        document: PdfDocument.openFile(widget.book.path),
+        initialPage: savedPage < 1 ? 1 : savedPage,
       );
-      _totalPages = storedTotal != null && storedTotal > 0
-          ? storedTotal
-          : null;
-    });
+      if (!mounted) {
+        pdfController.dispose();
+        return;
+      }
+      setState(() {
+        controller = pdfController;
+        _openingError = null;
+        _visiblePage = savedPage < 1 ? 1 : savedPage;
+        final storedTotal = prefs.getInt(
+          ReadingProgressStore.pdfTotalKey(widget.book.path),
+        );
+        _totalPages = storedTotal != null && storedTotal > 0
+            ? storedTotal
+            : null;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _openingError =
+            'Selura could not prepare this PDF. Your existing library '
+            'and reading history are still saved.');
+      }
+    }
   }
 
   Future<void> _savePage(int page) async {
@@ -1358,10 +1571,34 @@ class _PdfBookPageState extends State<PdfBookPage> {
                 ),
               ),
             ),
-      body: activeController == null
-          ? const Center(child: CircularProgressIndicator())
-          : PdfViewPinch(
+      body: _openingError != null
+          ? SeluraLoadError(
+              title: 'Unable to open PDF',
+              message: _openingError!,
+              onRetry: _retryOpening,
+            )
+          : activeController == null
+              ? const SeluraLoadingView(
+                  title: 'Opening your document',
+                  subtitle: 'Restoring the last page you read',
+                )
+              : PdfViewPinch(
               controller: activeController,
+              builders: pdfx.PdfViewPinchBuilders<pdfx.DefaultBuilderOptions>(
+                options: const pdfx.DefaultBuilderOptions(),
+                documentLoaderBuilder: (_) => const SeluraLoadingView(
+                  title: 'Rendering PDF pages',
+                  subtitle: 'Preparing the document for smooth scrolling',
+                ),
+                pageLoaderBuilder: (_) => const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                errorBuilder: (_, error) => SeluraLoadError(
+                  title: 'Could not display PDF',
+                  message: 'The document may be damaged or unsupported.',
+                  onRetry: _retryOpening,
+                ),
+              ),
               onDocumentLoaded: (document) {
                 final total = document.pagesCount;
                 if (total > 0) {
