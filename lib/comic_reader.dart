@@ -104,13 +104,14 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
 
   void _switchDirection() {
     final old = _controller;
+    final nextVertical = !_vertical;
     setState(() {
-      _vertical = !_vertical;
+      _vertical = nextVertical;
       _controller = PageController(initialPage: _page - 1);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => old?.dispose());
     SharedPreferences.getInstance().then(
-      (prefs) => prefs.setBool('selura_comic_vertical', _vertical),
+      (prefs) => prefs.setBool('selura_comic_vertical', nextVertical),
     );
   }
 
@@ -209,7 +210,8 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
 
   @override
   void dispose() {
-    unawaited(_savePage(_page));
+    // A damaged CBZ must not overwrite a previously saved valid location.
+    if (_archive != null) unawaited(_savePage(_page));
     _controller?.dispose();
     super.dispose();
   }
