@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'manga_sources.dart';
+import 'keiyoushi_companion.dart';
 import 'nhentai_source.dart';
 import 'nhentai_ui.dart';
 
@@ -145,6 +146,28 @@ class _MangaExtensionsPageState extends State<MangaExtensionsPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              key: const Key('keiyoushi-companion'),
+              leading: Icon(
+                Icons.hub_outlined,
+                color: colors.primary,
+              ),
+              title: const Text('Keiyoushi extensions'),
+              subtitle: const Text(
+                'Open the official repository in Mihon, the '
+                'compatible native extension reader.',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const KeiyoushiCompanionPage(),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 22),
