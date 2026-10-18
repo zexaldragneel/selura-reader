@@ -1332,8 +1332,10 @@ class _EpubBookPageState extends State<EpubBookPage> {
               switch (tool) {
                 case _EpubReaderTool.addBookmark:
                   unawaited(_addBookmark());
+                  break;
                 case _EpubReaderTool.bookmarks:
                   unawaited(_showBookmarks());
+                  break;
                 case _EpubReaderTool.chapters:
                   showModalBottomSheet<void>(
                     context: context,
@@ -1342,6 +1344,7 @@ class _EpubBookPageState extends State<EpubBookPage> {
                       controller: activeController,
                     ),
                   );
+                  break;
               }
             },
             itemBuilder: (_) => [
