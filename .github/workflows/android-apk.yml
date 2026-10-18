@@ -100,14 +100,27 @@ jobs:
           set -euo pipefail
           SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
           test -n "$SDK_PATH"
-          APKSIGNER="$(find "$SDK_PATH/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
-          AAPT="$(find "$SDK_PATH/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          test -x "$APKSIGNER"
-          test -x "$AAPT"
+          APKSIGNER="$(find "$SDK_PATH/build-tools" -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$SDK_PATH/build-tools" -name aapt | sort -V | tail -n 1)"
+          AAPT2="$(find "$SDK_PATH/build-tools" -name aapt2 | sort -V | tail -n 1)"
           APK=build/app/outputs/flutter-apk/app-release.apk
-          "$APKSIGNER" verify --print-certs "$APK" | grep -m1 'Signer #1 certificate SHA-256 digest:'
-          "$AAPT" dump badging "$APK" |
-            grep -m1 -F "package: name='com.selura.reader' versionCode='$GITHUB_RUN_NUMBER'"
+          if [ ! -x "$APKSIGNER" ] || [ ! -s "$APK" ]; then
+            echo "::error::Android APK or apksigner is missing."
+            exit 1
+          fi
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee "$RUNNER_TEMP/selura-apk-signature.txt"
+          grep -F 'Signer #1 certificate SHA-256 digest:' "$RUNNER_TEMP/selura-apk-signature.txt"
+
+          if [ -x "$AAPT" ]; then
+            "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/selura-apk-metadata.txt"
+          elif [ -x "$AAPT2" ]; then
+            "$AAPT2" dump badging "$APK" > "$RUNNER_TEMP/selura-apk-metadata.txt"
+          else
+            echo "::error::Neither aapt nor aapt2 was found in Android SDK build-tools."
+            exit 1
+          fi
+          grep -m1 -F "package: name='com.selura.reader' versionCode='$GITHUB_RUN_NUMBER'" "$RUNNER_TEMP/selura-apk-metadata.txt" ||
+            { echo "::error::APK package identity or version code mismatch."; cat "$RUNNER_TEMP/selura-apk-metadata.txt" | head -n 20; exit 1; }
       - name: Upload signed APK
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v4
