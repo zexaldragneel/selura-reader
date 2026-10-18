@@ -35,14 +35,57 @@ jobs:
         run: flutter analyze
       - name: Test cover extraction
         run: flutter test
-      - name: Build debug APK
-        run: flutter build apk --debug
-      - name: Upload CI artifact
+      # Fail closed until one permanent keystore has been created and
+      # encrypted by .github/workflows/bootstrap-signing.yml.
+      - name: Unlock persistent release signing key
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SELURA_SIGNING_PASSWORD" ]; then
+            echo "::error::Add the SELURA_SIGNING_PASSWORD repository secret. See android/signing/README.md"
+            exit 1
+          fi
+          if [ ! -f android/signing/selura-release.jks.asc ]; then
+            echo "::error::Run the Bootstrap Selura Signing Key workflow on main before publishing APKs."
+            exit 1
+          fi
+          umask 077
+          mkdir -p "$RUNNER_TEMP/selura-signing"
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback \
+              --passphrase-fd 0 --decrypt \
+              --output "$RUNNER_TEMP/selura-signing/selura-release.jks" \
+              android/signing/selura-release.jks.asc
+          keytool -list -keystore "$RUNNER_TEMP/selura-signing/selura-release.jks" \
+            -alias selura-release -storepass:env SELURA_SIGNING_PASSWORD >/dev/null
+          echo "SELURA_KEYSTORE_PATH=$RUNNER_TEMP/selura-signing/selura-release.jks" >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
+      - name: Verify APK certificate, package and version code
+        run: |
+          set -euo pipefail
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$SDK_PATH"
+          APKSIGNER="$(find "$SDK_PATH/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$SDK_PATH/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          test -x "$AAPT"
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          "$APKSIGNER" verify --print-certs "$APK" | grep -m1 'Signer #1 certificate SHA-256 digest:'
+          "$AAPT" dump badging "$APK" |
+            grep -m1 -F "package: name='com.selura.reader' versionCode='$GITHUB_RUN_NUMBER'"
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: selura-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: selura-signed-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+      - name: Delete decrypted signing material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/selura-signing"
 
   release:
     name: Publish direct APK
@@ -57,10 +100,10 @@ jobs:
       - name: Download built APK
         uses: actions/download-artifact@v4
         with:
-          name: selura-debug-apk
+          name: selura-signed-apk
           path: release
       - name: Rename APK
-        run: mv release/app-debug.apk release/selura-debug.apk
+        run: mv release/app-release.apk release/selura.apk
       - name: Publish direct-install APK
         env:
           GH_TOKEN: ${{ github.token }}
@@ -68,17 +111,17 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             TAG="test-pr-${{ github.event.pull_request.number }}"
             TITLE="Selura Test PR #${{ github.event.pull_request.number }}"
-            NOTES="Direct-install test APK for Pull Request #${{ github.event.pull_request.number }}. Built by GitHub Actions run #${{ github.run_number }}."
+            NOTES="Release-signed direct-install test APK for Pull Request #${{ github.event.pull_request.number }}. Built by GitHub Actions run #${{ github.run_number }}."
             gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 && \
               gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag || true
           else
             TAG="dev-${{ github.run_number }}"
             TITLE="Selura Development Build #${{ github.run_number }}"
-            NOTES="Direct-install Selura Android APK generated from main by GitHub Actions."
+            NOTES="Release-signed Selura Android APK generated from main by GitHub Actions. Persistently signed; uses an incrementing Android version code."
           fi
 
           gh release create "$TAG" \
-            "release/selura-debug.apk#Selura Debug APK" \
+            "release/selura.apk#Selura Signed APK" \
             --repo "${{ github.repository }}" \
             --target "${{ github.sha }}" \
             --title "$TITLE" \
