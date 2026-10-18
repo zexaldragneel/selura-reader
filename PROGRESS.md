@@ -147,18 +147,27 @@ CI status:
 - Verified GitHub release artifacts: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-13/selura.apk and https://github.com/john-selwyn/selura-reader/releases/download/dev-74/selura.apk (the latter SHA-256 asset digest `bf11d331c7d0fc67cd932013b6b69fcbc8e8a5a8e0514e3b29d32988b9a3329e`).
 - **Outstanding device verification:** test that Build #74 installs over already-installed Build #73 without uninstalling (or a later signed APK installs over #74). This does **not** remove the one-time old debug-signature incompatibility or automatically save app-private library data.
 
+## Completed milestone — Signed Android EPUB import repair (PR #14)
+- On-device failure in signed Builds #73/#74: importing an EPUB triggered a Java `NoSuchMethodError` for `io.flutter.plugins.sharedpreferences.SharedPreferencesApiRegistrar.getAll(String,List,Continuation)`. This was a SharedPreferences native plugin ABI issue rather than an EPUB format problem.
+- Build #74 dependencies resolved `shared_preferences_android 2.5.0`, whose new JNI implementation triggered the runtime failure. PR #14 on branch `fix/shared-preferences-release-import` applied an explicit `dependency_overrides` pin to **`shared_preferences_android 2.4.28`** and added an Android CI guard requiring the exact resolved version.
+- CI Build #77 (run `39090015554`) passed dependency verification, `flutter analyze`, `flutter test`, signed release APK compilation, APK signature/Android package/version-code verification, artifact upload, and direct release publishing (`test-pr-14/selura.apk`). Package `com.selura.reader`, versionCode `77`, same permanent signing certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
+- **Device verification:** user installed the fix and confirmed that EPUB importing/reading works again. The signed APK update process was previously tested successfully from Build #73 to #74 without uninstalling.
+- PR #14 squash-merged into `main` as `b94153c8491389551d53c43791c047af441272ab` after device confirmation.
+- **Next:** verify a successful post-merge `main` signed APK build; retain the 2.4.28 pin until a tested upstream plugin release is available. Do not upgrade the native plugin blindly.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
-- Release signing is configured: new `selura.apk` releases from Build #73 onward use the permanent certificate. Prior `selura-debug.apk` builds remain signed by unrelated debug keys and cannot upgrade normally to new release-signed APKs.
+- Release-signed builds use the permanent APK certificate; the user successfully upgraded Build #73 to #74 in place on Android. Legacy `selura-debug.apk` builds still have incompatible ephemeral signing identities.
+- `shared_preferences_android` is intentionally pinned to **2.4.28** after the signed-release JNI regression on 2.5.0; reassess only with device-tested compatibility.
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Do not uninstall current debug-signed Selura until user confirms whether preserving its app-private books/bookmarks/reading positions is necessary; there is no verified lossless migration path.
-2. If user can reimport originals and accepts losing local app data, install a first permanent-signed build after the one-time debug-to-release transition. Android cannot replace an incompatible debug-signed install in place.
-3. Test a newer permanent-signed APK as an in-place upgrade over an older permanent-signed APK, confirming the bookshelf and reading progress survive.
-4. In-place signed upgrade verified on Android for #73 to #74; investigate the newly reported EPUB import error in signed release before further feature milestones.
-5. Continue toward offline CBZ manga reading after safe update installation is verified.
+1. Verify post-merge `main` signed APK build and direct release publishing for PR #14.
+2. Add an in-app backup/export and restore path for imported books, progress, and bookmarks before future risky migrations.
+3. Start offline CBZ manga import/reader support, preserving the existing EPUB/PDF features and saved preferences.
+4. Add tests for release-mode plugin compatibility and retain the verified Android preferences override until an upstream fix is tested on a device.
+5. Expand EPUB/PDF file-based smoke testing and address the non-fatal pdfx Kotlin/Gradle compatibility warning.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -172,6 +181,7 @@ CI status:
 - Pull Request #9: local EPUB/PDF bookmarks, Build #48 (run `39079512964`) passed analysis/tests/APK/release; user confirmed runtime works, squash-merged at `e9bcc5a365f53e01f26a9f23cceb33e38f83a2ad`.
 - Pull Request #10: EPUB appearance and typography, Build #52 (run `39081145276`) passed analysis/tests/APK/release; user confirmed Android runtime works, squash-merged at `1396846c795a3cf25f89fda6fb48eda893f7873f`.
 - Pull Request #11: accurate PDF pages and EPUB chapters, Build #58 (run `39082566356`) passed analysis/tests/APK/release; user confirmed feature works but reports update installation failures with debug APKs; squash-merged at `2c3f71cbbf7e0c4c3966689ea3be95c6398031a0`.
+- Pull Request #14: signed-release EPUB import plugin compatibility fix, Build #77 (run `39090015554`) passed source/tests/release APK/signing/release publishing; user confirmed Android EPUB import works, squash-merged at `b94153c8491389551d53c43791c047af441272ab`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
