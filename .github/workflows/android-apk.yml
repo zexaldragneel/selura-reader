@@ -182,11 +182,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            TAG="test-pr-${{ github.event.pull_request.number }}"
-            TITLE="Selura Test PR #${{ github.event.pull_request.number }}"
-            NOTES="Release-signed direct-install test APK for Pull Request #${{ github.event.pull_request.number }}. Built by GitHub Actions run #${{ github.run_number }}."
-            gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 && \
-              gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag || true
+            # Immutable per-run tag prevents another in-flight PR workflow
+            # from replacing the APK that has already passed device testing.
+            TAG="test-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+            TITLE="Selura PR #${{ github.event.pull_request.number }} · Build #${{ github.run_number }}"
+            NOTES="Release-signed direct-install test APK from PR #${{ github.event.pull_request.number }}, Build #${{ github.run_number }}. Never replaces another run's APK."
           else
             TAG="dev-${{ github.run_number }}"
             TITLE="Selura Development Build #${{ github.run_number }}"
