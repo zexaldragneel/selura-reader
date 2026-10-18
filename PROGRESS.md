@@ -96,8 +96,8 @@ CI status:
 - Device verification: user confirmed PR #10 APK works on Android. The user did not separately report individual test results for every theme, margin, bookmark and persistence edge case; those remain useful regression checks.
 - Post-merge `main` Builds #54 (run `39082036348`) and #55 (run `39082054291`) both passed full Android APK build and direct APK publishing.
 
-## Current milestone — Accurate reading position (PR #11)
-- Branch `feature/reading-progress-details`; PR https://github.com/john-selwyn/selura-reader/pull/11 is OPEN and must not be merged before Android device testing.
+## Completed milestone — Accurate reading position (PR #11)
+- PR #11 (`feature/reading-progress-details`) squash-merged into `main` at `2c3f71cbbf7e0c4c3966689ea3be95c6398031a0` after user confirmed reading-progress APK works on Android.
 - Existing EPUB CFI (`reading_epub_cfi:`) and PDF page (`reading_pdf_page:`) keys are retained unchanged to preserve auto-resume for previously imported books.
 - Added `lib/reading_progress.dart` with optional EPUB chapter number/title and actual PDF total-page metadata, plus backward-compatible, per-book summary formatting.
 - PDF: `PdfViewPinch.onDocumentLoaded` persists the document's real `pagesCount`. Reader and bookshelf/Continue Reading show `Page X of Y` with a page-position bar when totals are available. Older PDFs show `Page X` until reopened; no invented totals or reading percentages.
@@ -107,7 +107,10 @@ CI status:
 - Implementation commits: `05d226048099f185c47e1a0b57ae1f81c741cd1b`, `2994c201aa2f8d6c7d60c1153899d9abcbbe7d3d`, `d45f8c68f82107857c980463d2c288bd7261c8b1`, `7b4b39fa6431748be152fbda3efdc35fdf27344b`, `ff65d6cb8149868186cfdceca1759058f0b84bfa`, `623444753f7596b9e6d08d21447372e0f02c32e8`, `1e9e60c0e8776f0a466d62e265fc79e0c505c93f`, and `c6275c9399df8115972c22d84c94ab2de9f10032`.
 - Build #58 (GitHub Actions run `39082566356`) passed Android project verification, dependencies, `flutter analyze`, `flutter test`, APK compilation, artifact upload and direct APK prerelease publishing.
 - Direct APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-11/selura-debug.apk (GitHub asset SHA-256 `121e5adb556c9c6472d269ba3dfa0cc0ccdf0d271caa8275821476fa1b07a967`).
-- Device/runtime verification: PENDING. Test a multi-page PDF and multi-chapter EPUB, progress after reopening offline, reading controls and bookmarks before merging PR #11.
+- Device/runtime verification: user confirmed the reading-progress test APK works on Android; comprehensive checks for every EPUB/PDF edge case were not individually reported.
+- New reported blocker: successive APKs cannot be installed over existing Selura; user has had to uninstall before installing updates. This risks deleting app-private EPUB/PDF imports, bookmarks, and preferences.
+- Root-cause assessment: GitHub Actions builds with `flutter build apk --debug` on fresh ephemeral runners, with no persistent signing keystore; signing certificate changes can cause update rejection. Every build also uses `version: 0.1.0+1` with no monotonic build number.
+- Corrective work: configure persistent signing and monotonic versionCode before further installable APK releases; first signing-key transition cannot replace an incompatible preexisting signing certificate without uninstall, so plan data preservation carefully.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -116,11 +119,11 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Device-test PR #11 test APK on Android: PDF page totals/bar, EPUB chapter indicator, reopen/offline saved metadata, bookmarks and EPUB appearance.
-2. Fix any issues found; merge PR #11 only after successful user verification and confirm the post-merge `main` APK.
-3. Review release signing and debug APK upgrade compatibility.
-4. Begin local CBZ manga import and page reading, then right-to-left and webtoon modes.
-5. Expand EPUB/PDF regression testing on varied files.
+1. Fix Android in-place update failures using a consistent, protected release-signing key and monotonic version codes; do not publish fresh-runner debug APKs as updateable releases.
+2. Set up signing securely via GitHub Secrets from a phone; document the unavoidable existing-debug-signature transition and app-private data-loss risk before installing.
+3. Verify two consecutive Android APKs have identical signing certificate fingerprints and increasing versionCode; user tests in-place install without uninstall.
+4. Recheck post-merge PR #11 `main` CI publishing after signing is configured.
+5. Add offline CBZ manga support after reliable updates are in place.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -133,6 +136,7 @@ CI status:
 - Pull Request #8: real EPUB covers, Build #43 passed, offline on-device cover display/resume verified, squash-merged at `c9d29173690f259af4f67e3ac3f374953143ff2f`.
 - Pull Request #9: local EPUB/PDF bookmarks, Build #48 (run `39079512964`) passed analysis/tests/APK/release; user confirmed runtime works, squash-merged at `e9bcc5a365f53e01f26a9f23cceb33e38f83a2ad`.
 - Pull Request #10: EPUB appearance and typography, Build #52 (run `39081145276`) passed analysis/tests/APK/release; user confirmed Android runtime works, squash-merged at `1396846c795a3cf25f89fda6fb48eda893f7873f`.
+- Pull Request #11: accurate PDF pages and EPUB chapters, Build #58 (run `39082566356`) passed analysis/tests/APK/release; user confirmed feature works but reports update installation failures with debug APKs; squash-merged at `2c3f71cbbf7e0c4c3966689ea3be95c6398031a0`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
