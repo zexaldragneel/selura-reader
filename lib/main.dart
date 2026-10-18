@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:epub_view/epub_view.dart' hide Image;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart' hide DefaultBuilderOptions;
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
 import 'cover_cache.dart';
+import 'library_backup.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
 import 'reader_navigation.dart';
@@ -125,6 +127,7 @@ String _epubProgressKey(Book book) => 'reading_epub_cfi:${book.path}';
 String _pdfProgressKey(Book book) => 'reading_pdf_page:${book.path}';
 
 enum _LibrarySort { recent, title, favorites, format }
+enum _LibraryAction { backup, restore }
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -140,6 +143,8 @@ class _LibraryPageState extends State<LibraryPage> {
   final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
   bool busy = false;
+  String busyTitle = 'Adding your book';
+  String busySubtitle = 'Copying your file into your offline library';
   bool loadingLibrary = true;
   String? libraryLoadError;
   bool gridView = true;
@@ -258,7 +263,12 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _import() async {
-    setState(() => busy = true);
+    if (busy) return;
+    setState(() {
+      busy = true;
+      busyTitle = 'Adding your book';
+      busySubtitle = 'Copying your file into your offline library';
+    });
     try {
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
@@ -327,6 +337,132 @@ class _LibraryPageState extends State<LibraryPage> {
       }
     } finally {
       if (mounted) setState(() => busy = false);
+    }
+  }
+
+
+  void _libraryMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _exportLibraryBackup() async {
+    if (busy || loadingLibrary) return;
+    setState(() {
+      busy = true;
+      busyTitle = 'Preparing your backup';
+      busySubtitle = 'Packing your books and reading positions offline';
+    });
+    File? temporaryZip;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final temp = await getTemporaryDirectory();
+      final name = 'Selura-library-' +
+          DateTime.now().millisecondsSinceEpoch.toString() + '.zip';
+      temporaryZip = File(temp.path + '/' + name);
+      await const SeluraBackupService().export(
+        books: books.map((book) => BackupBook(
+          path: book.path,
+          title: book.title,
+          type: book.type,
+          favorite: book.favorite,
+          lastOpened: book.lastOpened,
+        )).toList(),
+        prefs: prefs,
+        output: temporaryZip,
+      );
+      if (!mounted) return;
+      final saved = await FlutterFileDialog.saveFile(
+        params: SaveFileDialogParams(
+          sourceFilePath: temporaryZip.path,
+          fileName: name,
+          mimeTypesFilter: const ['application/zip'],
+        ),
+      );
+      _libraryMessage(saved == null
+          ? 'Backup cancelled. Your library is unchanged.'
+          : 'Backup saved. Keep the ZIP outside Selura for safekeeping.');
+    } catch (error) {
+      _libraryMessage('Could not create backup: ' + error.toString());
+    } finally {
+      try {
+        if (temporaryZip != null && await temporaryZip.exists()) {
+          await temporaryZip.delete();
+        }
+      } catch (_) {
+        // Temporary cleanup cannot affect library files.
+      }
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _restoreLibraryBackup() async {
+    if (busy || loadingLibrary) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Restore Selura library'),
+        content: const Text(
+          'Select a Selura ZIP backup. New books and their reading positions '
+          'will be restored without removing or replacing your existing '
+          'books, bookmarks or preferences. Matching books are skipped. '
+          'Keep your original backup until the restoration is verified.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Choose backup'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final selected = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+    );
+    if (selected == null || !mounted) return;
+    if (selected.path == null) {
+      _libraryMessage('Could not access that ZIP file on this phone.');
+      return;
+    }
+    setState(() {
+      busy = true;
+      busyTitle = 'Restoring your library';
+      busySubtitle = 'Validating books and remapping saved positions';
+    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final documents = await getApplicationDocumentsDirectory();
+      final result = await const SeluraBackupService().restore(
+        backup: File(selected.path!),
+        documents: documents,
+        prefs: prefs,
+      );
+      if (!mounted) return;
+      await _load();
+      _libraryMessage('Restored ' + result.imported.toString() +
+          ' books; skipped ' + result.skipped.toString() +
+          ' already in your library.');
+    } catch (error) {
+      _libraryMessage('Restore cancelled: ' + error.toString());
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  void _selectLibraryAction(_LibraryAction action) {
+    switch (action) {
+      case _LibraryAction.backup:
+        unawaited(_exportLibraryBackup());
+        break;
+      case _LibraryAction.restore:
+        unawaited(_restoreLibraryBackup());
+        break;
     }
   }
 
@@ -490,6 +626,29 @@ class _LibraryPageState extends State<LibraryPage> {
                   ),
                 )
                 .toList(),
+          ),
+          PopupMenuButton<_LibraryAction>(
+            tooltip: 'Library backup and restore',
+            enabled: !busy && !loadingLibrary,
+            onSelected: _selectLibraryAction,
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: _LibraryAction.backup,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.archive_outlined),
+                  title: Text('Back up library'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _LibraryAction.restore,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.settings_backup_restore_rounded),
+                  title: Text('Restore backup'),
+                ),
+              ),
+            ],
           ),
           IconButton(
             tooltip: gridView ? 'List view' : 'Grid view',
@@ -671,10 +830,10 @@ class _LibraryPageState extends State<LibraryPage> {
                     .colorScheme
                     .surface
                     .withValues(alpha: 0.94),
-                child: const SeluraLoadingView(
-                  key: Key('selura-import-loading'),
-                  title: 'Adding your book',
-                  subtitle: 'Copying your file into your offline library',
+                child: SeluraLoadingView(
+                  key: const Key('selura-import-loading'),
+                  title: busyTitle,
+                  subtitle: busySubtitle,
                   compact: true,
                 ),
               ),
