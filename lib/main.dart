@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bookmarks.dart';
 import 'cover_cache.dart';
+import 'cover_decode.dart';
 import 'library_backup.dart';
 import 'reader_settings.dart';
 import 'reading_progress.dart';
@@ -945,19 +946,31 @@ class _BookCover extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (coverPath != null)
-            ClipRRect(
-              borderRadius: borderRadius,
-              child: Image.file(
-                File(coverPath!),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Icon(
-                    Icons.auto_stories_rounded,
-                    size: 46,
-                    color: scheme.onPrimaryContainer,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final density = MediaQuery.devicePixelRatioOf(context);
+                return ClipRRect(
+                  borderRadius: borderRadius,
+                  child: Image.file(
+                    File(coverPath!),
+                    fit: BoxFit.cover,
+                    cacheWidth: seluraCoverDecodePixels(
+                      constraints.maxWidth, density,
+                    ),
+                    cacheHeight: seluraCoverDecodePixels(
+                      constraints.maxHeight, density,
+                    ),
+                    filterQuality: FilterQuality.low,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Icon(
+                        Icons.auto_stories_rounded,
+                        size: 46,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             )
           else
             Center(
