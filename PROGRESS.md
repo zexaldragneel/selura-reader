@@ -178,7 +178,7 @@ CI status:
 - **Build #102** (run `39096407925`) passed dependency pin verification, `flutter analyze`, `flutter test`, signed APK compilation, cert/package/version checks, CI artifact upload, and published the direct APK at https://github.com/john-selwyn/selura-reader/releases/download/test-pr-16-run-102/selura.apk.
 - Build #102 APK: `com.selura.reader` version `0.2.0`, versionCode `102`; certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` (unchanged); APK SHA-256 `352bdc48c929592866793fe63df25cb4b6024766b93f4bb3de1a568d1cfe1b4b`.
 - **Device result:** user installed Build #102 and explicitly confirmed Selura and the corrected reader opening now work; broad device testing of huge libraries and unusually structured EPUBs remains outstanding.
-- **Post-merge main build:** Build #103 (run `39097231670`) started for squash commit `02e125515d16f63ecb14cd9612b014735d638287`; final signing and publication result must be verified.
+- **Post-merge main Build #103** (run `39097231670`) completed successfully for squash commit `02e125515d16f63ecb14cd9612b014735d638287`: Flutter analysis/tests, pinned Android preferences dependency, signed Android release APK, certificate/identity/version checks, artifact upload, and direct GitHub Release publication all passed. Published APK: https://github.com/john-selwyn/selura-reader/releases/download/dev-103/selura.apk (`60,281,649` bytes; asset SHA-256 `d10d3ad5a0426c85349d1251732df904b5bc29a86c6d227d706c43aade568a6c`). Verified `com.selura.reader`, versionCode `103`, versionName `0.2.0`; permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged. User tested prior signed Build #102 successfully; Build #103 has not separately been device-tested.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -188,7 +188,7 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify successful, permanently signed post-merge `main` Build #103 (run `39097231670`) and its direct APK publication. Builds #96/#97 already validated PR #15 after merge.
+1. Complete the planned safe offline backup/export and restore feature through a new feature branch/PR with non-destructive, path-remapping restoration and automated tests. Do not merge until user Android testing.
 2. Prioritize safe offline **backup/export and restore** for EPUB/PDF originals, library metadata, favorites, bookmarks, reading locations and preferences. Ensure non-destructive restore and path remapping with import validation; user data protection matters before more experimental features.
 3. Continue improving EPUB TTS UX (optional sentence-accurate resume, clearer controls) and measure large-library behavior on real Android devices; do not regress current working features.
 4. Later: EPUB highlights/annotations and offline CBZ manga support. Keep `shared_preferences_android` pinned at `2.4.28` until an updated implementation is device-verified.
