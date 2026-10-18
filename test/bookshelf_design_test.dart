@@ -114,10 +114,10 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MaterialApp(
+    await tester.pumpWidget(MaterialApp(
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData(brightness: Brightness.dark),
-      home: Scaffold(
+      home: const Scaffold(
         body: Padding(
           padding: EdgeInsets.all(12),
           child: SeluraLibraryBanner(
