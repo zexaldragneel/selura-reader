@@ -302,7 +302,7 @@ class SeluraLibraryBanner extends StatelessWidget {
                   const SizedBox(width: 8),
                   IconButton.filled(
                     key: const Key('selura-banner-import'),
-                    tooltip: 'Import EPUB or PDF',
+                    tooltip: 'Import EPUB, PDF or CBZ manga',
                     onPressed: onImport,
                     style: IconButton.styleFrom(
                       backgroundColor: ink,
