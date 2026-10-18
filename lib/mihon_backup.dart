@@ -417,7 +417,7 @@ Future<MihonLibraryData> _decodeFile(String path) async {
         throw const FormatException('Backup expands beyond 128 MB.');
       }
     }
-  } on ZLibException {
+  } on FormatException {
     throw const FormatException('Compressed Mihon backup is corrupted.');
   }
   return decodeMihonProto(builder.takeBytes());
