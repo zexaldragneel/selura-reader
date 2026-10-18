@@ -120,9 +120,17 @@ CI status:
 - Build validation includes Android package ID verification, source analysis/tests, a temporary non-published release signing smoke test before permanent setup, and `apksigner` + `aapt` validation for published builds. Fork PRs do not receive signing secrets.
 - Local Java `keytool` + GPG AES256 encrypt/decrypt/keystore round-trip was verified successfully without exposing any persistent signing credentials.
 - CI Build #62 (run `39083965699`) passed `flutter analyze` and `flutter test`, then intentionally failed at permanent-key setup because it has not yet been configured. No unsigned APK was published. Build #64 (run `39084137395`) passed source analysis, `flutter test`, **Android release APK compilation signed with a disposable test key, and APK signature verification**. It then intentionally failed at `Unlock persistent release signing key` because the GitHub repository signing secret and permanent encrypted keystore are not configured; the release publishing job was correctly skipped.
-- **BLOCKER: no permanent signing key or signed Selura release APK has been generated/verified yet.** User must add a random >=24-character repository Actions secret named `SELURA_SIGNING_PASSWORD` via GitHub Settings from phone (never share the value in chat), then run `Actions → Bootstrap Selura Signing Key` on main **once**.
+- **Signing bootstrap complete** (run #1 success). The permanent encrypted signing key now exists, but no final permanently signed Selura APK has been verified yet; CI release publishing and actual in-place update behavior still require verification.
 - The already-installed debug-signed Selura cannot be updated by an APK bearing a new signing certificate. Do **not** uninstall before considering loss of app-private imported books and reading data. There is no verified lossless migration path to the first permanent signer yet. Once that initial transition has been made, two consecutive new builds must be checked for identical certificate fingerprint and increasing version codes, and then an on-device in-place update must be tested without uninstall.
 - Setup and security instructions: `android/signing/README.md`. **Do not claim the update installation problem is fully fixed until the signer is bootstrapped and an in-place Android update has been verified.**
+
+## Signing bootstrap activation — 2026-10-18
+- User confirmed `SELURA_SIGNING_PASSWORD` was added as a GitHub Actions repository secret (secret value is not stored in this file).
+- To avoid another manual GitHub screen, the one-time bootstrap workflow was augmented with an exact-path push trigger in commit `4ff98fda8234be09dc128f6b97d59e8ee317966d`; trigger file `android/signing/START_SIGNING_SETUP` added in `2c67b074cd9bab72bef824cb05e0a052cf553435`.
+- **Bootstrap Selura Signing Key** run #1 (`39087102850`) completed **successfully**. The encrypted permanent Android signing key now exists at `android/signing/selura-release.jks.asc` on `main` (ASCII-armored PGP symmetric ciphertext, not a raw keystore).
+- The bootstrap created a key commit `2b6a5018905aa77c6dffa9aa5b1dd0f9df4b2159` and dispatched **Build Android APK #70** (`39087117047`). At documentation time the first permanent-signer release APK was not yet verified.
+- Next: confirm Build #70 analysis/tests/release-signing, inspect `apksigner` SHA-256 fingerprint and APK versionCode, then compare against a second signed build. Do not claim in-place upgrade works until Android device testing.
+- Old debug-signed APKs remain incompatible with the new permanent key; DO NOT uninstall old Selura until the owner understands app-private data loss and verifies copies of imported files.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -131,11 +139,11 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. User securely adds `SELURA_SIGNING_PASSWORD` as a repository Actions secret (>=24 random characters, stored in password manager).
-2. User runs `Bootstrap Selura Signing Key` once on main. Verify encrypted key commit, successful first release build, exact signing certificate and version code.
-3. Verify the next signed APK has the same certificate and a higher versionCode; perform an Android update **without uninstalling** after the first-signature migration is safely addressed.
-4. Do not erase current app-private book data without confirming a recovery/reimport plan. Add backup/export functionality once reliable upgrades are available.
-5. Resume offline CBZ manga reader development after safe update installation is verified.
+1. Verify first permanent-key release Build #70 APK, signing certificate and version code.
+2. Verify a second signed APK has the identical certificate SHA-256 and higher Android versionCode; test installing the second APK over the first without uninstalling.
+3. Before the old debug-to-release transition, safeguard original EPUB/PDF copies and decide how to handle private bookmarks/progress; Android will not preserve app data through uninstall.
+4. Record on-device upgrade verification and only then consider the signing issue resolved.
+5. Implement in-app backup/restore and offline CBZ manga reading as following milestones.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
