@@ -16,6 +16,7 @@ import 'cover_cache.dart';
 import 'comic_archive.dart';
 import 'comic_reader.dart';
 import 'manga_online_ui.dart';
+import 'mihon_library_ui.dart';
 import 'cover_decode.dart';
 import 'library_backup.dart';
 import 'reader_settings.dart';
@@ -133,7 +134,7 @@ String _epubProgressKey(Book book) => 'reading_epub_cfi:${book.path}';
 String _pdfProgressKey(Book book) => 'reading_pdf_page:${book.path}';
 
 enum _LibrarySort { recent, title, favorites, format }
-enum _LibraryAction { backup, restore }
+enum _LibraryAction { backup, restore, mihon }
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -486,6 +487,14 @@ class _LibraryPageState extends State<LibraryPage> {
       case _LibraryAction.restore:
         unawaited(_restoreLibraryBackup());
         break;
+      case _LibraryAction.mihon:
+        unawaited(Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => const MihonLibraryPage(),
+          ),
+        ));
+        break;
     }
   }
 
@@ -699,7 +708,15 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.settings_backup_restore_rounded),
-                  title: Text('Restore backup'),
+                  title: Text('Restore Selura backup'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _LibraryAction.mihon,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.import_contacts_outlined),
+                  title: Text('Mihon library & backup'),
                 ),
               ),
             ],
