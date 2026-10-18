@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'bookmarks.dart';
 import 'cover_cache.dart';
 import 'reader_settings.dart';
+import 'reading_progress.dart';
 
 void main() => runApp(const SeluraApp());
 
@@ -98,7 +99,7 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   List<Book> books = [];
-  final Map<String, String> progressLabels = {};
+  final Map<String, ReadingProgressSummary> progressLabels = {};
   final Map<String, String> coverPaths = {};
   final EpubCoverCache coverCache = EpubCoverCache();
   final TextEditingController searchController = TextEditingController();
@@ -166,17 +167,14 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _refreshProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    final next = <String, String>{};
+    const store = ReadingProgressStore();
+    final next = <String, ReadingProgressSummary>{};
     for (final book in books) {
-      if (book.type == 'pdf') {
-        final page = prefs.getInt(_pdfProgressKey(book));
-        next[book.path] = page == null ? 'Not started' : 'Page $page';
-      } else {
-        final cfi = prefs.getString(_epubProgressKey(book));
-        next[book.path] = cfi == null || cfi.isEmpty
-            ? 'Not started'
-            : 'Resume available';
-      }
+      next[book.path] = store.read(
+        prefs,
+        path: book.path,
+        type: book.type,
+      );
     }
     if (!mounted) return;
     setState(() {
@@ -448,7 +446,7 @@ class _LibraryPageState extends State<LibraryPage> {
                         return _ContinueCard(
                           book: book,
                           coverPath: coverPaths[book.path],
-                          progress: progressLabels[book.path] ?? 'Not started',
+                          progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                           onTap: () => _openBook(book),
                         );
                       },
@@ -495,7 +493,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       return _GridBookCard(
                         book: book,
                         coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? 'Not started',
+                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                         onTap: () => _openBook(book),
                         onFavorite: () => _toggleFavorite(book),
                       );
@@ -512,7 +510,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       return _ListBookCard(
                         book: book,
                         coverPath: coverPaths[book.path],
-                        progress: progressLabels[book.path] ?? 'Not started',
+                        progress: progressLabels[book.path] ?? ReadingProgressSummary.notStarted,
                         opened: _relativeOpened(book),
                         onTap: () => _openBook(book),
                         onFavorite: () => _toggleFavorite(book),
@@ -672,10 +670,43 @@ class _BookCover extends StatelessWidget {
   }
 }
 
+class _BookProgressIndicator extends StatelessWidget {
+  const _BookProgressIndicator({required this.progress});
+
+  final ReadingProgressSummary progress;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            progress.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (progress.pageFraction != null) ...[
+            const SizedBox(height: 5),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progress.pageFraction,
+                minHeight: 4,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest,
+              ),
+            ),
+          ],
+        ],
+      );
+}
+
 class _ContinueCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final VoidCallback onTap;
 
   const _ContinueCard({
@@ -718,7 +749,7 @@ class _ContinueCard extends StatelessWidget {
                               ),
                         ),
                         const SizedBox(height: 8),
-                        Text(progress),
+                        _BookProgressIndicator(progress: progress),
                         const Spacer(),
                         Row(
                           children: [
@@ -744,7 +775,7 @@ class _ContinueCard extends StatelessWidget {
 class _GridBookCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
 
@@ -796,12 +827,7 @@ class _GridBookCard extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 3),
-            Text(
-              progress,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            _BookProgressIndicator(progress: progress),
           ],
         ),
       );
@@ -810,7 +836,7 @@ class _GridBookCard extends StatelessWidget {
 class _ListBookCard extends StatelessWidget {
   final Book book;
   final String? coverPath;
-  final String progress;
+  final ReadingProgressSummary progress;
   final String opened;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
@@ -854,7 +880,9 @@ class _ListBookCard extends StatelessWidget {
                             ),
                       ),
                       const SizedBox(height: 7),
-                      Text('${book.type.toUpperCase()} • $progress'),
+                      Text(book.type.toUpperCase()),
+                      const SizedBox(height: 4),
+                      _BookProgressIndicator(progress: progress),
                       const SizedBox(height: 3),
                       Text(
                         opened,
@@ -893,6 +921,42 @@ class EpubBookPage extends StatefulWidget {
 class _EpubBookPageState extends State<EpubBookPage> {
   EpubController? controller;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+  final ReadingProgressStore _progressStore = const ReadingProgressStore();
+  String? _chapterStatus;
+  int? _lastChapterNumber;
+  String? _lastChapterTitle;
+  Future<void> _chapterWriteQueue = Future<void>.value();
+
+  void _onReadingChapterChanged(int? chapterNumber, String? chapterTitle) {
+    if (chapterNumber == null || chapterNumber < 1) return;
+    final title = ReadingProgressSummary.normalizedChapterTitle(chapterTitle);
+    if (_lastChapterNumber == chapterNumber && _lastChapterTitle == title) {
+      return;
+    }
+    _lastChapterNumber = chapterNumber;
+    _lastChapterTitle = title;
+    final currentLabel = ReadingProgressSummary.epub(
+      cfi: 'current-position',
+      chapterNumber: chapterNumber,
+      chapterTitle: title,
+    ).label;
+    // The EPUB position listener can notify during layout; avoid calling
+    // setState synchronously during the descendant's build phase.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _chapterStatus != currentLabel) {
+        setState(() => _chapterStatus = currentLabel);
+      }
+    });
+    _chapterWriteQueue = _chapterWriteQueue.then((_) {
+      return _progressStore.recordEpubChapter(
+        widget.book.path,
+        chapterNumber: chapterNumber,
+        chapterTitle: title,
+      );
+    }).catchError((Object _) {
+      // Metadata is supplementary: bookmark and reading resume still work.
+    });
+  }
   EpubReadingSettings _readingSettings = const EpubReadingSettings();
   bool _readingSettingsLoaded = false;
   Future<void> _settingsWriteQueue = Future<void>.value();
@@ -989,6 +1053,11 @@ class _EpubBookPageState extends State<EpubBookPage> {
   Future<void> _restoreProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final savedCfi = prefs.getString(_epubProgressKey(widget.book));
+    final savedSummary = _progressStore.read(
+      prefs,
+      path: widget.book.path,
+      type: 'epub',
+    );
     final epubController = EpubController(
       document: EpubDocument.openFile(File(widget.book.path)),
       epubCfi: savedCfi,
@@ -998,7 +1067,13 @@ class _EpubBookPageState extends State<EpubBookPage> {
       epubController.dispose();
       return;
     }
-    setState(() => controller = epubController);
+    setState(() {
+      controller = epubController;
+      if (savedSummary.label != 'Not started' &&
+          savedSummary.label != 'Resume available') {
+        _chapterStatus = savedSummary.label;
+      }
+    });
   }
 
   Future<void> _saveProgress() async {
@@ -1063,6 +1138,26 @@ class _EpubBookPageState extends State<EpubBookPage> {
           ),
         ],
       ),
+      bottomNavigationBar: _chapterStatus == null
+          ? null
+          : ColoredBox(
+              color: palette.background,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+                  child: Text(
+                    _chapterStatus!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: palette.foreground.withValues(alpha: 0.75),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ),
       body: activeController == null
           ? Center(child: CircularProgressIndicator(color: palette.accent))
           : EpubView(
@@ -1093,8 +1188,12 @@ class _EpubBookPageState extends State<EpubBookPage> {
                   ),
                 ),
               ),
-              onChapterChanged: (_) {
+              onChapterChanged: (value) {
                 _saveProgress();
+                _onReadingChapterChanged(
+                  value?.chapterNumber,
+                  value?.chapter?.Title,
+                );
               },
             ),
     );
@@ -1113,6 +1212,17 @@ class PdfBookPage extends StatefulWidget {
 class _PdfBookPageState extends State<PdfBookPage> {
   PdfControllerPinch? controller;
   final BookmarkStore _bookmarkStore = const BookmarkStore();
+  final ReadingProgressStore _progressStore = const ReadingProgressStore();
+  int? _visiblePage;
+  int? _totalPages;
+
+  Future<void> _recordPdfPageCount(int total) async {
+    try {
+      await _progressStore.recordPdfTotal(widget.book.path, total);
+    } catch (_) {
+      // Missing optional metadata never blocks PDF reading.
+    }
+  }
 
   void _bookmarkMessage(String text) {
     if (!mounted) return;
@@ -1182,7 +1292,16 @@ class _PdfBookPageState extends State<PdfBookPage> {
       pdfController.dispose();
       return;
     }
-    setState(() => controller = pdfController);
+    setState(() {
+      controller = pdfController;
+      _visiblePage = savedPage < 1 ? 1 : savedPage;
+      final storedTotal = prefs.getInt(
+        ReadingProgressStore.pdfTotalKey(widget.book.path),
+      );
+      _totalPages = storedTotal != null && storedTotal > 0
+          ? storedTotal
+          : null;
+    });
   }
 
   Future<void> _savePage(int page) async {
@@ -1225,11 +1344,41 @@ class _PdfBookPageState extends State<PdfBookPage> {
           ),
         ],
       ),
+      bottomNavigationBar: activeController == null
+          ? null
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
+                child: _BookProgressIndicator(
+                  progress: ReadingProgressSummary.pdf(
+                    page: _visiblePage,
+                    totalPages: _totalPages,
+                  ),
+                ),
+              ),
+            ),
       body: activeController == null
           ? const Center(child: CircularProgressIndicator())
           : PdfViewPinch(
               controller: activeController,
+              onDocumentLoaded: (document) {
+                final total = document.pagesCount;
+                if (total > 0) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _totalPages != total) {
+                      setState(() => _totalPages = total);
+                    }
+                  });
+                }
+                unawaited(_recordPdfPageCount(total));
+              },
               onPageChanged: (page) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && _visiblePage != page) {
+                    setState(() => _visiblePage = page);
+                  }
+                });
                 _savePage(page);
               },
             ),
