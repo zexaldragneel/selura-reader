@@ -12,7 +12,7 @@ void main() {
 
   setUp(() async {
     temp = await Directory.systemTemp.createTemp('selura_cbz_');
-    png = image.encodePng(image.Image(width: 8, height: 12));
+    png = image.encodePng(image.Image(8, 12));
   });
 
   tearDown(() async {
