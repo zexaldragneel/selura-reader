@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -130,7 +132,7 @@ List<dynamic> _list(dynamic item) => item is List ? item : const <dynamic>[];
 /// Strict TLS endpoint protection: remote JSON may only come from MangaDex.
 Future<Map<String, dynamic>> readMangaDexJson(Uri uri) async {
   if (uri.scheme != 'https' || uri.host != _mangaApiHost ||
-      uri.hasUserInfo || uri.port != 443) {
+      uri.userInfo.isNotEmpty || uri.port != 443) {
     throw const MangaSourceException('Untrusted manga API address.');
   }
   final client = HttpClient()
@@ -290,7 +292,7 @@ class MangaDexClient {
     ));
     final base = Uri.tryParse(raw['baseUrl'] is String
         ? raw['baseUrl'] as String : '');
-    if (base == null || base.scheme != 'https' || base.hasUserInfo ||
+    if (base == null || base.scheme != 'https' || base.userInfo.isNotEmpty ||
         !(base.host == 'mangadex.org' ||
           base.host.endsWith('.mangadex.org') ||
           base.host == 'mangadex.network' ||
