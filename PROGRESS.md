@@ -155,6 +155,19 @@ CI status:
 - PR #14 squash-merged into `main` as `b94153c8491389551d53c43791c047af441272ab` after device confirmation.
 - **Next:** verify a successful post-merge `main` signed APK build; retain the 2.4.28 pin until a tested upstream plugin release is available. Do not upgrade the native plugin blindly.
 
+## Completed milestone — Premium Selura UI and offline EPUB narration (PR #15)
+- Feature branch: `feature/premium-loading-and-epub-tts`; PR https://github.com/john-selwyn/selura-reader/pull/15 squash-merged to `main` as `05732ee33897550fd3d26543479f0ef08411dd63` after the user confirmed the APK works on Android.
+- Premium UI: coordinated light/dark Material 3 palettes, editorial bookshelf banner, adaptive Selura launcher icon and branded Android splash screen, subtle reader navigation animation.
+- Loading/error optimization: proper initial library loading state instead of a false empty-library flash, import loading overlay, EPUB/PDF branded loading views and recoverable error screens; library rows with invalid metadata no longer prevent healthy books from appearing.
+- Offline EPUB read-aloud: `flutter_tts` Android on-device TTS for the **current chapter**; pause/resume/stop, selected installed Android voice, persisted narration speed/voice preferences, bounded text chunks, background-isolate XHTML-to-speech extraction. Active chapter switches stop narration, and leaving the reader releases TTS.
+- EPUB toolbar keeps Listen and Reading appearance visible; bookmarks and chapter navigation remain available in the overflow menu.
+- Cover thumbnails now warm with bounded concurrency. EPUB/PDF reading, resume, bookmarks, real covers, typography settings and the Android signing identity are preserved.
+- Regression tests for narration HTML extraction, chunk sizes, pause/resume/stop, saved speed/voice preferences and empty-chapter handling run alongside existing reader tests.
+- **Build #95** (Actions run `39092988929`) passed source analysis, Flutter tests, release APK build, signature/package/version-code verification, CI upload, and GitHub release publishing. Exact test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-15-run-95/selura.apk (60,117,425 bytes, asset SHA-256 `ae197127ff697e24fdd65a44c49d10c9b3980054b8051ac5b9582475204ffc5a`).
+- **Device verification:** user reports Build #95 works on Android after testing the new design and EPUB TTS. Individual edge cases, Android offline voice data availability on other phones, and all combinations of controls have not been exhaustively tested.
+- Limitations: EPUB narration starts at the beginning of the visible **chapter**, not the exact visible paragraph; PDF text-to-speech and continuing narration after closing the reader are not implemented.
+- Post-merge `main` build and publication: pending verification.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -163,11 +176,11 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge `main` signed APK build and direct release publishing for PR #14.
-2. Add an in-app backup/export and restore path for imported books, progress, and bookmarks before future risky migrations.
-3. Start offline CBZ manga import/reader support, preserving the existing EPUB/PDF features and saved preferences.
-4. Add tests for release-mode plugin compatibility and retain the verified Android preferences override until an upstream fix is tested on a device.
-5. Expand EPUB/PDF file-based smoke testing and address the non-fatal pdfx Kotlin/Gradle compatibility warning.
+1. Verify post-merge `main` signed APK build and release publication for PR #15.
+2. Continue UI/UX optimization with measured launch, import and large-library responsiveness on Android; address regressions only after verified evidence.
+3. Enhance EPUB TTS with sentence/paragraph selection or more accurate position-aware narration, and consider safe background playback controls.
+4. Add in-app backup/export and restore for imported books, bookmarks and reading positions.
+5. Begin offline CBZ manga support when prioritized; keep the Android preferences plugin pinned to verified `shared_preferences_android 2.4.28` until a compatible update passes device testing.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -182,6 +195,7 @@ CI status:
 - Pull Request #10: EPUB appearance and typography, Build #52 (run `39081145276`) passed analysis/tests/APK/release; user confirmed Android runtime works, squash-merged at `1396846c795a3cf25f89fda6fb48eda893f7873f`.
 - Pull Request #11: accurate PDF pages and EPUB chapters, Build #58 (run `39082566356`) passed analysis/tests/APK/release; user confirmed feature works but reports update installation failures with debug APKs; squash-merged at `2c3f71cbbf7e0c4c3966689ea3be95c6398031a0`.
 - Pull Request #14: signed-release EPUB import plugin compatibility fix, Build #77 (run `39090015554`) passed source/tests/release APK/signing/release publishing; user confirmed Android EPUB import works, squash-merged at `b94153c8491389551d53c43791c047af441272ab`.
+- Pull Request #15: premium Selura UI, native loading states and offline EPUB chapter narration, signed Build #95 (run `39092988929`) fully passed, user confirmed Android runtime works, squash-merged at `05732ee33897550fd3d26543479f0ef08411dd63`.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
