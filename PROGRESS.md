@@ -201,6 +201,15 @@ CI status:
 - Published PR APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-18-run-107/selura.apk (60,757,489 bytes; SHA-256 `a4b429998537073761b13b8dd94a7a957a35b33b07251150650eb85d1590931e`). Application ID `com.selura.reader`, version `0.2.0` (code 107), permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged.
 - **Post-merge Build #108** (run `39102269836`) completed successfully for merge commit `c767af6c013c53345cea25e745c337f39f27979d`, including Flutter checks, signed APK and direct release publishing: https://github.com/john-selwyn/selura-reader/releases/download/dev-108/selura.apk (60,757,489 bytes; SHA-256 `3e6c46a628e994836675a0cc90337cc905b6e7c3a67946f282887d55918f0716`). The user tested PR Build #107, not necessarily this post-merge APK.
 
+## Completed milestone — EPUB comfort presets and efficient covers (PR #19)
+- PR #19 was squash-merged to main as `af7f8ddc2520db69b463c5e0e887201bb9404f2a` after the user confirmed signed test Build #109 works on Android.
+- Added Compact (15sp / 1.15 line spacing / 10px margins), Balanced (16sp / 1.25 / 16px), and Relaxed (19sp / 1.6 / 24px) EPUB reading layouts. Existing selected theme and font family remain unchanged, and manual adjustments still work.
+- Bookshelf covers now request bounded decoded image dimensions based on actual card size and device pixel ratio. This reduces potential cached image memory use while preserving existing book covers, readers and offline files.
+- Added regression tests covering reading presets and saved preferences, live choice controls, cover sizing, invalid constraints and memory bounds.
+- **Build #109**, run `39104469074`: Flutter analysis and tests passed, permanently signed APK compiled, signer/package/version verified, and direct download published. User confirmed this build works on their phone.
+- Published APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-19-run-109/selura.apk, 60,823,025 bytes, SHA-256 `7022cdfcf973912458325d714a33f798efb30b6483db825bd7528cd0298b11b6`. Android application ID `com.selura.reader`, versionCode 109, signing certificate unchanged.
+- Post-merge Build #110 (run `39105542447`) started from the merge commit. Verify this run independently before claiming successful publication. Large-library memory improvement has not been measured on a real device.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -209,10 +218,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Develop and physically test PR #19 (`feature/reading-comfort-cover-memory`): Compact/Balanced/Relaxed EPUB reading presets and bounded decoded bookshelf cover sizes. Validate signed APK before merge.
-2. Prioritize premium visual refinements, reading comfort, and measured performance improvements rather than highlights/annotations. Keep EPUB/PDF loading, auto-resume, TTS and reading settings stable.
-3. Consider an optional night-reading sleep timer, safer TTS playback in the background, and large-library performance testing on real Android; scope each as a separate feature PR and request phone testing before merge.
-4. Re-test restore on a second phone when available and keep the backup ZIP outside app storage. Maintain the `shared_preferences_android 2.4.28` pin until replacement is proven compatible on Android.
+1. Verify post-merge signed Build #110 (run `39105542447`) and direct APK release.
+2. Continue premium EPUB/PDF UI polish and measured large-library responsiveness while keeping import, progress, bookmarks and TTS stable.
+3. Consider optional TTS sleep timer or other reading-comfort work as separate milestones, only after review and device testing. No highlights or annotations.
+4. Maintain the tested `shared_preferences_android 2.4.28` pin. Keep backup ZIPs outside Selura for safe recovery.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -234,6 +243,8 @@ CI status:
 - Pull Request #17: offline library backup/export and non-destructive ZIP restore, CI Build #104 passed signing/APK/release, user confirmed Android functionality, squash-merged into main at `9a9f9d06678e8aa72bcacb6d961a18b735389ae9`; post-merge Build #105 pending verification.
 
 - Pull Request #18: premium EPUB/PDF Focus Mode, quick EPUB typography and refined status footers; signed Build #107 (run `39100988481`) passed CI and user confirmed Android runtime; squash-merged as `c767af6c013c53345cea25e745c337f39f27979d`. Main Build #108 awaiting verification. Highlights and annotations intentionally excluded by user choice.
+
+- PR #19: EPUB comfort presets and bounded bookshelf cover decoding; signed Build #109 passed CI and worked on Android; merged at `af7f8ddc2520db69b463c5e0e887201bb9404f2a`. Post-merge Build #110 must be independently verified.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
