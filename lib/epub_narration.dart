@@ -54,6 +54,36 @@ class NarrationText {
 
   static List<String> chapterUtterances(String html, {
     int maxCharacters = maxUtteranceCharacters,
+  }) => _chunkBlocks(
+        blocksFromHtml(html),
+        maxCharacters: maxCharacters,
+      );
+
+  /// Segment boundaries stay within each paragraph, allowing exact
+  /// paragraph starts and accessible previous/next paragraph controls.
+  static NarrationChapterPlan chapterPlan(String html) {
+    final paragraphs = blocksFromHtml(html);
+    final starts = <int>[];
+    final utterances = <String>[];
+    final segmentParagraphs = <int>[];
+
+    for (var index = 0; index < paragraphs.length; index++) {
+      starts.add(utterances.length);
+      final chunks = _chunkBlocks(<String>[paragraphs[index]]);
+      utterances.addAll(chunks);
+      segmentParagraphs.addAll(List<int>.filled(chunks.length, index));
+    }
+    return NarrationChapterPlan(
+      paragraphs: paragraphs,
+      utterances: utterances,
+      paragraphStarts: starts,
+      segmentParagraphs: segmentParagraphs,
+    );
+  }
+
+  static List<String> _chunkBlocks(
+    List<String> blocks, {
+    int maxCharacters = maxUtteranceCharacters,
   }) {
     if (maxCharacters < 80) {
       throw ArgumentError.value(maxCharacters, 'maxCharacters');
@@ -77,7 +107,7 @@ class NarrationText {
       buffer.write(phrase);
     }
 
-    for (final block in blocksFromHtml(html)) {
+    for (final block in blocks) {
       final sentences = block.split(_sentenceBreak);
       for (final sentence in sentences) {
         final normalized = normalize(sentence);
@@ -86,7 +116,7 @@ class NarrationText {
           addShort(normalized);
           continue;
         }
-        // Extremely long sentences and unbroken words are hard-split safely.
+        // Oversized sentences/words are split to fit Android TTS limits.
         final words = normalized.split(' ');
         var section = '';
         for (final word in words) {
@@ -119,6 +149,30 @@ class NarrationText {
     }
     flush();
     return utterances;
+  }
+}
+
+@immutable
+class NarrationChapterPlan {
+  const NarrationChapterPlan({
+    required this.paragraphs,
+    required this.utterances,
+    required this.paragraphStarts,
+    required this.segmentParagraphs,
+  });
+
+  final List<String> paragraphs;
+  final List<String> utterances;
+  final List<int> paragraphStarts;
+  final List<int> segmentParagraphs;
+
+  bool get isEmpty => utterances.isEmpty;
+
+  int segmentForParagraph(int index) {
+    if (paragraphs.isEmpty || index < 0 || index >= paragraphs.length) {
+      throw RangeError.index(index, paragraphs, 'paragraph');
+    }
+    return paragraphStarts[index];
   }
 }
 
@@ -231,6 +285,9 @@ class EpubNarrationController extends ChangeNotifier {
   int _session = 0;
   int _index = 0;
   List<String> _utterances = <String>[];
+  NarrationChapterPlan? _plan;
+  String? _preparedChapterHtml;
+  int _selectedParagraph = 0;
 
   NarrationStatus status = NarrationStatus.idle;
   NarrationSpeed speed = NarrationSpeed.normal;
@@ -241,6 +298,20 @@ class EpubNarrationController extends ChangeNotifier {
 
   int get spokenParts => _index;
   int get totalParts => _utterances.length;
+  List<String> get paragraphs => _plan?.paragraphs ?? const <String>[];
+  int get currentParagraph {
+    final plan = _plan;
+    if (plan == null || plan.isEmpty) return 0;
+    if (status == NarrationStatus.playing ||
+        status == NarrationStatus.paused ||
+        status == NarrationStatus.finished) {
+      final segment = _index >= plan.segmentParagraphs.length
+          ? plan.segmentParagraphs.length - 1
+          : _index;
+      return plan.segmentParagraphs[segment];
+    }
+    return _selectedParagraph;
+  }
 
   void _emit() {
     if (!_closed) notifyListeners();
@@ -290,27 +361,85 @@ class EpubNarrationController extends ChangeNotifier {
     _emit();
   }
 
-  Future<void> readChapter(String html, {String? title}) async {
+  /// Decode the active chapter in an isolate once; reselecting a paragraph
+  /// uses the resulting local speech plan without parsing XHTML again.
+  Future<void> prepareChapter(String html, {String? title}) async {
     if (_closed) return;
+    // The controls are a modal: closing and reopening them must not restart
+    // an already-speaking chapter or throw away its selected paragraph.
+    if (_plan != null && _preparedChapterHtml == html) return;
     await initialize();
     if (!_ready || _closed) return;
-    await stop();
-    // Parsing very large XHTML chapters happens in a worker isolate so it
-    // cannot freeze page scrolling or the loading/player controls.
-    final chunks = await compute(NarrationText.chapterUtterances, html);
-    if (_closed) return;
-    _utterances = chunks;
-    chapterName = title?.trim().isNotEmpty == true
-        ? title!.trim()
-        : 'Current chapter';
-    _index = 0;
-    if (_utterances.isEmpty) {
+
+    final generation = ++_session;
+    status = NarrationStatus.loading;
+    errorMessage = null;
+    _emit();
+
+    try {
+      await _engine.stop();
+      final plan = await compute(NarrationText.chapterPlan, html);
+      if (_closed || generation != _session) return;
+      _plan = plan;
+      _preparedChapterHtml = html;
+      _utterances = plan.utterances;
+      chapterName = title?.trim().isNotEmpty == true
+          ? title!.trim()
+          : 'Current chapter';
+      _selectedParagraph = 0;
+      _index = 0;
+      if (plan.isEmpty) {
+        status = NarrationStatus.error;
+        errorMessage = 'This chapter has no readable text.';
+      } else {
+        status = NarrationStatus.idle;
+      }
+    } catch (_) {
+      if (_closed || generation != _session) return;
       status = NarrationStatus.error;
-      errorMessage = 'This chapter has no readable text.';
-      _emit();
+      errorMessage = 'Selura could not prepare this chapter for narration.';
+    }
+    _emit();
+  }
+
+  /// Keeps the original one-tap chapter narration workflow compatible.
+  Future<void> readChapter(String html, {String? title}) async {
+    await prepareChapter(html, title: title);
+    if (_closed || status != NarrationStatus.idle) return;
+    await playFromParagraph(0);
+  }
+
+  Future<void> playFromParagraph(int paragraph) async {
+    final plan = _plan;
+    if (_closed || !_ready || plan == null || plan.isEmpty ||
+        paragraph < 0 || paragraph >= plan.paragraphs.length) {
       return;
     }
-    unawaited(_playLoop());
+
+    final generation = ++_session;
+    _selectedParagraph = paragraph;
+    _index = plan.segmentForParagraph(paragraph);
+    status = NarrationStatus.loading;
+    errorMessage = null;
+    _emit();
+    try {
+      // Android TTS lacks reliable native seeking; a short current utterance
+      // is interrupted and the selected paragraph starts from its beginning.
+      await _engine.stop();
+      if (_closed || generation != _session) return;
+      unawaited(_playLoop());
+    } catch (_) {
+      if (_closed || generation != _session) return;
+      status = NarrationStatus.error;
+      errorMessage = 'Could not start narration from that paragraph.';
+      _emit();
+    }
+  }
+
+  Future<void> skipParagraph(int offset) async {
+    final target = currentParagraph + offset;
+    if (target < 0 || target >= paragraphs.length) return;
+    await playFromParagraph(target);
   }
 
   Future<void> _playLoop() async {
@@ -321,6 +450,11 @@ class EpubNarrationController extends ChangeNotifier {
     _emit();
     try {
       while (!_closed && session == _session && _index < _utterances.length) {
+        final plan = _plan;
+        if (plan != null) {
+          _selectedParagraph = plan.segmentParagraphs[_index];
+          _emit();
+        }
         await _engine.speak(_utterances[_index]);
         if (_closed || session != _session) return;
         _index += 1;
@@ -348,14 +482,13 @@ class EpubNarrationController extends ChangeNotifier {
     try {
       await _engine.stop();
     } catch (_) {
-      // A failed stop should not block the user's next control action.
+      // Native engines can complete an utterance while the pause is requested.
     }
   }
 
   void resume() {
     if (status != NarrationStatus.paused || _closed) return;
-    // Android TTS doesn't support native pause consistently. We restart
-    // the interrupted short segment rather than losing the chapter position.
+    // Resume the interrupted bounded segment; does not restart the chapter.
     unawaited(_playLoop());
   }
 
@@ -363,13 +496,15 @@ class EpubNarrationController extends ChangeNotifier {
     if (_closed) return;
     ++_session;
     status = NarrationStatus.idle;
-    _utterances = <String>[];
-    _index = 0;
+    final plan = _plan;
+    _index = plan != null && !plan.isEmpty
+        ? plan.segmentForParagraph(_selectedParagraph)
+        : 0;
     _emit();
     try {
       await _engine.stop();
     } catch (_) {
-      // The phone may not have an installed TTS provider.
+      // A missing phone TTS provider must not block book reading.
     }
   }
 
