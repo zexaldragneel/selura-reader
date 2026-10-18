@@ -208,7 +208,17 @@ CI status:
 - Added regression tests covering reading presets and saved preferences, live choice controls, cover sizing, invalid constraints and memory bounds.
 - **Build #109**, run `39104469074`: Flutter analysis and tests passed, permanently signed APK compiled, signer/package/version verified, and direct download published. User confirmed this build works on their phone.
 - Published APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-19-run-109/selura.apk, 60,823,025 bytes, SHA-256 `7022cdfcf973912458325d714a33f798efb30b6483db825bd7528cd0298b11b6`. Android application ID `com.selura.reader`, versionCode 109, signing certificate unchanged.
-- Post-merge Build #110 (run `39105542447`) started from the merge commit. Verify this run independently before claiming successful publication. Large-library memory improvement has not been measured on a real device.
+- Post-merge Build #110 (run `39105542447`) passed CI and published signed Android APK at https://github.com/john-selwyn/selura-reader/releases/download/dev-110/selura.apk (60,823,025 bytes; SHA-256 `091795ec721830e4a4041172f200acf9599dd5122565e443f83073adbd24ca7e`). The user confirmed PR Build #109; Build #110 itself was not separately device-tested. Large-library memory improvement has not been measured on a real device.
+
+## Completed milestone — Quiet Luxury bookshelf redesign (PR #20)
+- PR #20 (`feature/premium-bookshelf-quiet-luxury`) was squash-merged into `main` as `f9414f3ca7326ba0a36ea1e49289670f514f76fd` **after** the user installed signed test Build #113 and confirmed it works on Android.
+- Added refined editorial ivory/lavender and midnight charcoal design, responsive real library book/favorite counts and an existing-working import action, upgraded Continue Reading hero, book grid and list cards, search presentation, and useful empty/results reset states.
+- Added real, scrollable All books / EPUB / PDF / Favorites filtering driven by existing local book attributes. Existing search, sorting, favorites, grid/list toggle and persistent EPUB/PDF storage remain functional by design; no renderer or native Android changes.
+- Tests cover actual filter behavior, 320px narrow-device responsive dark banner, counts, empty search reset and layout states. Initial PR Builds #111 and #112 failed with narrow dark-mode banner overflow; corrected in passing commit `9b7f460f0a08cde67ab50e89bf2339402576f6d7`.
+- **Signed PR Build #113** (run `39126079596`) passed `flutter analyze`, 53 widget/unit tests, native plugin version guard, release APK compilation and signing, package/version/certificate checks and GitHub direct APK publishing.
+- Published Android test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-20-run-113/selura.apk (60,921,317 bytes, SHA-256 `78dcd5a42099156c6e360504b50020af1e693551c1add6b53abb9b7927aa2ffb`), application ID `com.selura.reader`, versionCode 113, permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged.
+- **Device testing:** user confirmed Build #113 works. This does not independently establish every edge case of backup restoration, rare EPUB/PDF formats, or performance on very large libraries.
+- **Post-merge main Build #114** (run `39127248456`) triggered for merge commit `f9414f3ca7326ba0a36ea1e49289670f514f76fd`; confirm final CI/signing/release asset independently before claiming it passed.
 
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
@@ -218,10 +228,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Verify post-merge signed Build #110 (run `39105542447`) and direct APK release.
-2. Continue premium EPUB/PDF UI polish and measured large-library responsiveness while keeping import, progress, bookmarks and TTS stable.
-3. Consider optional TTS sleep timer or other reading-comfort work as separate milestones, only after review and device testing. No highlights or annotations.
-4. Maintain the tested `shared_preferences_android 2.4.28` pin. Keep backup ZIPs outside Selura for safe recovery.
+1. Verify post-merge `main` Build #114 (run `39127248456`) including APK package ID, permanent signing certificate, CI tests and published download asset. Do not assume the post-merge APK was separately device-tested.
+2. Continue incremental premium reading UI polish, accessibility and measured performance improvements. Retain working import, bookshelf, EPUB/PDF navigation, TTS, progress, bookmarks, backup/restore and Focus Mode.
+3. Consider an optional offline TTS sleep timer/mini player in a dedicated future PR, with signed test APK and owner verification before merging.
+4. Keep `shared_preferences_android 2.4.28` pinned until any upgrade has passed physical Android tests, and maintain off-device backups. Highlights/annotations are out of scope at owner's request.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -245,6 +255,8 @@ CI status:
 - Pull Request #18: premium EPUB/PDF Focus Mode, quick EPUB typography and refined status footers; signed Build #107 (run `39100988481`) passed CI and user confirmed Android runtime; squash-merged as `c767af6c013c53345cea25e745c337f39f27979d`. Main Build #108 awaiting verification. Highlights and annotations intentionally excluded by user choice.
 
 - PR #19: EPUB comfort presets and bounded bookshelf cover decoding; signed Build #109 passed CI and worked on Android; merged at `af7f8ddc2520db69b463c5e0e887201bb9404f2a`. Post-merge Build #110 must be independently verified.
+
+- PR #20: Quiet Luxury premium bookshelf with real filters, Continue Reading hero, editorial themes, responsive layout and regression tests; signed Build #113 CI succeeded, user confirmed device functionality, squash-merged as `f9414f3ca7326ba0a36ea1e49289670f514f76fd`. Main Build #114 pending final release verification.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
