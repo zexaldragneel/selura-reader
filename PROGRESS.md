@@ -180,6 +180,17 @@ CI status:
 - **Device result:** user installed Build #102 and explicitly confirmed Selura and the corrected reader opening now work; broad device testing of huge libraries and unusually structured EPUBs remains outstanding.
 - **Post-merge main Build #103** (run `39097231670`) completed successfully for squash commit `02e125515d16f63ecb14cd9612b014735d638287`: Flutter analysis/tests, pinned Android preferences dependency, signed Android release APK, certificate/identity/version checks, artifact upload, and direct GitHub Release publication all passed. Published APK: https://github.com/john-selwyn/selura-reader/releases/download/dev-103/selura.apk (`60,281,649` bytes; asset SHA-256 `d10d3ad5a0426c85349d1251732df904b5bc29a86c6d227d706c43aade568a6c`). Verified `com.selura.reader`, versionCode `103`, versionName `0.2.0`; permanent signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` unchanged. User tested prior signed Build #102 successfully; Build #103 has not separately been device-tested.
 
+## Completed milestone — Offline library ZIP backup and restore (PR #17)
+- PR #17 (`feature/offline-library-backup-restore`) was squash-merged into `main` as `9a9f9d06678e8aa72bcacb6d961a18b735389ae9` after user confirmed Build #104 works on their Android phone.
+- Implemented offline ZIP export containing EPUB/PDF originals, versioned portable manifest, favorites and last-opened times, EPUB CFI/chapter data, PDF progress, per-book bookmarks, and appearance/TTS/shelf preferences. Android native Save File dialog allows storing the backup outside app-private storage.
+- Restore validates manifest/schema, archive filenames, sizes, SHA-256 checksums and metadata, stages files, assigns new paths, remaps reading/bookmark keys and preserves existing books and preferences. Identical book files are skipped. Restore does not require internet/cloud.
+- Backup ZIP files are **not encrypted**. The user must save a copy outside the app; backups in app-private storage are lost on uninstall. Large file and archive limits apply.
+- Added regression tests for ZIP round trip, path remapping, stored preferences and bookmarks, duplicate restore, unsafe ZIP paths, wrong checksums, and missing source files.
+- Signed PR test **Build #104** (run `39098475269`) passed dependency regression pin, `flutter analyze`, all `flutter test`, release APK build, certificate/application ID/version checks, artifact upload and GitHub release publishing.
+- Direct test APK: https://github.com/john-selwyn/selura-reader/releases/download/test-pr-17-run-104/selura.apk (60,675,277 bytes; SHA-256 `a28ecae57ede41e20ade4f3ce404629bc933b7d63cf85390ab1e46ceac68a423`). Application ID `com.selura.reader`, versionCode `104`, same permanent signer certificate `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
+- **Device testing:** user reports Build #104 works on Android; individual edge cases including fresh-device recovery, very large ZIP files, checksum tampering, and recovery after accidental uninstall have not all been independently device-tested.
+- **Post-merge main Build #105** (run `39099324058`) started for merge commit; verify final CI and release before claiming it passed.
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -188,10 +199,10 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Complete the planned safe offline backup/export and restore feature through a new feature branch/PR with non-destructive, path-remapping restoration and automated tests. Do not merge until user Android testing.
-2. Prioritize safe offline **backup/export and restore** for EPUB/PDF originals, library metadata, favorites, bookmarks, reading locations and preferences. Ensure non-destructive restore and path remapping with import validation; user data protection matters before more experimental features.
-3. Continue improving EPUB TTS UX (optional sentence-accurate resume, clearer controls) and measure large-library behavior on real Android devices; do not regress current working features.
-4. Later: EPUB highlights/annotations and offline CBZ manga support. Keep `shared_preferences_android` pinned at `2.4.28` until an updated implementation is device-verified.
+1. Verify post-merge `main` Build #105 (run `39099324058`), including signed APK and published download asset, without changing application ID or permanent signing certificate.
+2. Next priority: offline EPUB highlights and annotations with per-book locally persisted text selections, colors, notes and navigation, implemented through a dedicated feature PR with regression tests and Android device verification before merging. Investigate limitations of the current `epub_view` renderer before promising on-page selection/highlight behavior.
+3. Improve reading/TTS UX and measure large-library performance on physical Android devices. Validate restoration on a second phone when possible; consider optional encrypted backup support later.
+4. Keep `shared_preferences_android` pinned to `2.4.28` until a compatible replacement passes real Android tests. Consider future offline CBZ manga support.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
@@ -209,6 +220,8 @@ CI status:
 - Pull Request #15: premium Selura UI, native loading states and offline EPUB chapter narration, signed Build #95 (run `39092988929`) fully passed, user confirmed Android runtime works, squash-merged at `05732ee33897550fd3d26543479f0ef08411dd63`.
 
 - Pull Request #16: paragraph seeking/skip offline TTS, sliver bookshelf performance and instant opaque reader navigation; Build #102 (run `39096407925`) passed analysis/tests/signing/APK/release; user confirmed Android fix works; squash-merged at `02e125515d16f63ecb14cd9612b014735d638287`.
+
+- Pull Request #17: offline library backup/export and non-destructive ZIP restore, CI Build #104 passed signing/APK/release, user confirmed Android functionality, squash-merged into main at `9a9f9d06678e8aa72bcacb6d961a18b735389ae9`; post-merge Build #105 pending verification.
 
 ## Future chat instructions
 Read `PROJECT_CONTEXT.md` and `PROGRESS.md` from the GitHub main branch first, then inspect current source, open pull requests, and GitHub Actions before making development claims. Update this file with exact commits, build results, blockers, and next steps after each milestone. Never claim an APK or runtime feature works without verification.
