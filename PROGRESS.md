@@ -112,6 +112,18 @@ CI status:
 - Root-cause assessment: GitHub Actions builds with `flutter build apk --debug` on fresh ephemeral runners, with no persistent signing keystore; signing certificate changes can cause update rejection. Every build also uses `version: 0.1.0+1` with no monotonic build number.
 - Corrective work: configure persistent signing and monotonic versionCode before further installable APK releases; first signing-key transition cannot replace an incompatible preexisting signing certificate without uninstall, so plan data preservation carefully.
 
+## Current milestone — Fix Android APK update installation (PR #12)
+- User confirmed PR #11 feature APK works but repeatedly had to **uninstall current Selura** to install another APK. Android update requires the same app ID and signing certificate and a non-decreasing versionCode; uninstall can remove app-private books/bookmarks/progress.
+- Previous Actions builds used `flutter build apk --debug` on fresh ephemeral runners with no persistent debug keystore and static version `0.1.0+1`. Changing debug certificates are a likely cause of the update failure; no exact Android installer error code or cross-APK certificate comparison has been collected yet.
+- Infrastructure PR #12 (`fix/persistent-release-signing`) squash-merged into `main` at `b2ad074f745514363bf04c4984b4f914f2a0127a`. It adds permanent release signing with a GPG-AES256-encrypted keystore stored only in armored form in the repo, with decryption password in GitHub Actions secret `SELURA_SIGNING_PASSWORD`, plus monotonically increasing `versionCode` from `GITHUB_RUN_NUMBER`.
+- Adds `.github/workflows/bootstrap-signing.yml` to generate/encrypt/commit the key once and dispatch the first signed build; `android/app/build.gradle.kts` is configured for the release key, and `.github/workflows/android-apk.yml` no longer publishes ephemeral debug builds. Signed release file name: `selura.apk`.
+- Build validation includes Android package ID verification, source analysis/tests, a temporary non-published release signing smoke test before permanent setup, and `apksigner` + `aapt` validation for published builds. Fork PRs do not receive signing secrets.
+- Local Java `keytool` + GPG AES256 encrypt/decrypt/keystore round-trip was verified successfully without exposing any persistent signing credentials.
+- CI Build #62 (run `39083965699`) passed `flutter analyze` and `flutter test`, then intentionally failed at permanent-key setup because it has not yet been configured. No unsigned APK was published. Build #64 (run `39084137395`) passed source analysis/tests and was still compiling the temporary release-signing smoke APK on last inspection.
+- **BLOCKER: no permanent signing key or signed Selura release APK has been generated/verified yet.** User must add a random >=24-character repository Actions secret named `SELURA_SIGNING_PASSWORD` via GitHub Settings from phone (never share the value in chat), then run `Actions → Bootstrap Selura Signing Key` on main **once**.
+- The already-installed debug-signed Selura cannot be updated by an APK bearing a new signing certificate. Do **not** uninstall before considering loss of app-private imported books and reading data. There is no verified lossless migration path to the first permanent signer yet. Once that initial transition has been made, two consecutive new builds must be checked for identical certificate fingerprint and increasing version codes, and then an on-device in-place update must be tested without uninstall.
+- Setup and security instructions: `android/signing/README.md`. **Do not claim the update installation problem is fully fixed until the signer is bootstrapped and an in-place Android update has been verified.**
+
 ## Unverified / blockers
 - EPUB covers are merged and device-verified for displayed cover, offline persistence, and resume; unusual EPUB variants still need broader field testing.
 - The package-ID correction means data stored by old `com.selura.selura_reader` debug installs does not automatically migrate to `com.selura.reader`.
@@ -119,11 +131,11 @@ CI status:
 - `pdfx` has emitted a non-fatal Kotlin/Gradle compatibility warning that should be addressed before a future Flutter upgrade.
 
 ## Next steps
-1. Fix Android in-place update failures using a consistent, protected release-signing key and monotonic version codes; do not publish fresh-runner debug APKs as updateable releases.
-2. Set up signing securely via GitHub Secrets from a phone; document the unavoidable existing-debug-signature transition and app-private data-loss risk before installing.
-3. Verify two consecutive Android APKs have identical signing certificate fingerprints and increasing versionCode; user tests in-place install without uninstall.
-4. Recheck post-merge PR #11 `main` CI publishing after signing is configured.
-5. Add offline CBZ manga support after reliable updates are in place.
+1. User securely adds `SELURA_SIGNING_PASSWORD` as a repository Actions secret (>=24 random characters, stored in password manager).
+2. User runs `Bootstrap Selura Signing Key` once on main. Verify encrypted key commit, successful first release build, exact signing certificate and version code.
+3. Verify the next signed APK has the same certificate and a higher versionCode; perform an Android update **without uninstalling** after the first-signature migration is safely addressed.
+4. Do not erase current app-private book data without confirming a recovery/reimport plan. Add backup/export functionality once reliable upgrades are available.
+5. Resume offline CBZ manga reader development after safe update installation is verified.
 
 ## Key milestone history
 - Pull Request #1: offline library hardening, squash-merged to main at `e9c8d3a18f2fc5224ae41076dc7ebdebd69be752`.
