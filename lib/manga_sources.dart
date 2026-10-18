@@ -99,6 +99,28 @@ class OnlineMangaChapter {
   final String group;
 }
 
+/// An offset-paginated chapter feed. The total may include offsite chapters.
+class OnlineMangaChapterPage {
+  const OnlineMangaChapterPage({
+    required this.chapters,
+    required this.total,
+    required this.nextOffset,
+    required this.hasMore,
+  });
+  final List<OnlineMangaChapter> chapters;
+  final int total;
+  final int nextOffset;
+  final bool hasMore;
+
+  OnlineMangaChapterPage appended(OnlineMangaChapterPage next) =>
+      OnlineMangaChapterPage(
+        chapters: [...chapters, ...next.chapters],
+        total: next.total,
+        nextOffset: next.nextOffset,
+        hasMore: next.hasMore,
+      );
+}
+
 typedef MangaJsonLoader = Future<Map<String, dynamic>> Function(Uri uri);
 
 const _mangaApiHost = 'api.mangadex.org';
@@ -246,34 +268,59 @@ class MangaDexClient {
     return results;
   }
 
-  Future<List<OnlineMangaChapter>> chapters(String mangaId) async {
+  Future<List<OnlineMangaChapter>> chapters(
+    String mangaId, {
+    String? language = 'en',
+  }) async => (await chapterPage(mangaId, language: language)).chapters;
+
+  /// The offset counts raw feed rows, including skipped external chapters.
+  Future<OnlineMangaChapterPage> chapterPage(
+    String mangaId, {
+    String? language = 'en',
+    int offset = 0,
+  }) async {
     if (!_validId(mangaId)) {
       throw const MangaSourceException('Invalid manga identifier.');
     }
-    final raw = await _fetchJson(_api('/manga/' + mangaId + '/feed', {
-      'translatedLanguage[]': 'en',
+    if (offset < 0 || offset > 10000) {
+      throw const MangaSourceException('Invalid chapter feed offset.');
+    }
+    if (language != null &&
+        !const {'en', 'ja', 'es', 'es-la', 'id', 'fil', 'fr', 'pt-br'}
+            .contains(language)) {
+      throw const MangaSourceException('Unsupported chapter language.');
+    }
+    final query = <String, String>{
       'limit': '100',
+      'offset': offset.toString(),
       'includes[]': 'scanlation_group',
       'order[chapter]': 'asc',
       'includeExternalUrl': '0',
-    }));
+    };
+    if (language != null) query['translatedLanguage[]'] = language;
+    final raw = await _fetchJson(_api(
+      '/manga/' + mangaId + '/feed', query,
+    ));
     if (raw['result'] == 'error') {
       throw const MangaSourceException('MangaDex chapters are unavailable.');
     }
+    final data = _list(raw['data']);
     final result = <OnlineMangaChapter>[];
-    for (final item in _list(raw['data'])) {
+    for (final item in data) {
       final row = _map(item);
       final id = row['id'];
       if (id is! String || !_validId(id)) continue;
       final attrs = _map(row['attributes']);
       if (attrs['externalUrl'] is String &&
           (attrs['externalUrl'] as String).isNotEmpty) continue;
-      if (attrs['translatedLanguage'] != 'en') continue;
+      final translated = attrs['translatedLanguage'];
+      if (translated is! String || translated.isEmpty) continue;
+      if (language != null && translated != language) continue;
       final chapter = attrs['chapter']?.toString() ?? '?';
       final name = attrs['title'] is String
           ? (attrs['title'] as String).trim() : '';
-      final label = 'Chapter ' + chapter +
-          (name.isEmpty ? '' : ' · ' + name);
+      final label = (translated == 'en' ? '' : '[' + translated + '] ') +
+          'Chapter ' + chapter + (name.isEmpty ? '' : ' · ' + name);
       var group = 'Unknown scanlation group';
       for (final rel in _list(row['relationships'])) {
         final relation = _map(rel);
@@ -286,7 +333,17 @@ class MangaDexClient {
       }
       result.add(OnlineMangaChapter(id: id, label: label, group: group));
     }
-    return result;
+    final total = raw['total'] is int
+        ? (raw['total'] as int).clamp(0, 1000000).toInt()
+        : offset + data.length;
+    final nextOffset = offset + data.length;
+    return OnlineMangaChapterPage(
+      chapters: result,
+      total: total,
+      nextOffset: nextOffset,
+      hasMore: data.isNotEmpty && nextOffset < 10000 &&
+          (nextOffset < total || (raw['total'] == null && data.length == 100)),
+    );
   }
 
   Future<List<Uri>> chapterPages(String chapterId) async {
