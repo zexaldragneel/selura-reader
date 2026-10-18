@@ -295,7 +295,11 @@ class EpubNarrationController extends ChangeNotifier {
     await initialize();
     if (!_ready || _closed) return;
     await stop();
-    _utterances = NarrationText.chapterUtterances(html);
+    // Parsing very large XHTML chapters happens in a worker isolate so it
+    // cannot freeze page scrolling or the loading/player controls.
+    final chunks = await compute(NarrationText.chapterUtterances, html);
+    if (_closed) return;
+    _utterances = chunks;
     chapterName = title?.trim().isNotEmpty == true
         ? title!.trim()
         : 'Current chapter';
