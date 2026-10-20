@@ -17,6 +17,8 @@ FILES = {
     "tabs": "app/src/main/java/eu/kanade/presentation/library/components/LibraryTabs.kt",
     "library": "app/src/main/java/eu/kanade/presentation/library/components/LibraryContent.kt",
     "cards": "app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt",
+    "compact": "app/src/main/java/eu/kanade/presentation/library/components/LibraryCompactGrid.kt",
+    "comfortable": "app/src/main/java/eu/kanade/presentation/library/components/LibraryComfortableGrid.kt",
     "toolbar": "app/src/main/java/eu/kanade/presentation/library/components/LibraryToolbar.kt",
     "home": "app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt",
 }
@@ -279,6 +281,131 @@ def patch(root: Path) -> None:
             .padding(4.dp),""",
         """            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
             .padding(if (isPremium) 3.dp else 4.dp),""", key)
+
+    s = once(s,
+        "import androidx.compose.material3.FilledIconButton\n",
+        "import androidx.compose.material3.FilledIconButton\n"
+        "import androidx.compose.material3.LinearProgressIndicator\n", key)
+    s = once(s,
+        """    coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
+) {
+    GridItemSelectable(""",
+        """    coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
+    readCount: Long = 0L,
+    totalChapters: Long = 0L,
+) {
+    GridItemSelectable(""", key)
+    s = once(s,
+        """            },
+        )
+    }
+}
+
+/**
+ * Title overlay for [MangaCompactGridItem]""",
+        """            },
+        )
+        PremiumLibraryProgress(
+            readCount = readCount,
+            totalChapters = totalChapters,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+/**
+ * Title overlay for [MangaCompactGridItem]""", key)
+    s = once(s,
+        """    onClickContinueReading: (() -> Unit)? = null,
+) {
+    GridItemSelectable(""",
+        """    onClickContinueReading: (() -> Unit)? = null,
+    readCount: Long = 0L,
+    totalChapters: Long = 0L,
+) {
+    GridItemSelectable(""", key)
+    s = once(s,
+        """                maxLines = titleMaxLines,
+            )
+        }
+    }
+}
+
+/**
+ * Common cover layout""",
+        """                maxLines = titleMaxLines,
+            )
+            PremiumLibraryProgress(readCount = readCount, totalChapters = totalChapters)
+        }
+    }
+}
+
+/**
+ * Common cover layout""", key)
+    s = once(s,
+        """/**
+ * Layout of list item.
+ */""",
+        """/**
+ * Shows actual read-chapter ratio from existing LibraryManga state; it never
+ * infers chapter count from a cover, chapter label or source title.
+ */
+@Composable
+private fun PremiumLibraryProgress(
+    readCount: Long,
+    totalChapters: Long,
+    modifier: Modifier = Modifier,
+) {
+    val appearance = LocalSeluraLibraryAppearance.current
+    if (appearance?.theme == null ||
+        appearance.theme == SeluraLibraryTheme.DEFAULT ||
+        totalChapters <= 0L
+    ) return
+    val fraction = (readCount.toFloat() / totalChapters.toFloat()).coerceIn(0f, 1f)
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LinearProgressIndicator(
+            progress = { fraction },
+            modifier = Modifier.weight(1f).height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+        Text(
+            text = ((fraction * 100).toInt()).toString() + "%",
+            modifier = Modifier.padding(start = 6.dp),
+            fontSize = 10.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+/**
+ * Layout of list item.
+ */""", key)
+    files[key] = s
+
+    key = "compact"
+    s = files[key]
+    s = once(s,
+        """            MangaCompactGridItem(
+                isSelected = manga.id in selection,""",
+        """            MangaCompactGridItem(
+                readCount = libraryItem.libraryManga.readCount,
+                totalChapters = libraryItem.libraryManga.totalChapters,
+                isSelected = manga.id in selection,""", key)
+    files[key] = s
+
+    key = "comfortable"
+    s = files[key]
+    s = once(s,
+        """            MangaComfortableGridItem(
+                isSelected = manga.id in selection,""",
+        """            MangaComfortableGridItem(
+                readCount = libraryItem.libraryManga.readCount,
+                totalChapters = libraryItem.libraryManga.totalChapters,
+                isSelected = manga.id in selection,""", key)
     files[key] = s
 
     key = "toolbar"
