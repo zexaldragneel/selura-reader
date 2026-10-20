@@ -361,6 +361,19 @@ interface AppGraph {
         self.assertIn("createCancelPendingIntent(id)", worker)
         self.assertIn("if (replace && MigrationFlag.REMOVE_DOWNLOAD in flags", usecase)
         self.assertNotIn("replace = true", worker)
+        # Failure IDs and the cursor must survive cancellation together;
+        # re-entry skips successful entries, not failed entries.
+        self.assertIn('val failuresKey = "failed_manga_"', worker)
+        self.assertIn("manga.id !in failedIds", worker)
+        self.assertIn("putStringSet(failuresKey", worker)
+        self.assertIn("val nextCursor = maxOf(lastProcessedId, manga.id)", worker)
+        self.assertIn("failedIds.add(manga.id)", worker)
+        self.assertIn("failedIds.remove(manga.id)", worker)
+        self.assertNotIn("remove(cursorKey)", worker)
+        self.assertIn("getFavorites.subscribe(target.id).first()", worker)
+        self.assertIn("existingTargetUrls.add(canonicalUrl)", worker)
+        self.assertIn("setRequiredNetworkType(NetworkType.CONNECTED)", worker)
+        self.assertIn("setupFailure(", worker)
 
     def test_refuse_unexpected_upstream_batch_migration_marker(self):
         vm = (self.root /
