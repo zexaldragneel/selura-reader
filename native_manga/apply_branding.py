@@ -484,9 +484,11 @@ import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
                                 ),
                                 AppBar.OverflowAction(
                                     title = "Copy NHentai in background",
-                                    enabled = !state.isEmpty &&
-                                        state.source?.name?.contains("nhentai", ignoreCase = true) == true,
-                                    onClick = { backgroundCopyConfirm = true },
+                                    onClick = {
+                                        if (state.source?.name?.contains("nhentai", ignoreCase = true) == true) {
+                                            backgroundCopyConfirm = true
+                                        }
+                                    },
                                 ),
                             ),""",
     )
