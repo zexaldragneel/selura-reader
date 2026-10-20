@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -135,6 +135,9 @@ jobs:
           python3 native_manga/apply_branding.py native-upstream \
             --version-code "$((1000 + SELURA_NATIVE_VERSION_CODE))"
           python3 native_manga/optimize_reader.py native-upstream
+          python3 native_manga/apply_premium_themes.py native-upstream
+          grep -q 'seluraColorScheme' native-upstream/app/src/main/java/eu/kanade/presentation/theme/TachiyomiTheme.kt
+          grep -q 'Library theme' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsAppearanceScreen.kt
           grep -q 'applicationId = "com.selura.manga"' native-upstream/app/build.gradle.kts
           grep -q 'PARAMETER_CACHE_SIZE = 192L \* 1024 \* 1024' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/cache/ChapterCache.kt
