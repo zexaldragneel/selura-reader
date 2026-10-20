@@ -275,11 +275,41 @@ interface AppGraph {
         self.assertIn(
             "https://github.com/keiyoushi/extensions/raw/repo/index.pb", settings
         )
+        self.assertIn("Add Selura extensions", settings)
+        self.assertIn("Review and add the Selura extension store", settings)
+        self.assertIn(
+            "https://raw.githubusercontent.com/zexaldragneel/selura-extensions/repo/repo.json",
+            settings,
+        )
+        self.assertLess(settings.index("Add Keiyoushi extensions"),
+                        settings.index("Add Selura extensions"))
+        self.assertEqual(settings.count("Add Selura extensions"), 1)
+        self.assertEqual(settings.count("Add Keiyoushi extensions"), 1)
         self.assertIn("navigator.push(ExtensionStoresScreen())", settings)
         self.assertIn("ExtensionStoresScreen(\n", settings)
         self.assertNotIn("Intent.ACTION_VIEW", settings)
         self.assertNotIn("startActivity", settings)
         self.assertNotIn("installPackage", settings)
+
+    def test_selura_store_shortcut_preserves_existing_store_confirmation(self):
+        patch(self.root, 2049)
+        settings = (
+            self.root /
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt"
+        ).read_text(encoding="utf-8")
+        shortcut = settings[settings.index('title = "Add Selura extensions"'):]
+        self.assertIn("navigator.push(", shortcut)
+        self.assertIn("ExtensionStoresScreen(", shortcut)
+        self.assertIn(
+            '"https://raw.githubusercontent.com/zexaldragneel/selura-extensions/repo/repo.json"',
+            shortcut,
+        )
+        self.assertIn("navigator.push(ExtensionStoresScreen())", settings)
+        self.assertNotIn("Intent.ACTION_VIEW", settings)
+        self.assertNotIn("startActivity(", shortcut)
+        self.assertNotIn("installExtension(", shortcut)
+        self.assertNotIn("deleteRepo(", shortcut)
+        self.assertNotIn("removeExtension", shortcut)
 
     def test_selura_update_prompt_preserves_native_updater_separation(self):
         patch(self.root, 2025)

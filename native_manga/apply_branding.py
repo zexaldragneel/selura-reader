@@ -119,6 +119,20 @@ def patch(root: pathlib.Path, version_code: int):
                                 ),
                             )
                         },
+                    ),
+                    // Selura customization: one-tap official Selura store setup.
+                    // Existing stores are handled by Mihon's confirmation flow;
+                    // this never silently installs APKs or alters trusted keys.
+                    Preference.PreferenceItem.TextPreference(
+                        title = "Add Selura extensions",
+                        subtitle = "Review and add the Selura extension store",
+                        onClick = {
+                            navigator.push(
+                                ExtensionStoresScreen(
+                                    "https://raw.githubusercontent.com/zexaldragneel/selura-extensions/repo/repo.json",
+                                ),
+                            )
+                        },
                     ),""",
     )
 
