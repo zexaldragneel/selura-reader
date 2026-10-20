@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Update feed hosting: free GitHub plan limitation (2026-10-20)
+- **Owner screenshot of Settings → Pages:** "Upgrade or make this repository public to enable Pages". This confirms the private `selura-reader` repository cannot use Pages under the owner's current GitHub plan. **Do not upgrade or change application repo visibility** solely to activate updates.
+- **Free fallback selected for proposal (not yet deployed):** create a separate *public, metadata-only* `john-selwyn/selura-updates` repository with a single `latest.json`. Android app will read `https://raw.githubusercontent.com/john-selwyn/selura-updates/main/latest.json` over HTTPS, with existing app ID/version/digest/owner release-URL checks and timeouts. This avoids GitHub Pages and does not expose private APKs, source or keys.
+- **Owner action required:** create the public `selura-updates` repository using GitHub mobile; share its URL. The connected GitHub tools cannot provision a new repository, and the project rules forbid modifying other repositories without owner authorization. Do not fabricate an existing endpoint or claim the update popup is operational.
+- **After repo creation:** switch the updater feed URL; replace the failed private Pages deployment job with metadata-only publishing to the public repo. Cross-repository write from private Actions needs a **fine-grained, Contents-write token scoped only to the new metadata repository** stored in the private project's Actions Secrets (never paste in chat). Produce a new verified native APK and test that a version newer than installed produces a cold-start update dialog, while private signed release downloads still require signing into GitHub.
+- **Until then:** APK #18 has been verified signed and published; only public feed provisioning failed. Avoid repeat Pages failures in normal CI. Keep working releases, existing extensions and manga library unchanged.
+
 ## In-app update prompt — APK verified, Pages activation blocked (2026-10-20)
 - **Owner authorized** public release metadata only (version, notes, checksum, URL). Private repository and signed APK releases must remain private; no access tokens in the client.
 - **PR #27:** native Compose startup update dialog and bounded public JSON feed check, plus signing-verified manifest generator, offline-safe fail-closed behavior. Separate minimal `gh-pages` branch `1577556ef5fa07c915253229f86339364d06890d` includes ONLY `index.html`, `.nojekyll`, and `updates/latest.json`, initially referencing Build #16; branch existence DOES NOT mean Pages URL is publicly deployed.
