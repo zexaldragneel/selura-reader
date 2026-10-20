@@ -3,8 +3,8 @@
 package eu.kanade.tachiyomi.extension.all.seluranhentai
 
 import android.app.Application
-import android.util.Log
 import android.content.SharedPreferences
+import android.util.Log
 import android.webkit.CookieManager
 import android.widget.Toast
 import androidx.preference.EditTextPreference
