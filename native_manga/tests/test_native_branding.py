@@ -94,28 +94,24 @@ class NativeMigrationTests(unittest.TestCase):
                         }
                     }
                 }
-                if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
-                    setError(
-                        error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
-                        canRestore = true,
-                    )
-                    return
-                }
+                canRestore = true,
+            )
+            return
+        }
 
-                setError(error = null, canRestore = true)
+        setError(error = null, canRestore = true)
 
-                private fun setError(error: Any?, canRestore: Boolean) {
-                    state.update {
-                        it.copy(
-                            error = error,
-                            canRestore = canRestore,
-                        )
-                    }
-                }
+    private fun setError(error: Any?, canRestore: Boolean) {
+        state.update {
+            it.copy(
+                error = error,
+                canRestore = canRestore,
+            )
+        }
+    }
 
-                data class State(
-                    val options: RestoreOptions = RestoreOptions(),
-                )
+        val options: RestoreOptions = RestoreOptions(),
+    )
             }""",
         )
         for native in (
