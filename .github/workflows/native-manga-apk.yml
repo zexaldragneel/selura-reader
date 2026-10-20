@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/selura-native-manga-migration]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -229,6 +229,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Selura update manifest generator
+        uses: actions/checkout@v4
+
       - name: Download signed native APK
         uses: actions/download-artifact@v4
         with:
@@ -255,3 +258,116 @@ jobs:
             --title "Selura Manga Native Preview · Build #${{ github.run_number }}" \
             --notes "Based on Mihon v0.21.2 (Apache-2.0), with Selura's distinct com.selura.manga application ID. Supports original Mihon backup restore and Mihon-compatible extension engines. This installs separately from legacy Selura and Mihon; user Android verification required. Preserve upstream attribution." \
             --prerelease
+
+      - name: Generate safe version metadata from verified signed APK
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="test-native-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            TAG="test-native-dispatch-run-${{ github.run_number }}"
+          fi
+          python3 native_manga/selura_updater/write_update_feed.py \
+            --version-code "$((1000 + RUN_NUMBER))" \
+            --tag "$TAG" \
+            --apk release/selura-manga.apk \
+            --output public-feed/updates/latest.json
+
+      - name: Save update manifest as private artifact (public feed opt-in only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-update-feed-private
+          path: public-feed/updates/latest.json
+          if-no-files-found: error
+
+  publish_update_feed:
+    name: Publish signed release metadata
+    needs: release
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout metadata-only branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: published
+
+      - name: Download verified APK version manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: selura-update-feed-private
+          path: incoming
+
+      - name: Validate release metadata and version increase
+        id: validate
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          source = Path("incoming/latest.json")
+          if not source.is_file() or source.stat().st_size > 3000:
+              raise SystemExit("Invalid public metadata file")
+          data = json.loads(source.read_text(encoding="utf-8"))
+          keys = {"schemaVersion", "applicationId", "versionCode", "versionName",
+                  "notes", "releaseUrl", "sha256"}
+          assert set(data) == keys
+          assert data["schemaVersion"] == 1
+          assert data["applicationId"] == "com.selura.manga"
+          assert type(data["versionCode"]) is int
+          assert data["versionCode"] == 1000 + int(os.environ["GITHUB_RUN_NUMBER"])
+          assert len(data["versionName"]) <= 60
+          assert len(data["notes"]) <= 1200
+          assert re.fullmatch("[a-fA-F0-9]{64}", data["sha256"])
+          assert re.fullmatch(
+              "https://github.com/zexaldragneel/selura-reader/releases/tag/"
+              "test-native-(pr-[0-9]+|dispatch)-run-[0-9]+",
+              data["releaseUrl"],
+          )
+          previous = Path("published/updates/latest.json")
+          newer = not previous.exists() or data["versionCode"] > json.loads(
+              previous.read_text(encoding="utf-8"),
+          )["versionCode"]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("publish=" + str(newer).lower() + "\n")
+          print("Metadata validated; publishing newer release:", newer)
+          PY
+
+      - name: Publish only version metadata to public branch
+        if: steps.validate.outputs.publish == 'true'
+        working-directory: published
+        run: |
+          set -euo pipefail
+          mkdir -p updates
+          cp ../incoming/latest.json updates/latest.json
+          git add -- updates/latest.json
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Publish verified Selura Manga build $GITHUB_RUN_NUMBER metadata"
+          git push origin HEAD:gh-pages
+
+      - name: Confirm public metadata URL
+        if: steps.validate.outputs.publish == 'true'
+        run: |
+          curl -fsSL --retry 3 --retry-delay 4 --max-time 20 \
+            https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json \
+            -o /tmp/selura-feed.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("/tmp/selura-feed.json").read_text())
+          assert data["applicationId"] == "com.selura.manga"
+          print("Public feed reachable; versionCode:", data["versionCode"])
+          PY
