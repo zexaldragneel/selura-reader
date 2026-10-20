@@ -3,6 +3,7 @@
 package eu.kanade.tachiyomi.extension.all.seluranhentai
 
 import android.app.Application
+import android.util.Log
 import android.content.SharedPreferences
 import android.webkit.CookieManager
 import android.widget.Toast
@@ -47,6 +48,7 @@ import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.seconds
 
 @Source
@@ -70,6 +72,8 @@ class NHentai(
     val apiUrl = "$baseUrl/api/v2"
 
     private val baseUrlHost by lazy { baseUrl.toHttpUrl().host }
+
+    private val lastHealthyCdn = AtomicReference<String?>(null)
 
     override val supportsLatest = true
 
@@ -97,7 +101,13 @@ class NHentai(
                 ),
             )
             // Restrict gallery page retries to declared nhentai.net CDN hosts.
-            .addInterceptor(NhImageRecoveryInterceptor { nhConfig.imageServers })
+            .addInterceptor(
+                NhImageRecoveryInterceptor(
+                    imageServers = { nhConfig.imageServers },
+                    lastGoodHost = { lastHealthyCdn.get() },
+                    rememberGoodHost = { lastHealthyCdn.set(it) },
+                ),
+            )
             .addNetworkInterceptor(NhGalleryCacheInterceptor())
             .addNetworkInterceptor(NhAuthorizationInterceptor())
             .rateLimit(permits, period.seconds) { it.host == baseUrlHost }
@@ -135,7 +145,8 @@ class NHentai(
     // Use one consistent, advertised image CDN host for a whole gallery.
     // Alternate hosts are only used for transient image load failures.
     val imageServer
-        get() = nhConfig.imageServers.firstOrNull { it.startsWith("https://") }
+        get() = lastHealthyCdn.get()?.let { "https://$it" }
+            ?: nhConfig.imageServers.firstOrNull { it.startsWith("https://") }
             ?: "https://i1.nhentai.net"
 
     val thumbServer
@@ -518,6 +529,8 @@ class NHentai(
      */
     private class NhImageRecoveryInterceptor(
         private val imageServers: () -> List<String>,
+        private val lastGoodHost: () -> String?,
+        private val rememberGoodHost: (String) -> Unit,
     ) : Interceptor {
         private val allowedHost = Regex("""^i[0-9]+\.nhentai\.net$""")
 
@@ -529,16 +542,23 @@ class NHentai(
                 .filter { it.scheme == "https" && allowedHost.matches(it.host) }
                 .map { it.host }
                 .distinct()
-            val hosts = (listOf(request.url.host) + alternativeHosts).distinct().take(5)
+            val previous = lastGoodHost()?.takeIf { it in alternativeHosts }
+            val hosts = (listOfNotNull(previous, request.url.host) + alternativeHosts)
+                .distinct().take(3)
             var lastError: IOException? = null
+            val started = System.nanoTime()
+            val timedChain = chain.withConnectTimeout(4, TimeUnit.SECONDS)
+                .withReadTimeout(9, TimeUnit.SECONDS)
 
             for (host in hosts) {
+                if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started) > 18_000) break
                 val candidateUrl = request.url.newBuilder().host(host).build()
-                for (attempt in 0 until 2) {
+                for (attempt in 0 until 1) {
                     val response = try {
-                        chain.proceed(request.newBuilder().url(candidateUrl).build())
+                        timedChain.proceed(request.newBuilder().url(candidateUrl).build())
                     } catch (error: IOException) {
                         lastError = error
+                        Log.w("SeluraNHentai", "Image CDN request timed out on $host")
                         continue
                     }
                     // Never retry access denials or provider rate limits.
@@ -547,13 +567,14 @@ class NHentai(
                     }
                     val contentType = response.header("Content-Type").orEmpty().lowercase()
                     if (response.isSuccessful && !contentType.startsWith("text/html")) {
+                        rememberGoodHost(host)
                         return response
                     }
-                    if (response.code !in 500..599 &&
-                        !(response.isSuccessful && contentType.startsWith("text/html"))
-                    ) {
-                        return response
-                    }
+                    val retryable = response.code == 404 || response.code == 408 ||
+                        response.code == 410 || response.code in 500..599 ||
+                        (response.isSuccessful && contentType.startsWith("text/html"))
+                    if (!retryable) return response
+                    Log.w("SeluraNHentai", "Image CDN returned HTTP ${response.code} from $host")
                     response.close()
                 }
             }

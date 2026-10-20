@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Slow NHentai pages — follow-up iteration 2 (2026-10-20)
+- Owner reports first Selura NHentai extension still slow. Possible cause in our own initial fix: up to 10 sequential CDN image attempts with default timeouts; no packet capture or precise page data yet.
+- New versionCode 2: at most 3 provider-declared CDN hosts, 1 attempt per host, 4s connect/9s read timeouts, stop scheduling more attempts once ~18s elapsed, remember a successful CDN, retry only CDN 404/408/410/5xx/HTML-instead-of-image. Never retry 401/403/429. Log only host/status; do not log sensitive gallery URL/header data.
+- IMPORTANT: existing Library manga remain bound to original Cursed Yuzono NHentai source IDs. User needs to test via **Browse → Sources → Selura NHentai** or the old extension will still be used.
+- Status: CI and user device test of version 2 pending; no claim of fix. Keep old extension and data intact.
+
 ## Cursed Yuzono NHentai.net repair pilot — PR #25 (2026-10-20)
 - **Exact source identified by Android screenshots:** installed failing provider **NHentai — Cursed Yūzōnō 1.4.62**, targeting `https://nhentai.net`; separately installed `nHentai.com (unoriginal) — Keiyoushi 1.6.1` is NOT the same source. The former `nhentai.to` pilot targeted the wrong site and is retained only as unused experimental code; do not install it for this issue.
 - **Verified upstream source:** `yuzono/cursed-manga-extensions@5dad5cf65dce98bb05ba8edf1f38770585e032b9`, `src/all/nhentai/NHentai.kt`, with original Apache-2.0 license. Upstream `pageListParse()` constructs image URLs with `$imageServer`; original getter returns `nhConfig.imageServers.random()`, which chooses a possibly different CDN for each gallery page. This is a testable candidate cause, not confirmed by packet capture.

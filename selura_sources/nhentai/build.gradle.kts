@@ -7,7 +7,7 @@ plugins {
 keiyoushi {
     // New name and source IDs; original Cursed Yuzono library stays intact.
     name = "Selura NHentai"
-    versionCode = 1
+    versionCode = 2
     contentWarning = ContentWarning.NSFW
     libVersion = "1.4"
 

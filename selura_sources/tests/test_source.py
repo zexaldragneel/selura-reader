@@ -52,7 +52,14 @@ class SeluraNhentaiTests(unittest.TestCase):
         self.assertIn("it.scheme == \"https\"", source)
         self.assertIn("response.code == 403 || response.code == 429", source)
         self.assertIn("take(5)", source)
-        self.assertIn("0 until 2", source)
+        self.assertIn("0 until 1", source)
+        self.assertIn("take(3)", source)
+        self.assertIn("withConnectTimeout(4, TimeUnit.SECONDS)", source)
+        self.assertIn("withReadTimeout(9, TimeUnit.SECONDS)", source)
+        self.assertIn("lastGoodHost()", source)
+        self.assertIn("rememberGoodHost(host)", source)
+        self.assertIn("response.code == 404", source)
+        self.assertIn("versionCode = 2", (self.provider / "build.gradle.kts").read_text())
         self.assertIn("response.close()", source)
 
     def test_duplicate_patching_fails(self):

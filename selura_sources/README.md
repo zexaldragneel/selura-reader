@@ -2,6 +2,12 @@
 
 **Pilot for the exact extension shown on the owner's phone:** `NHentai` by **Cursed Yūzōnō**, version **1.4.62**, which uses `https://nhentai.net`. `nHentai.com (unoriginal)` is a separate Keiyoushi extension. The superseded `selura_sources/nhentaito/` experiment addresses a different hostname and **is not the shipped module**.
 
+## Version 2 follow-up: slow online pages
+
+The owner reports page loading is still slow. In the first pilot, a page could wait for up to 5 distinct CDN hosts with 2 attempts per host, potentially hitting long OkHttp timeouts. This release reduces that to 3 approved hosts, one request each, 4-second connect and 9-second read timeouts, and avoids beginning another request after ~18 seconds of elapsed time. Successful image requests teach the extension a preferred nHentai CDN. Retryable CDN errors include 404/408/410/5xx and HTML error responses, but never 401/403/429. The source logs only error status/host, never gallery URLs or credentials.
+
+**Source check:** Older titles restored into the Library retain their original Cursed Yuzono source ID. Installing Selura NHentai does not migrate them. To test this extension, navigate to **Browse → Sources → Selura NHentai** and open a gallery from this source.
+
 ## Verified source and changes
 - Adapted from `yuzono/cursed-manga-extensions@5dad5cf65dce98bb05ba8edf1f38770585e032b9`, `src/all/nhentai`, Apache-2.0; upstream copyright and license remain. Original source module is not changed.
 - Stored first-party code in `selura_sources/nhentai/NHentai.kt` and supporting `NHDto.kt`/`NHUtils.kt`, built by Yuzono's pinned framework.
