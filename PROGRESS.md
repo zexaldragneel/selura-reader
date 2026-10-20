@@ -1,6 +1,15 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Android-tested startup update notification — Build #28 → #29 (2026-10-20)
+- **Phone-tested: PASS.** The owner shared an Android screenshot of the native `Selura Manga update available` dialog, saying "It works". The installed updater-enabled Build #28 detected `Selura Manga Build 29` on app startup and rendered release notes plus functional UI affordances `Later` and `View update`. The manga library was visibly present behind the dialog (3,963 entries shown); this screen does not independently establish that every entry and reading position was preserved during an APK upgrade.
+- **CI verified: PASS.** GitHub Actions native APK Build #29 run `39423294555` completed **SUCCESS** in all four jobs: pinned engine, native Gradle build and APK identity/signature checks, GitHub Release, and signed-release metadata publication. Release: https://github.com/zexaldragneel/selura-reader/releases/download/test-native-pr-27-run-29/selura-manga.apk (67,170,640 bytes; reported SHA-256 `9ad56b348206851e217795aac7373d71a49f1c425db700a59e05892cc750cff8`).
+- **Public feed verified: PASS.** `https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json` advertises versionCode `1029`, appId `com.selura.manga`, correct owner/release URL and SHA-256 matching the released APK.
+- **Milestone:** reliable phone-visible cold-start update notification is implemented, compiled, signed, released and **device-confirmed**. Does not require an extra hosting repository, a GitHub token in the app, or GitHub Pages setup.
+- **Still awaiting separate phone confirmation:** selecting `View update` opens the correct GitHub release; downloading/build #29 **installs over** Build #28 without uninstalling; manga titles/categories, downloaded chapters and reading positions remain intact afterward; reopening fully updated Build #29 does **not** show a spurious update prompt for the same version.
+- **Safe follow-up:** owner should tap `View update`, install over the existing Selura Manga app (do not uninstall), relaunch and check library/reading progress; report any installation or data problem before proceeding.
+ 
+
 ## Public native update notification — verified Build #28 (2026-10-20)
 - **Owner screenshot and direct GitHub API check:** native PR #27 Build #28, run `39420253038`, finished **SUCCESS**. Jobs Preserve pinned Mihon engine, Compile native manga reader, Publish Selura Manga direct download, and Publish signed release metadata all **SUCCESS**.
 - **Verified release:** https://github.com/zexaldragneel/selura-reader/releases/download/test-native-pr-27-run-28/selura-manga.apk, asset 67,170,640 bytes, SHA-256 `8e4b4716b1b5eedc71419aa28669d02f8ebc1dcfc4b8840c8a7846eb36b9eb02`. App ID `com.selura.manga`, versionCode `1028`; build job explicitly checks the established signing certificate and Android package identity before the release job runs.
