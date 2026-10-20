@@ -121,6 +121,132 @@ def patch(root: pathlib.Path, version_code: int):
                     ),""",
     )
 
+    # Selura customization: show what is actually in the selected Mihon backup
+    # before restoring. Category/settings-only backups must not appear to have
+    # successfully restored a manga library.
+    substitute_exact(
+        root,
+        "app/src/main/java/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt",
+        "return Results(missingSources, missingTrackers)",
+        """return Results(
+            missingSources,
+            missingTrackers,
+            mangaCount = backup.backupManga.size,
+            favoriteCount = backup.backupManga.count { it.favorite },
+        )""",
+    )
+    substitute_exact(
+        root,
+        "app/src/main/java/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt",
+        """        val missingTrackers: List<String>,
+    )""",
+        """        val missingTrackers: List<String>,
+        val mangaCount: Int,
+        val favoriteCount: Int,
+    )""",
+    )
+
+    restore_screen = "app/src/main/java/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt"
+    substitute_exact(
+        root,
+        restore_screen,
+        """                if (state.canRestore) {
+                    item {
+                        SectionCard {
+                            RestoreOptions.options.forEach""",
+        """                if (state.canRestore) {
+                    item {
+                        SectionCard {
+                            Column(
+                                modifier = Modifier.padding(MaterialTheme.padding.medium),
+                                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                            ) {
+                                Text(
+                                    text = "Selected backup: ${state.mangaCount} manga; " +
+                                        "${state.favoriteCount} marked as library entries.",
+                                )
+                                if (state.mangaCount == 0) {
+                                    Text(
+                                        text = "No manga entries were found in this backup. " +
+                                            "Create a new backup in Mihon with Manga selected.",
+                                    )
+                                } else if (state.favoriteCount == 0) {
+                                    Text(
+                                        text = "No titles are marked as library favorites in " +
+                                            "this backup; they may not appear in your Library.",
+                                    )
+                                }
+                                if (!state.options.libraryEntries) {
+                                    Text(text = "Enable Library below to restore manga titles.")
+                                }
+                            }
+                        }
+                    }
+                    item {
+                        SectionCard {
+                            RestoreOptions.options.forEach""",
+    )
+    substitute_exact(
+        root,
+        restore_screen,
+        """                canRestore = true,
+            )
+            return
+        }
+
+        setError(error = null, canRestore = true)""",
+        """                canRestore = true,
+                mangaCount = results.mangaCount,
+                favoriteCount = results.favoriteCount,
+            )
+            return
+        }
+
+        setError(
+            error = null,
+            canRestore = true,
+            mangaCount = results.mangaCount,
+            favoriteCount = results.favoriteCount,
+        )""",
+    )
+    substitute_exact(
+        root,
+        restore_screen,
+        """    private fun setError(error: Any?, canRestore: Boolean) {
+        state.update {
+            it.copy(
+                error = error,
+                canRestore = canRestore,
+            )
+        }
+    }""",
+        """    private fun setError(
+        error: Any?,
+        canRestore: Boolean,
+        mangaCount: Int = 0,
+        favoriteCount: Int = 0,
+    ) {
+        state.update {
+            it.copy(
+                error = error,
+                canRestore = canRestore,
+                mangaCount = mangaCount,
+                favoriteCount = favoriteCount,
+            )
+        }
+    }""",
+    )
+    substitute_exact(
+        root,
+        restore_screen,
+        """        val options: RestoreOptions = RestoreOptions(),
+    )""",
+        """        val options: RestoreOptions = RestoreOptions(),
+        val mangaCount: Int = 0,
+        val favoriteCount: Int = 0,
+    )""",
+    )
+
     icon = root / "app/src/main/res/drawable/selura_manga_icon.xml"
     icon.parent.mkdir(parents=True, exist_ok=True)
     icon.write_text(ICON_XML, encoding="utf-8")
