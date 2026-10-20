@@ -52,7 +52,7 @@ jobs:
           AUTH_HEADER="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           EXISTING="$(git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" ls-remote "$TARGET" "$MIRROR_REF" | cut -f1)"
           if [ -n "$EXISTING" ]; then
-            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" fetch --depth=1 "$TARGET" "$EXISTING"
+            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" fetch --depth=1 "$TARGET" "$MIRROR_REF"
             test "$(git -C "$SOURCE_DIR" rev-parse FETCH_HEAD^{tree})" = "$UPSTREAM_TREE" || {
               echo "::error::Existing Selura source mirror differs from pinned upstream. Manual review required."
               exit 1
