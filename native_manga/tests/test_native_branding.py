@@ -178,6 +178,9 @@ class MigrationListViewModel {
         write(
             "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt",
             """class MigrateMangaUseCase {
+    suspend operator fun invoke(current: Manga, target: Manga, replace: Boolean) {
+        val flags = sourcePreferences.migrationFlags.get()
+        try {
             // Update chapters read, bookmark and dateFetch
             if (MigrationFlag.CHAPTER in flags) {
                 val prevMangaChapters = getChaptersByMangaId.await(current.id)
@@ -206,9 +209,19 @@ class MigrationListViewModel {
                     }
                 updateChapter.awaitAll(chapterUpdates)
             }
+            if (MigrationFlag.CATEGORY in flags) {
+                val categoryIds = getCategories.await(current.id).map { it.id }
+                setMangaCategories.await(target.id, categoryIds)
+            }
             if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {
                 scope.launch { downloadManager.deleteManga(current, currentSource) }
             }
+        } catch (e: Throwable) {
+            if (e is CancellationException) {
+                throw e
+            }
+        }
+    }
 }""",
         )
         write(
