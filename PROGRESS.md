@@ -1,5 +1,14 @@
 # Selura — Development Progress
 
+## Extension installation repair — SHA-256 store fingerprint (2026-10-20)
+- **Android evidence:** Selura Extension Stores accepted the public `repo.json` and displayed Selura NHentai and Selura MangaDex, but both install attempts failed (Refresh/Retry action icons on Browse > Extensions). This confirms store discovery but not install success.
+- **Root cause verified in upstream native Mihon source:** `ExtensionInstaller.downloadAndInstall()` rejects a downloaded extension whose APK signing certificate digest does not match `extension.store.signingKey`; `ExtensionLoader.getSignatures()` uses SHA-256. The Selura public store generator mistakenly published the 40-character SHA-1 fingerprint (`95366c895b24b05d2f37a4cdeb30ad9ad4d70d96`) instead of SHA-256, despite verifying SHA-256 privately.
+- **Fix merged:** Public store [PR #3](https://github.com/john-selwyn/selura-extensions/pull/3), squash commit `9fe223f8e5f06bb307339bcd927b76264ca3a7f5`. The generator now publishes and checks the known Selura SHA-256 fingerprint `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` in BOTH `repo.json.meta.signingKeyFingerprint` and `index.json.signingKey`, with regression tests.
+- **CI:** PR test run `39411164796` PASSED; [public release publication `39411220988`](https://github.com/john-selwyn/selura-extensions/actions/runs/39411220988) PASSED; fetched the public catalog URLs and confirmed both 64-character SHA-256 values. Both APK Git blob SHAs remain unchanged (NHentai `c2d3527ab844e495ef1ed45b1c322cf4e3efe89c`, MangaDex `a6460cbe5e6b3b3cab302227b850ec3062426b11`); no APK rebuild or package ID changes.
+- **Crucial device cache detail:** ExtensionStoreRepositoryImpl keeps signingKey in a local database. The ordinary Extensions list refresh fetches extensions but not repository trust metadata. User must open **Browse → Extensions → Extension stores** and tap that screen's top-right **Refresh** (calls `UpdateExtensionStores/refreshAll`), then return to Extensions, refresh list and retry installing MangaDex. Do NOT uninstall original extensions or remove library. If still fails, capture Android installation message; compare manual APK install to distinguish downloading, trust, and package-installer issues.
+- **Verification remaining:** actual phone installation and chapter loading through public store not yet confirmed.
+
+
 ## Selura Extensions public store published — 2026-10-20
 
 - The owner created public `john-selwyn/selura-extensions` and added a fine-grained `SELURA_READER_READ_TOKEN` secret with Contents: Read-only access limited to private `selura-reader`. Token value was never shared in chat or committed.
