@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
