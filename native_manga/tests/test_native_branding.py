@@ -70,6 +70,54 @@ class NativeMigrationTests(unittest.TestCase):
                     ),
             }""",
         )
+        write(
+            "app/src/main/java/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt",
+            """class BackupFileValidator {
+        fun validate(backup: Backup): Results {
+            return Results(missingSources, missingTrackers)
+        }
+        data class Results(
+            val missingSources: List<String>,
+            val missingTrackers: List<String>,
+        )
+    }""",
+        )
+        write(
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt",
+            """class RestoreBackupScreen {
+                if (state.canRestore) {
+                    item {
+                        SectionCard {
+                            RestoreOptions.options.forEach { option ->
+                                LabeledCheckbox(label = stringResource(option.label))
+                            }
+                        }
+                    }
+                }
+                if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
+                    setError(
+                        error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
+                        canRestore = true,
+                    )
+                    return
+                }
+
+                setError(error = null, canRestore = true)
+
+                private fun setError(error: Any?, canRestore: Boolean) {
+                    state.update {
+                        it.copy(
+                            error = error,
+                            canRestore = canRestore,
+                        )
+                    }
+                }
+
+                data class State(
+                    val options: RestoreOptions = RestoreOptions(),
+                )
+            }""",
+        )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt",
@@ -106,6 +154,36 @@ class NativeMigrationTests(unittest.TestCase):
         self.assertNotIn("Intent.ACTION_VIEW", settings)
         self.assertNotIn("startActivity", settings)
         self.assertNotIn("installPackage", settings)
+
+    def test_mihon_backup_preview_reports_library_counts(self):
+        patch(self.root, 2011)
+        validator = (
+            self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt"
+        ).read_text()
+        screen = (
+            self.root /
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt"
+        ).read_text()
+        self.assertIn("mangaCount = backup.backupManga.size", validator)
+        self.assertIn("favoriteCount = backup.backupManga.count { it.favorite }", validator)
+        self.assertIn("Selected backup:", screen)
+        self.assertIn("mangaCount = results.mangaCount", screen)
+        self.assertIn("favoriteCount = results.favoriteCount", screen)
+        self.assertIn("Enable Library below", screen)
+        self.assertIn("No manga entries were found", screen)
+
+    def test_refuse_modified_backup_validator_contract(self):
+        validator = (
+            self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/data/backup/BackupFileValidator.kt"
+        )
+        validator.write_text(validator.read_text().replace(
+            "return Results(missingSources, missingTrackers)",
+            "return Results(emptyList(), emptyList())",
+        ))
+        with self.assertRaises(IncompatibleUpstreamError):
+            patch(self.root, 2009)
 
     def test_refuse_modified_extension_store_entry(self):
         settings = (
