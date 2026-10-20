@@ -1,6 +1,11 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Phone test — batch migration succeeded (2026-10-20)
+- User confirmed batch Copy to Selura NHentai ALL works in Build #15. EN and ALL are language variants, not duplicate extension installations.
+- Individual transferred page positions, bookmarks, categories and complete title counts have not been audited. Preserve original library, downloads and backup pending spot-checks.
+- Build #15: https://github.com/john-selwyn/selura-reader/actions/runs/39396879791 (passed).
+
 ## Signed native batch migration APK — Build #14, 2026-10-20
 - **Owner request:** transfer all existing NHentai (Cursed Yūzōnō) favorites into the distinct first-party Selura NHentai source in a batch. Original extension and restored library must stay intact until copying is tested.
 - **PR #24 code commits:** `cd08a05717a1b35fa4ac3ea1f6e283cfdcc2c7a1` added **Select All / Deselect All** on the native source migration list, source-specific exact `/g/<numeric ID>/` matching (avoids fuzzy title matches for Selura NHentai), and same-gallery single-chapter transfer of bookmark/read/lastPageRead when chapter URLs agree. `8eeac6ee7e6b488cc0ce3d1a86a28374a895e9dd` added fail-closed upstream patch tests.
