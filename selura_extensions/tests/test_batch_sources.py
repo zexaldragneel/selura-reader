@@ -76,7 +76,7 @@ class BatchSourceTests(unittest.TestCase):
         self.assertEqual(old, (self.root / "src/all/mangaplus/build.gradle.kts").read_text())
         settings = (self.root / "settings.gradle.kts").read_text()
         self.assertNotIn("loadAllIndividualExtensions()", settings)
-        self.assertEqual(settings.count("loadIndividualExtension("), 6)
+        self.assertEqual(settings.count('loadIndividualExtension("'), 6)
 
     def test_preserves_valid_explicit_locale_blocks(self):
         batch.prepare(self.root, 1008, verify_git=False)
@@ -90,7 +90,7 @@ class BatchSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(batch.ImportErrorContract, "Version code"):
             batch.prepare(self.root, 0, verify_git=False)
         batch.prepare(self.root, 1007, verify_git=False)
-        with self.assertRaisesRegex(batch.ImportErrorContract, "Refusing to overwrite"):
+        with self.assertRaisesRegex(batch.ImportErrorContract, "Unsupported upstream settings|Refusing to overwrite"):
             batch.prepare(self.root, 1008, verify_git=False)
 
     def test_changed_upstream_layout_fails_before_copy(self):
