@@ -679,6 +679,28 @@ import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
         raise IncompatibleUpstreamError("Missing first-party Selura updater source.")
     shutil.copyfile(update_source, update_dest)
 
+    # Selura's validated in-app APK downloader uses the existing FileProvider,
+    # trusted Android package installer, and private application cache.
+    installer_source = (
+        pathlib.Path(__file__).resolve().parent /
+        "selura_updater/SeluraApkInstaller.kt"
+    )
+    installer_dest = (
+        root /
+        "app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraApkInstaller.kt"
+    )
+    if installer_dest.exists() or not installer_source.is_file():
+        raise IncompatibleUpstreamError("Missing or conflicting Selura APK installer source.")
+    shutil.copyfile(installer_source, installer_dest)
+    provider_paths = root / "app/src/main/res/xml/provider_paths.xml"
+    manifest_text = (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
+    if provider_paths.is_file() and provider_paths.read_text(encoding="utf-8").count(
+        'name="cache_files"'
+    ) != 1:
+        raise IncompatibleUpstreamError("Selura installer needs an existing private cache FileProvider.")
+    if 'android:authorities="${applicationId}.provider"' not in manifest_text:
+        raise IncompatibleUpstreamError("Selura APK installation requires native FileProvider.")
+
     icon = root / "app/src/main/res/drawable/selura_manga_icon.xml"
     icon.parent.mkdir(parents=True, exist_ok=True)
     icon.write_text(ICON_XML, encoding="utf-8")
