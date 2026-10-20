@@ -79,6 +79,9 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
                         raise ImportErrorContract(f"Unexpected custom package for {upstream}")
                     # Avoid competing with original extension deep-link intents.
                     content = re.sub(r"(?ms)^    deeplink \{\n.*?^    \}\n", "", content)
+                    # Removing the deep-link block must not leave a
+                    # double blank before the module's closing brace.
+                    content = content.replace("    }\n\n}\n\ndependencies {", "    }\n}\n\ndependencies {")
                     # VersionId 2 gives new source IDs with natural display names.
                     # Two Webtoons locales carried explicit historical IDs.
                     # Remap them without emptying the Kotlin DSL when{} branches.
