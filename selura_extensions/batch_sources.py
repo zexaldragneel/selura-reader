@@ -80,10 +80,21 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
                     # Avoid competing with original extension deep-link intents.
                     content = re.sub(r"(?ms)^    deeplink \{\n.*?^    \}\n", "", content)
                     # VersionId 2 gives new source IDs with natural display names.
-                    content = re.sub(r"(?m)^\s*id = \d+[Ll]?\s*\n", "\n", content)
+                    # Two Webtoons locales carried explicit historical IDs.
+                    # Remap them without emptying the Kotlin DSL when{} branches.
+                    if upstream == "webtoons":
+                        old_ids = {
+                            "8749627068478740298": "2440516289140843419",
+                            "2959982438613576472": "4442238007005333330",
+                        }
+                        for previous, current in old_ids.items():
+                            expected = f"id = {previous}"
+                            if content.count(expected) != 1:
+                                raise ImportErrorContract(f"Missing Webtoons ID {previous}")
+                            content = content.replace(expected, f"id = {current}L")
                     content = re.sub(
-                        r"(\bsource\s*\{\s*\n)",
-                        r"\1            versionId = 2\n",
+                        r"(?m)^([ \t]*)source \{\n",
+                        lambda match: match.group(0) + match.group(1) + "    versionId = 2\n",
                         content,
                     )
                     content = content.replace(
@@ -91,7 +102,7 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
                         f'name = "{display_name}"\n    pkgName = "{language}.{selura}"',
                     )
                     content = re.sub(
-                        r"(?m)^(\s*)versionCode = \d+\s*$",
+                        r"(?m)^([ \t]*)versionCode = \d+[ \t]*$",
                         rf"\g<1>versionCode = {version_code}",
                         content,
                     )
