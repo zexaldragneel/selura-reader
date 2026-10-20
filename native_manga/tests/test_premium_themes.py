@@ -18,7 +18,7 @@ class PremiumThemeTests(unittest.TestCase):
                 theme_patch.once(source, "target", "replacement", "test")
 
     def test_theme_files_are_ui_only(self):
-        self.assertEqual(len(theme_patch.FILES), 7)
+        self.assertEqual(len(theme_patch.FILES), 9)
         for path in theme_patch.FILES.values():
             self.assertTrue(path.endswith(".kt"))
             self.assertNotIn("/data/", path)
