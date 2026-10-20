@@ -58,6 +58,18 @@ class NativeMigrationTests(unittest.TestCase):
             'android:label="@string/app_name"/></manifest>\n',
         )
         write("settings.gradle.kts", 'rootProject.name = "Mihon"\n')
+        write(
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt",
+            """object SettingsBrowseScreen {
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.extensionStores),
+                        subtitle = pluralStringResource(MR.plurals.num_repos, reposCount.toInt(), reposCount),
+                        onClick = {
+                            navigator.push(ExtensionStoresScreen())
+                        },
+                    ),
+            }""",
+        )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt",
@@ -81,6 +93,34 @@ class NativeMigrationTests(unittest.TestCase):
         self.assertTrue((self.root / "LICENSE").exists())
         self.assertNotEqual(NATIVE_APPLICATION_ID, LEGACY_FLUTTER_APPLICATION_ID)
         self.assertEqual(APP_LABEL, "Selura Manga")
+        settings = (
+            self.root /
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Add Keiyoushi extensions", settings)
+        self.assertIn(
+            "https://github.com/keiyoushi/extensions/raw/repo/index.pb", settings
+        )
+        self.assertIn("navigator.push(ExtensionStoresScreen())", settings)
+        self.assertIn("ExtensionStoresScreen(\n", settings)
+        self.assertNotIn("Intent.ACTION_VIEW", settings)
+        self.assertNotIn("startActivity", settings)
+        self.assertNotIn("installPackage", settings)
+
+    def test_refuse_modified_extension_store_entry(self):
+        settings = (
+            self.root /
+            "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt"
+        )
+        settings.write_text(
+            settings.read_text().replace(
+                "navigator.push(ExtensionStoresScreen())",
+                "navigator.pop()",
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaises(IncompatibleUpstreamError):
+            patch(self.root, 2002)
 
     def test_refuse_unexpected_upstream_variant(self):
         path = self.root / "app/build.gradle.kts"
