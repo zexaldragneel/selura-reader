@@ -1,6 +1,15 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Owner identity cleanup — Zexal Dragneel (2026-10-20)
+- Repository was transferred intact to **zexaldragneel/selura-reader**, private, with the new connected GitHub account holding admin/push rights. Old GitHub repository URLs are obsolete; only the new owner path should be used going forward.
+- Owner requires **Zexal Dragneel / zexaldragneel** in current Selura code and repo links, with no old owner name. Updated current tracked documentation, updater code, release URL allowlist, signed release metadata generator, workflow metadata assertions and affected tests under the new owner. Related cleanup commits also applied to main, native, NHentai, Keiyoushi, six-source and gh-pages branches.
+- Updated native updater feed to `https://raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json` (future metadata-only public repository). **That public repository/feed has not been created or verified**, so automatic update notifications are not live. Removed the failing GitHub Pages publishing job from this feature branch because private Pages is unavailable under owner's plan. Existing signed APK releases remain private.
+- Existing Git history, old GitHub activities, commit author metadata and prior immutable APK/release assets may retain historical references. Do not force-push or rewrite attribution/signatures to erase history without separate informed authorization; preserve software license and contributor attribution.
+- CI after cleanup: new native run #23 `39418939450` queued at writing. No new build verified yet. Do not claim new APK success until CI passes.
+- **Next:** review CI, inspect every active branch and metadata for old owner names, maintain no-change to package IDs and signing key, and build the native APK. Avoid using the previous owner path in any new code.
+
+
 ## Update feed hosting: free GitHub plan limitation (2026-10-20)
 - **Owner screenshot of Settings → Pages:** "Upgrade or make this repository public to enable Pages". This confirms the private `selura-reader` repository cannot use Pages under the owner's current GitHub plan. **Do not upgrade or change application repo visibility** solely to activate updates.
 - **Free fallback selected for proposal (not yet deployed):** create a separate *public, metadata-only* `zexaldragneel/selura-updates` repository with a single `latest.json`. Android app will read `https://raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json` over HTTPS, with existing app ID/version/digest/owner release-URL checks and timeouts. This avoids GitHub Pages and does not expose private APKs, source or keys.
