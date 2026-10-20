@@ -76,11 +76,11 @@ class NativeMigrationTests(unittest.TestCase):
         fun validate(backup: Backup): Results {
             return Results(missingSources, missingTrackers)
         }
-        data class Results(
-            val missingSources: List<String>,
-            val missingTrackers: List<String>,
-        )
-    }""",
+    data class Results(
+        val missingSources: List<String>,
+        val missingTrackers: List<String>,
+    )
+}""",
         )
         write(
             "app/src/main/java/eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt",
