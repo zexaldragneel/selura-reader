@@ -122,13 +122,13 @@ def patch(root: Path) -> None:
                     entries = mapOf("on" to "Enabled", "off" to "Disabled"),
                     title = "Atmospheric background",
                     subtitle = "%s · Original lightweight gradient artwork",
-                    onValueChanged = { premiumAppearance?.setBackgroundArtwork(it == "on") },
+                    onValueChanged = { premiumAppearance?.updateBackgroundArtwork(it == "on") },
                 ),
                 Preference.PreferenceItem.BasicListPreference(
                     value = if (premiumAppearance?.reducedEffects == true) "on" else "off",
                     entries = mapOf("on" to "Reduced", "off" to "Normal"),
                     title = "Visual effects",
-                    onValueChanged = { premiumAppearance?.setReducedEffects(it == "on") },
+                    onValueChanged = { premiumAppearance?.updateReducedEffects(it == "on") },
                 ),
                 Preference.PreferenceItem.CustomPreference(""", key)
     files[key] = s
