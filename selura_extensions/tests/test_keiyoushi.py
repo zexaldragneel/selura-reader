@@ -33,10 +33,19 @@ class KeiyoushiImportTests(unittest.TestCase):
             '    name = "MangaDex"\n'
             '    versionCode = 0\n'
             '    libVersion = "1.6"\n'
-            '    source { baseUrl = "https://mangadex.org" }\n'
+            '    listOf("en").forEach {\n'
+            '        source {\n'
+            '            baseUrl = "https://mangadex.org"\n'
+            '        }\n'
+            '    }\n'
+            '\n'
             '    deeplink {\n'
             '        host("mangadex.org")\n'
             '    }\n'
+            '}\n'
+            '\n'
+            'dependencies {\n'
+            '    implementation(project(":lib:i18n"))\n'
             '}\n',
             encoding="utf-8",
         )
@@ -58,6 +67,9 @@ class KeiyoushiImportTests(unittest.TestCase):
         self.assertIn('name = "Selura MangaDex"', build)
         self.assertIn("versionCode = 101", build)
         self.assertNotIn("deeplink {", build)
+        # Keiyoushi Spotless must accept the generated Gradle source.
+        self.assertNotIn("    }\n\n}\n\ndependencies {", build)
+        self.assertIn("    }\n}\n\ndependencies {", build)
         self.assertIn(module.NEW_PACKAGE, kotlin)
         self.assertIn('"Selura"', kotlin)
         self.assertIn(module.NEW_PACKAGE, (dest / "proguard-rules.pro").read_text())

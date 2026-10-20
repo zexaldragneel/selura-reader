@@ -85,6 +85,13 @@ def prepare(checkout: Path, version_code: int = 1, verify_git: bool = True) -> P
                 )
                 if matches != 1:
                     raise ContractError("Unexpected MangaDex deep-link block")
+                # The removed deep-link leaves one blank line that Spotless
+                # rejects, between the source block and module closing brace.
+                before = "    }\n\n}\n\ndependencies {"
+                after = "    }\n}\n\ndependencies {"
+                if body.count(before) != 1:
+                    raise ContractError("Unexpected Keiyoushi format after deep-link removal")
+                body = body.replace(before, after)
             if file.suffix == ".kt":
                 # The network header must identify the publisher truthfully.
                 body = body.replace('"Keiyoushi"', '"Selura"')
