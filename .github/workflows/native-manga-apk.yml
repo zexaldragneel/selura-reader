@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -134,7 +134,12 @@ jobs:
           set -euo pipefail
           python3 native_manga/apply_branding.py native-upstream \
             --version-code "$((1000 + SELURA_NATIVE_VERSION_CODE))"
+          python3 native_manga/optimize_reader.py native-upstream
           grep -q 'applicationId = "com.selura.manga"' native-upstream/app/build.gradle.kts
+          grep -q 'PARAMETER_CACHE_SIZE = 192L \* 1024 \* 1024' \
+            native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/cache/ChapterCache.kt
+          grep -q 'withOneTransientRetry' \
+            native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
           grep -q '<string name="app_name" translatable="false">Selura Manga</string>' \
             native-upstream/i18n/src/commonMain/moko-resources/base/strings.xml
 
