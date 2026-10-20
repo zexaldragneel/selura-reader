@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/selura-native-manga-migration]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -229,6 +229,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout Selura update manifest generator
+        uses: actions/checkout@v4
+
       - name: Download signed native APK
         uses: actions/download-artifact@v4
         with:
@@ -255,3 +258,101 @@ jobs:
             --title "Selura Manga Native Preview · Build #${{ github.run_number }}" \
             --notes "Based on Mihon v0.21.2 (Apache-2.0), with Selura's distinct com.selura.manga application ID. Supports original Mihon backup restore and Mihon-compatible extension engines. This installs separately from legacy Selura and Mihon; user Android verification required. Preserve upstream attribution." \
             --prerelease
+
+      - name: Generate safe version metadata from verified signed APK
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="test-native-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            TAG="test-native-dispatch-run-${{ github.run_number }}"
+          fi
+          python3 native_manga/selura_updater/write_update_feed.py \
+            --version-code "$((1000 + RUN_NUMBER))" \
+            --tag "$TAG" \
+            --apk release/selura-manga.apk \
+            --output public-feed/updates/latest.json
+
+      - name: Save update manifest as private artifact (public feed opt-in only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-update-feed-private
+          path: public-feed/updates/latest.json
+          if-no-files-found: error
+
+  publish_update_feed:
+    name: Publish version metadata to GitHub Pages
+    needs: release
+    # Only jobs from the owner's repository; forks must never publish a feed.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.pull_request.number == 24 || github.event.pull_request.number == 27))
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download only the verified version manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: selura-update-feed-private
+          path: site/updates
+
+      - name: Verify public artifact contains metadata only
+        run: |
+          set -euo pipefail
+          test -s site/updates/latest.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          feed = Path("site/updates/latest.json")
+          data = json.loads(feed.read_text())
+          expected = {
+              "schemaVersion", "applicationId", "versionCode", "versionName",
+              "notes", "releaseUrl", "sha256",
+          }
+          assert set(data) == expected, "Unexpected metadata fields"
+          assert data["applicationId"] == "com.selura.manga"
+          assert isinstance(data["versionCode"], int) and data["versionCode"] > 1000
+          assert data["releaseUrl"].startswith(
+              "https://github.com/john-selwyn/selura-reader/releases/tag/test-native-"
+          )
+          assert len(data["sha256"]) == 64
+          assert len(feed.read_bytes()) < 3000
+          assert [str(p) for p in Path("site").rglob("*") if p.is_file()] == [
+              "site/updates/latest.json"
+          ], "Refusing to publish extra files"
+          print("Only one checked update metadata file will be exposed.")
+          PY
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">
+          <title>Selura Manga update metadata</title></head><body>
+          <h1>Selura Manga update metadata</h1>
+          <p>This page publishes signed APK version information only. The repository
+          and release APKs remain private.</p>
+          <p><a href="updates/latest.json">View update manifest</a></p>
+          </body></html>
+          HTML
+          printf 'enabled\n' > site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload metadata-only Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy Selura metadata to public Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -11,6 +11,7 @@ extensions, and official Mihon backup/restore implementation stay native.
 import argparse
 import os
 import pathlib
+import shutil
 import xml.etree.ElementTree as ET
 
 UPSTREAM_SHA = "9612d955db3165e1578fdf9ff19ca9b7762c4a46"
@@ -434,6 +435,40 @@ import mihon.domain.manga.model.toDomainManga
                     }
                 updateChapter.awaitAll(chapterUpdates)""",
     )
+
+    # Selura startup update prompt. Mihon's update checker stays disabled
+    # because it points to Mihon's releases; the first-party read-only manifest
+    # is intended to be published independently with explicit owner consent.
+    substitute_exact(
+        root,
+        "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt",
+        """                if (!isBenchmarkBuildType) {
+                    if (isLaunch) CheckForUpdates()
+                    ShowOnboarding()
+                    ShowDonationCampaign()
+                }""",
+        """                if (!isBenchmarkBuildType) {
+                    if (isLaunch) {
+                        CheckForUpdates()
+                        SeluraStartupUpdateCheck()
+                    }
+                    ShowOnboarding()
+                    ShowDonationCampaign()
+                }""",
+    )
+    update_source = (
+        pathlib.Path(__file__).resolve().parent /
+        "selura_updater/SeluraStartupUpdateCheck.kt"
+    )
+    update_dest = (
+        root /
+        "app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraStartupUpdateCheck.kt"
+    )
+    if update_dest.exists():
+        raise IncompatibleUpstreamError("Native Selura updater already exists.")
+    if not update_source.is_file():
+        raise IncompatibleUpstreamError("Missing first-party Selura updater source.")
+    shutil.copyfile(update_source, update_dest)
 
     icon = root / "app/src/main/res/drawable/selura_manga_icon.xml"
     icon.parent.mkdir(parents=True, exist_ok=True)
