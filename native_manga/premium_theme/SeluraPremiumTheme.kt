@@ -42,12 +42,12 @@ class SeluraLibraryAppearance(context: Context) {
         preferences.edit().putString("theme", theme.key).apply()
     }
 
-    fun setBackgroundArtwork(enabled: Boolean) {
+    fun updateBackgroundArtwork(enabled: Boolean) {
         backgroundArtwork = enabled
         preferences.edit().putBoolean("background_artwork", enabled).apply()
     }
 
-    fun setReducedEffects(enabled: Boolean) {
+    fun updateReducedEffects(enabled: Boolean) {
         reducedEffects = enabled
         preferences.edit().putBoolean("reduced_effects", enabled).apply()
     }
