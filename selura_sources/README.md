@@ -19,8 +19,8 @@ The owner reports page loading is still slow. In the first pilot, a page could w
 - Installer: `python3 selura_sources/apply_source.py <yuzono-source-checkout>`.
 - Contract tests: `python3 -m unittest discover -s selura_sources/tests -v`.
 - GitHub Actions: `.github/workflows/selura-sources.yml` clones pinned Yuzono source only as the compilation framework, adds Selura's independent source module, compiles the Android extension with Java 25, signs with the existing encrypted Selura release key, checks package ID and signing fingerprint, and publishes a source APK.
-- **Build #8 passed**: https://github.com/john-selwyn/selura-reader/actions/runs/39390201876
-- **Signed standalone APK**: https://github.com/john-selwyn/selura-reader/releases/download/test-selura-source-pr-25-run-8/selura-nhentai.apk — SHA-256 `25fb6b2ba8e6331b8d8059059287af256a0ffd26dac85f8673c5f350f532016a`.
+- **Build #8 passed**: https://github.com/zexaldragneel/selura-reader/actions/runs/39390201876
+- **Signed standalone APK**: https://github.com/zexaldragneel/selura-reader/releases/download/test-selura-source-pr-25-run-8/selura-nhentai.apk — SHA-256 `25fb6b2ba8e6331b8d8059059287af256a0ffd26dac85f8673c5f350f532016a`.
 
 ## Phone acceptance
 1. **Keep the original Cursed Yuzono NHentai, Keiyoushi and Selura apps installed.**
