@@ -23,7 +23,7 @@ class UpdateMetadataTests(unittest.TestCase):
         self.assertEqual(result["versionName"], "Selura Manga Build 17")
         self.assertEqual(
             result["releaseUrl"],
-            "https://github.com/john-selwyn/selura-reader/releases/tag/"
+            "https://github.com/zexaldragneel/selura-reader/releases/tag/"
             "test-native-pr-24-run-17",
         )
         self.assertRegex(result["sha256"], r"^[a-f0-9]{64}$")

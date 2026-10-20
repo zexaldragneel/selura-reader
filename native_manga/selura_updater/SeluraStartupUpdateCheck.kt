@@ -28,7 +28,7 @@ import javax.net.ssl.HttpsURLConnection
 // personal access token or GitHub credentials to the Android APK.
 // Publishing this metadata is explicitly opt-in.
 private const val SELURA_UPDATE_FEED =
-    "https://john-selwyn.github.io/selura-reader/updates/latest.json"
+    "https://raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json"
 
 private data class SeluraUpdateOffer(
     val versionCode: Int,
@@ -67,7 +67,7 @@ private object SeluraReleaseFeed {
             val segments = uri.pathSegments
             if (uri.scheme != "https" || uri.host != "github.com" ||
                 segments.size != 5 ||
-                segments[0] != "john-selwyn" ||
+                segments[0] != "zexaldragneel" ||
                 segments[1] != "selura-reader" ||
                 segments[2] != "releases" ||
                 segments[3] != "tag" ||

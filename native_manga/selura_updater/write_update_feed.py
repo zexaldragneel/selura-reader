@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import re
 
-OWNER = "john-selwyn"
+OWNER = "zexaldragneel"
 REPO = "selura-reader"
 APPLICATION_ID = "com.selura.manga"
 TAG_PATTERN = re.compile(r"^test-native-(?:pr-[0-9]+|dispatch)-run-[0-9]+$")
