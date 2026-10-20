@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Owner-installed Build #29 — data retention audit pending (2026-10-20)
+- The owner explicitly confirmed: **"I already updated it"** after the device-tested Build #28 → Build #29 update notification. Record Build #29 as **user-reported installed**; GitHub Actions Build #29 (`39423294555`) separately verified signed APK assembly and public feed publication.
+- Previous owner's phone screenshot established that Build #28 presented the correct Build #29 update dialog over their populated manga library. Owner has not yet explicitly confirmed whether installation was performed as an in-place upgrade, whether manga categories/downloads/reading positions remained intact, or whether Build #29 no longer prompts for its own version.
+- Next acceptance check: ask the owner whether the **existing manga library and reading progress remained intact after updating**; never infer data preservation solely from success installing an APK.
+- No changes to app identity, signer, or installed data. PR #27 remains open; Android verification and follow-up are tracked here.
+
+
 ## Android-tested startup update notification — Build #28 → #29 (2026-10-20)
 - **Phone-tested: PASS.** The owner shared an Android screenshot of the native `Selura Manga update available` dialog, saying "It works". The installed updater-enabled Build #28 detected `Selura Manga Build 29` on app startup and rendered release notes plus functional UI affordances `Later` and `View update`. The manga library was visibly present behind the dialog (3,963 entries shown); this screen does not independently establish that every entry and reading position was preserved during an APK upgrade.
 - **CI verified: PASS.** GitHub Actions native APK Build #29 run `39423294555` completed **SUCCESS** in all four jobs: pinned engine, native Gradle build and APK identity/signature checks, GitHub Release, and signed-release metadata publication. Release: https://github.com/zexaldragneel/selura-reader/releases/download/test-native-pr-27-run-29/selura-manga.apk (67,170,640 bytes; reported SHA-256 `9ad56b348206851e217795aac7373d71a49f1c425db700a59e05892cc750cff8`).
