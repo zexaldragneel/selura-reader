@@ -345,12 +345,12 @@ interface AppGraph {
         self.assertIn("toDomainManga(source.id)", migration)
         self.assertIn("val sameSeluraGallery", usecase)
         self.assertIn("prevMangaChapters.size == 1 && mangaChapters.size == 1", usecase)
-        self.assertIn("lastPageRead = prevChapter.lastPageRead", usecase)
-        self.assertIn("read = prevChapter.read", usecase)
-        self.assertIn("bookmark = prevChapter.bookmark", usecase)
+        self.assertIn("lastPageRead = maxOf(mangaChapter.lastPageRead, prevChapter.lastPageRead)", usecase)
+        self.assertIn("read = mangaChapter.read || prevChapter.read", usecase)
+        self.assertIn("bookmark = mangaChapter.bookmark || prevChapter.bookmark", usecase)
         self.assertIn("if (!sameSeluraGallery && maxChapterRead != null", usecase)
 
-    def test_background_nhentai_copy_survives_navigation_and_retains_origins(self):
+    def test_background_nhentai_move_verifies_target_before_unfavoriting_source(self):
         patch(self.root, 2024)
         worker = (self.root /
                   "app/src/main/java/mihon/feature/migration/background/SeluraNhentaiBackgroundCopyWorker.kt").read_text()
@@ -360,13 +360,13 @@ interface AppGraph {
                  "app/src/main/java/mihon/app/di/AppGraph.kt").read_text()
         usecase = (self.root /
                    "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt").read_text()
-        self.assertIn("Copy NHentai in background", screen)
+        self.assertIn("Migrate NHentai in background", screen)
         self.assertIn("SeluraNhentaiBackgroundCopyWorker.start(", screen)
         self.assertIn("fun inject(seluraNhentaiBackgroundCopyWorker:", graph)
         self.assertIn("class SeluraNhentaiBackgroundCopyWorker", worker)
         self.assertIn("ExistingWorkPolicy.KEEP", worker)
         self.assertIn("setForegroundSafely()", worker)
-        self.assertIn("last_manga_", worker)
+        self.assertIn("last_moved_manga_", worker)
         self.assertIn("replace = false", worker)
         self.assertIn("matching.toDomainManga(target.id)", worker)
         self.assertIn('Regex("^/g/[0-9]+/?$")', worker)
@@ -376,17 +376,28 @@ interface AppGraph {
         self.assertNotIn("replace = true", worker)
         # Failure IDs and the cursor must survive cancellation together;
         # re-entry skips successful entries, not failed entries.
-        self.assertIn('val failuresKey = "failed_manga_"', worker)
-        self.assertIn("manga.id !in failedIds", worker)
+        self.assertIn('val failuresKey = "failed_move_manga_"', worker)
+        self.assertIn("getFavorites.subscribe(sourceId).first()", worker)
         self.assertIn("putStringSet(failuresKey", worker)
-        self.assertIn("val nextCursor = maxOf(lastProcessedId, manga.id)", worker)
+        self.assertIn(".putLong(cursorKey, manga.id)", worker)
         self.assertIn("failedIds.add(manga.id)", worker)
         self.assertIn("failedIds.remove(manga.id)", worker)
         self.assertNotIn("remove(cursorKey)", worker)
         self.assertIn("getFavorites.subscribe(target.id).first()", worker)
-        self.assertIn("existingTargetUrls.add(canonicalUrl)", worker)
+        self.assertIn("val existing = existingTargets[canonicalUrl]", worker)
         self.assertIn("setRequiredNetworkType(NetworkType.CONNECTED)", worker)
         self.assertIn("setupFailure(", worker)
+        self.assertIn("updateManga.awaitAll(listOf(MangaUpdate(manga.id) { favoriteAt = null }))", worker)
+        self.assertIn("strict = true", worker)
+        self.assertIn("getChaptersByMangaId.await(targetManga.id)", worker)
+        self.assertIn("targetCategories.containsAll(originalCategories)", worker)
+        self.assertIn("inputData.getString(MODE) != MOVE_MODE", worker)
+        self.assertIn("cancelUniqueWork(LEGACY_COPY_WORK)", worker)
+        self.assertIn("selected + setOf(", usecase)
+        self.assertIn("MigrationFlag.CHAPTER,", usecase)
+        self.assertIn("MigrationFlag.CATEGORY,", usecase)
+        self.assertIn("if (e is CancellationException || strict)", usecase)
+        self.assertIn("getCategories.await(target.id)", usecase)
 
     def test_refuse_unexpected_upstream_batch_migration_marker(self):
         vm = (self.root /
