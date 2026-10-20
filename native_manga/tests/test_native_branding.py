@@ -132,7 +132,8 @@ class NativeMigrationTests(unittest.TestCase):
         )
         write(
             "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt",
-            """import eu.kanade.presentation.components.AppBar
+            """import androidx.compose.material3.Text
+import eu.kanade.presentation.components.AppBar
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 
 class MigrateMangaScreen {
@@ -153,6 +154,8 @@ class MigrateMangaScreen {
             floatingActionButton = {
             }
         )
+        LaunchedEffect(Unit) {
+        }
 }""",
         )
         write(
@@ -211,6 +214,14 @@ class MigrationListViewModel {
                     ShowDonationCampaign()
                 }
             }""",
+        )
+        write(
+            "app/src/main/java/mihon/app/di/AppGraph.kt",
+            """import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
+interface AppGraph {
+    fun inject(backupRestoreWorker: BackupRestoreWorker)
+}
+""",
         )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
@@ -319,6 +330,31 @@ class MigrationListViewModel {
         self.assertIn("read = prevChapter.read", usecase)
         self.assertIn("bookmark = prevChapter.bookmark", usecase)
         self.assertIn("if (!sameSeluraGallery && maxChapterRead != null", usecase)
+
+    def test_background_nhentai_copy_survives_navigation_and_retains_origins(self):
+        patch(self.root, 2024)
+        worker = (self.root /
+                  "app/src/main/java/mihon/feature/migration/background/SeluraNhentaiBackgroundCopyWorker.kt").read_text()
+        screen = (self.root /
+                  "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt").read_text()
+        graph = (self.root /
+                 "app/src/main/java/mihon/app/di/AppGraph.kt").read_text()
+        usecase = (self.root /
+                   "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt").read_text()
+        self.assertIn("Copy NHentai in background", screen)
+        self.assertIn("SeluraNhentaiBackgroundCopyWorker.start(", screen)
+        self.assertIn("fun inject(seluraNhentaiBackgroundCopyWorker:", graph)
+        self.assertIn("class SeluraNhentaiBackgroundCopyWorker", worker)
+        self.assertIn("ExistingWorkPolicy.KEEP", worker)
+        self.assertIn("setForegroundSafely()", worker)
+        self.assertIn("last_manga_", worker)
+        self.assertIn("replace = false", worker)
+        self.assertIn("matching.toDomainManga(target.id)", worker)
+        self.assertIn('Regex("^/g/[0-9]+/?$")', worker)
+        self.assertIn("sourceManager.getOnlineSources()", worker)
+        self.assertIn("createCancelPendingIntent(id)", worker)
+        self.assertIn("if (replace && MigrationFlag.REMOVE_DOWNLOAD in flags", usecase)
+        self.assertNotIn("replace = true", worker)
 
     def test_refuse_unexpected_upstream_batch_migration_marker(self):
         vm = (self.root /
