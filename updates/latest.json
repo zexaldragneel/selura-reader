@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "applicationId": "com.selura.manga",
+  "versionCode": 1016,
+  "versionName": "Selura Manga Build 16",
+  "notes": "Selura Manga native Android reader with manga library, improved source migration and offline reading. Review the release before installing.",
+  "releaseUrl": "https://github.com/john-selwyn/selura-reader/releases/tag/test-native-pr-24-run-16",
+  "sha256": "65e56d6497520c5f210d7bc2668709263fb3fef50642b8bb753cee30e8b6ecf8"
+}

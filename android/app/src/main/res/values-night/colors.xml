@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="selura_launch_bg_start">#14121D</color>
-    <color name="selura_launch_bg_end">#272138</color>
-    <color name="selura_launch_symbol">#C5ADEB</color>
-    <color name="selura_launch_page">#21192C</color>
-</resources>
