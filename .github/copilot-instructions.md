@@ -10,7 +10,7 @@ Selura is a premium, offline-first Android eBook and manga reader written in Flu
 
 ## Repository boundary
 
-- Work only in `john-selwyn/selura-reader`.
+- Work only in `zexaldragneel/selura-reader`.
 - Never modify any other repository or deploy to any VPS/server.
 - Do not merge your own pull request. Leave review/merge to the repository owner.
 
