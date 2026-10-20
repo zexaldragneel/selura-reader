@@ -293,7 +293,11 @@ def patch(root: Path) -> None:
                     tint = if (selected && premium != SeluraLibraryTheme.DEFAULT) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        if (premium == SeluraLibraryTheme.DEFAULT) {
+                            androidx.compose.material3.LocalContentColor.current
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     },""", k)
     s = once(s,
         """                    style = MaterialTheme.typography.labelLarge,
@@ -308,7 +312,11 @@ def patch(root: Path) -> None:
                     color = if (selected && premium != SeluraLibraryTheme.DEFAULT) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        if (premium == SeluraLibraryTheme.DEFAULT) {
+                            androidx.compose.material3.LocalContentColor.current
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     },
                     maxLines = 1,""", k)
     changed[k] = s
