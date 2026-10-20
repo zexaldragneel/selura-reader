@@ -81,7 +81,7 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
                     content = re.sub(r"(?ms)^    deeplink \{\n.*?^    \}\n", "", content)
                     # Removing the deep-link block must not leave a
                     # double blank before the module's closing brace.
-                    content = content.replace("    }\n\n}\n\ndependencies {", "    }\n}\n\ndependencies {")
+                    content = re.sub(r"\n\n(?=}\n)", "\n", content)
                     # VersionId 2 gives new source IDs with natural display names.
                     # Two Webtoons locales carried explicit historical IDs.
                     # Remap them without emptying the Kotlin DSL when{} branches.
