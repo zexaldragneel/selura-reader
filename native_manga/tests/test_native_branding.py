@@ -206,6 +206,9 @@ class MigrationListViewModel {
                     }
                 updateChapter.awaitAll(chapterUpdates)
             }
+            if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {
+                scope.launch { downloadManager.deleteManga(current, currentSource) }
+            }
 }""",
         )
         write(
