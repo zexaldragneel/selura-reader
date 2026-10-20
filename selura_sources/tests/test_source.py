@@ -51,7 +51,7 @@ class SeluraNhentaiTests(unittest.TestCase):
         self.assertIn('Regex("""^i[0-9]+', source)
         self.assertIn("it.scheme == \"https\"", source)
         self.assertIn("response.code == 403 || response.code == 429", source)
-        self.assertIn("take(5)", source)
+        self.assertIn("take(3)", source)
         self.assertIn("0 until 1", source)
         self.assertIn("take(3)", source)
         self.assertIn("withConnectTimeout(4, TimeUnit.SECONDS)", source)
