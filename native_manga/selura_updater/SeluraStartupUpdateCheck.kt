@@ -46,7 +46,14 @@ private object SeluraReleaseFeed {
         return try {
             if (connection.responseCode != 200) return null
             val text = connection.inputStream.bufferedReader().use { reader ->
-                reader.readText().take(12_001)
+                val collected = StringBuilder()
+                val buffer = CharArray(2048)
+                while (collected.length <= 12_000) {
+                    val count = reader.read(buffer)
+                    if (count == -1) break
+                    collected.append(buffer, 0, count)
+                }
+                collected.toString()
             }
             if (text.length > 12_000) return null
             val json = JSONObject(text)
