@@ -261,7 +261,7 @@ class MigrationListViewModel {
         self.assertIn("BuildConfig.VERSION_CODE", updater)
         self.assertIn("Selura Manga update available", updater)
         self.assertIn('Text("Later")', updater)
-        self.assertIn("github.io/selura-reader/updates/latest.json", updater)
+        self.assertIn("raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json", updater)
         self.assertIn('segments[1] != "selura-reader"', updater)
         self.assertNotIn("github_pat_", updater)
         self.assertNotIn("Intent.ACTION_INSTALL_PACKAGE", updater)
