@@ -67,9 +67,9 @@ def rewrite_gradle(source: str, language: str, upstream: str, isolated: str,
         source,
     )
     # Also replace pre-existing generated-ID version markers, including v2.
-    source = re.sub(r"(?m)^\s*versionId\s*=\s*\d+\s*\n", "", source)
+    source = re.sub(r"(?m)^[ \t]*versionId[ \t]*=[ \t]*\d+[ \t]*\n", "", source)
     source = re.sub(
-        r"(?m)^(\s*)source\s*\{\s*\n",
+        r"(?m)^([ \t]*)source[ \t]*\{[ \t]*\n",
         lambda m: m.group(0) + m.group(1) + "    versionId = " + str(SOURCE_VERSION_ID) + "\n",
         source,
     )
