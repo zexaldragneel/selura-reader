@@ -56,7 +56,7 @@ class NativeMigrationTests(unittest.TestCase):
             '<manifest><application android:icon="@mipmap/ic_launcher" '
             'android:roundIcon="@mipmap/ic_launcher" '
             'android:label="@string/app_name">'
-            '<provider android:authorities="\${applicationId}.provider" />'
+            '<provider android:authorities="${applicationId}.provider" />'
             '</application></manifest>\n',
         )
         write("settings.gradle.kts", 'rootProject.name = "Mihon"\n')
