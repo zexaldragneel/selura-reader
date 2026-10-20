@@ -247,6 +247,194 @@ def patch(root: pathlib.Path, version_code: int):
     )""",
     )
 
+    # Selura: add a real one-tap Select All / Deselect All action to the
+    # original source migration screen, which already supports bulk Copy/Migrate.
+    # Selecting everything NEVER runs a migration automatically.
+    manga_list_vm = "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaViewModel.kt"
+    substitute_exact(
+        root,
+        manga_list_vm,
+        """    fun clearSelection() {
+        selection.update { emptySet() }
+    }""",
+        """    fun clearSelection() {
+        selection.update { emptySet() }
+    }
+
+    // Selura: operate only on this source's displayed favorites.
+    fun toggleSelectAll() {
+        val mangaIds = state.value.titles.mapTo(mutableSetOf()) { it.id }
+        if (mangaIds.isEmpty()) return
+        selection.update { selected ->
+            if (mangaIds.all { it in selected }) emptySet() else mangaIds
+        }
+    }""",
+    )
+    substitute_exact(
+        root,
+        manga_list_vm,
+        """        val selectionMode = selection.isNotEmpty()
+    }""",
+        """        val selectionMode = selection.isNotEmpty()
+
+        val allSelected: Boolean
+            get() = titles.isNotEmpty() && titles.all { it.id in selection }
+    }""",
+    )
+    manga_list_screen = "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt"
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import eu.kanade.presentation.components.AppBar\n",
+        "import eu.kanade.presentation.components.AppBar\nimport eu.kanade.presentation.components.AppBarActions\n",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import mihon.icons.materialsymbols.automirroredrounded.ArrowForward\n",
+        """import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        """                    scrollBehavior = scrollBehavior,
+                )
+            },
+            floatingActionButton = {""",
+        """                    actions = {
+                        AppBarActions(
+                            listOf(
+                                AppBar.Action(
+                                    title = if (state.allSelected) "Deselect all" else "Select all",
+                                    icon = if (state.allSelected) {
+                                        MaterialSymbols.Rounded.Deselect
+                                    } else {
+                                        MaterialSymbols.Rounded.SelectAll
+                                    },
+                                    onClick = viewModel::toggleSelectAll,
+                                    enabled = !state.isEmpty,
+                                ),
+                            ),
+                        )
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            floatingActionButton = {""",
+    )
+
+    # Selura: NHentai gallery IDs are stable between Yuzono and our own
+    # source. Exact-ID lookup avoids unreliable long adult-gallery title matches.
+    # Validate the returned URL: never auto-select a wrong title.
+    migration_list_vm = "app/src/main/java/mihon/feature/migration/list/MigrationListViewModel.kt"
+    substitute_exact(
+        root,
+        migration_list_vm,
+        "import mihon.domain.migration.usecases.MigrateMangaUseCase\n",
+        """import mihon.domain.migration.usecases.MigrateMangaUseCase
+import mihon.domain.manga.model.toDomainManga
+""",
+    )
+    substitute_exact(
+        root,
+        migration_list_vm,
+        """            val searchResult = if (deepSearchMode) {
+                smartSearchEngine.deepSearch(source, manga.title)
+            } else {
+                smartSearchEngine.regularSearch(source, manga.title)
+            }""",
+        """            val galleryId = manga.url.takeIf {
+                source.name == "Selura NHentai" && it.matches(Regex("^/g/[0-9]+/?$"))
+            }?.removePrefix("/g/")?.trimEnd('/')
+            val searchResult = if (galleryId != null) {
+                // The new extension resolves numeric IDs through its original API.
+                // Do not fall back to fuzzy title matches for this exact gallery.
+                source.getSearchManga(1, galleryId, source.getFilterList())
+                    .mangas.firstOrNull {
+                        it.url.trimEnd('/') == manga.url.trimEnd('/')
+                    }?.toDomainManga(source.id)
+            } else if (deepSearchMode) {
+                smartSearchEngine.deepSearch(source, manga.title)
+            } else {
+                smartSearchEngine.regularSearch(source, manga.title)
+            }""",
+    )
+
+    # Selura: when old/new sources refer to the identical NHentai gallery and
+    # both have exactly one chapter, preserve bookmark, read status and exact
+    # page position even though both native chapters have unknown numbers.
+    # The generic Mihon migration semantics remain unchanged for every other
+    # source and for any ambiguous/non-identical gallery.
+    migration_usecase = "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt"
+    substitute_exact(
+        root,
+        migration_usecase,
+        """                val maxChapterRead = prevMangaChapters
+                    .filter { it.read }
+                    .maxOfOrNull { it.chapterNumber }
+
+                val chapterUpdates = mangaChapters
+                    .filter { it.isRecognizedNumber }
+                    .map { mangaChapter ->
+                        val prevChapter = prevMangaChapters
+                            .find { it.isRecognizedNumber && it.chapterNumber == mangaChapter.chapterNumber }
+
+                        ChapterUpdate(mangaChapter.id) {
+                            if (prevChapter != null) {
+                                dateFetch = prevChapter.dateFetch
+                                bookmark = prevChapter.bookmark
+                            }
+
+                            if (maxChapterRead != null && mangaChapter.chapterNumber <= maxChapterRead) {
+                                read = true
+                            }
+                        }
+                    }
+                updateChapter.awaitAll(chapterUpdates)""",
+        """                val maxChapterRead = prevMangaChapters
+                    .filter { it.read }
+                    .maxOfOrNull { it.chapterNumber }
+
+                val sameSeluraGallery = targetSource.name == "Selura NHentai" &&
+                    current.url.matches(Regex("^/g/[0-9]+/?$")) &&
+                    current.url.trimEnd('/') == target.url.trimEnd('/') &&
+                    prevMangaChapters.size == 1 && mangaChapters.size == 1 &&
+                    prevMangaChapters.single().url.trimEnd('/') ==
+                        mangaChapters.single().url.trimEnd('/')
+
+                val chapterUpdates = mangaChapters
+                    .filter { it.isRecognizedNumber || sameSeluraGallery }
+                    .map { mangaChapter ->
+                        val prevChapter = prevMangaChapters.find {
+                            (it.isRecognizedNumber && mangaChapter.isRecognizedNumber &&
+                                it.chapterNumber == mangaChapter.chapterNumber) ||
+                                (sameSeluraGallery && it.url.trimEnd('/') ==
+                                    mangaChapter.url.trimEnd('/'))
+                        }
+
+                        ChapterUpdate(mangaChapter.id) {
+                            if (prevChapter != null) {
+                                dateFetch = prevChapter.dateFetch
+                                bookmark = prevChapter.bookmark
+                                if (sameSeluraGallery) {
+                                    lastPageRead = prevChapter.lastPageRead
+                                    read = prevChapter.read
+                                }
+                            }
+
+                            if (!sameSeluraGallery && maxChapterRead != null &&
+                                mangaChapter.chapterNumber <= maxChapterRead
+                            ) {
+                                read = true
+                            }
+                        }
+                    }
+                updateChapter.awaitAll(chapterUpdates)""",
+    )
+
     icon = root / "app/src/main/res/drawable/selura_manga_icon.xml"
     icon.parent.mkdir(parents=True, exist_ok=True)
     icon.write_text(ICON_XML, encoding="utf-8")
