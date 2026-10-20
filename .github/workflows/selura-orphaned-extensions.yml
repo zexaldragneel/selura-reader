@@ -1,0 +1,162 @@
+name: Selura Orphaned 18 Extension APKs
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/selura-keiyoushi-foundation
+      - feature/selura-extension-batch
+    paths:
+      - 'selura_extensions/orphaned_sources.py'
+      - 'selura_extensions/tests/test_orphaned_sources.py'
+      - 'selura_extensions/ORPHANED_18.md'
+      - '.github/workflows/selura-orphaned-extensions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selura-orphaned-18-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out Selura code
+        uses: actions/checkout@v4
+
+      - name: Validate 18 orphaned sources and source ID isolation
+        run: python3 -m unittest discover -s selura_extensions/tests -p 'test_orphaned_sources.py' -v
+
+      - name: Check out the approved Apache-2.0 upstream revision
+        uses: actions/checkout@v4
+        with:
+          repository: keiyoushi/extensions-source
+          ref: ff521c17bb3e503c01e658e8fac00b60a95829f3
+          path: keiyoushi-deps
+          persist-credentials: false
+
+      - name: Prepare 18 modules and shard ${{ matrix.shard }} task list
+        run: |
+          set -euo pipefail
+          test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
+          python3 selura_extensions/orphaned_sources.py keiyoushi-deps \
+            --version-code "$((3000 + ${{ github.run_number }}))" \
+            --shard "${{ matrix.shard }}" \
+            --task-file "$RUNNER_TEMP/tasks.txt"
+          test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
+          test "$(grep -c ':lintRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
+
+      - name: Install Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Configure Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unlock permanent Selura signing key
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$SELURA_SIGNING_PASSWORD"
+          test -s android/signing/selura-release.jks.asc
+          umask 077
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 0 \
+              --decrypt --output keiyoushi-deps/signingkey.jks android/signing/selura-release.jks.asc
+
+      - name: Format, compile and lint six real extensions
+        working-directory: keiyoushi-deps
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+          KEY_STORE_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          ALIAS: selura-release
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          mapfile -t TASKS < "$RUNNER_TEMP/tasks.txt"
+          ./gradlew spotlessApply --no-daemon --stacktrace
+          ./gradlew "${TASKS[@]}" --no-daemon --stacktrace
+
+      - name: Verify package, release version and signing certificate
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+          mkdir -p release
+          version="$((3000 + ${{ github.run_number }}))"
+          while IFS= read -r task; do
+            [[ "$task" == *:assembleRelease ]] || continue
+            item="${task#:src:}"
+            lang="${item%%:*}"
+            module="${item#*:}"
+            module="${module%%:*}"
+            apk="$(find "keiyoushi-deps/src/$lang/$module/build/outputs/apk/release" -maxdepth 1 -type f -name '*.apk' | head -1)"
+            test -s "$apk"
+            "$APKSIGNER" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
+            grep -F 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' "$RUNNER_TEMP/signature.txt"
+            "$AAPT" dump badging "$apk" > "$RUNNER_TEMP/package.txt"
+            grep -F "package: name='eu.kanade.tachiyomi.extension.$lang.$module'" "$RUNNER_TEMP/package.txt"
+            grep -E "package:.*versionCode='$version'" "$RUNNER_TEMP/package.txt"
+            cp "$apk" "release/$module.apk"
+          done < "$RUNNER_TEMP/tasks.txt"
+          test "$(find release -name '*.apk' | wc -l)" -eq 6
+          sha256sum release/*.apk
+
+      - name: Upload six signed APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-orphaned-shard-${{ matrix.shard }}
+          path: release/*.apk
+          if-no-files-found: error
+
+      - name: Remove decrypted signing key
+        if: always()
+        run: rm -f keiyoushi-deps/signingkey.jks
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Collect all 18 verified signed APKs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: selura-orphaned-shard-*
+          merge-multiple: true
+          path: release
+
+      - name: Verify complete batch and publish immutable prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(find release -maxdepth 1 -type f -name '*.apk' | wc -l)" -eq 18
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            tag="test-orphaned-18-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            tag="test-orphaned-18-dispatch-run-${{ github.run_number }}"
+          fi
+          sha256sum release/*.apk
+          gh release create "$tag" release/*.apk \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Selura 18 orphaned sources run #${{ github.run_number }}" \
+            --notes "18 independently signed, isolated Apache-2.0 Keiyoushi-derived extensions. No NHentai. Natural visible names. Separate package/source identities; original manga library and installed extensions unchanged. Runtime tests on Android are still required." \
+            --prerelease
