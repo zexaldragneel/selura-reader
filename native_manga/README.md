@@ -18,6 +18,7 @@ The previous Selura Flutter importer could restore metadata only, not execute Mi
 - Original copyrights, contributor credits and unchanged source files remain part of the build. Changes are documented and marked in the modified source. Selura Manga is an independent customized build, not an official Mihon release.
 - Native source is fetched from the pinned public Git commit in CI, then customized reproducibly by native_manga/apply_branding.py. Original backup, extension and manga runtime is retained: not a hyperlink or web viewer.
 - First preview customizes app identity, app name, own launcher vector, version number and signing. Upstream automatic updater/telemetry disabled by build flags.
+- The native Settings → Browse screen also offers a consent-gated **Add Keiyoushi extensions** action. It passes the documented official index directly to Mihon's `ExtensionStoresScreen` and retains native repository trust verification, extension installation, refresh and removal. No silent third-party APK installation and no external Mihon handoff.
 
 ## Android identity and data safety
 - Legacy Flutter Selura: com.selura.reader
@@ -32,7 +33,7 @@ The previous Selura Flutter importer could restore metadata only, not execute Mi
 2. Install the signed selura-manga.apk from Selura GitHub Actions as a NEW app, leaving existing Mihon and Flutter Selura installed.
 3. Open Selura Manga, follow any storage-folder setup and grant Android access only as needed.
 4. Open Settings → Data and storage → Restore backup. Select the original .tachibk, then check manga/categories/chapter history and reading positions.
-5. Under Browse → Extensions / Extension repositories, add Keiyoushi with the Mihon-compatible workflow: https://github.com/keiyoushi/extensions/raw/repo/index.pb
+5. Open **Settings → Browse → Add Keiyoushi extensions**. Selura opens Mihon's real extension-store confirmation screen **inside Selura**, using the official protobuf index `https://github.com/keiyoushi/extensions/raw/repo/index.pb`. Review the provider before confirming. This is not a companion-app link. If needed, use the standard Extension stores manager under the same Settings → Browse screen.
 6. Review source signing and install only extensions you trust. Browse manga, read a real chapter, close/reopen, verify resume and history.
 7. Missing providers may leave restored metadata without readable online pages. Backups do not include every downloaded manga image, and Selura will not bypass website access controls.
 
@@ -41,6 +42,7 @@ The previous Selura Flutter importer could restore metadata only, not execute Mi
 - CI pins Mihon upstream commit, preserves original license, builds the Android release using Java 21 and the native Gradle project.
 - CI decrypts the existing Selura signer only in a trusted runner, verifies app ID, signer and version, and publishes an immutable signed preview APK.
 - CI success alone does not prove live backup restore or Keiyoushi browsing: owner must test on phone.
+- Automated source-level tests verify that the original repository manager remains accessible, the Keiyoushi entry uses the live in-app consent flow, and upstream source variations fail closed.
 - If CI fails, inspect errors before releasing an APK.
 
 ## Promotion after testing
