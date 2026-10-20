@@ -80,6 +80,9 @@ jobs:
           set -euo pipefail
           chmod +x ./gradlew
           mapfile -t TASKS < "$RUNNER_TEMP/extension-tasks"
+          # Keiyoushi's formatter handles provider-specific Kotlin DSL layout
+          # before the strict Spotless and Android lint checks.
+          ./gradlew spotlessApply --no-daemon --stacktrace
           ./gradlew "${TASKS[@]}" --no-daemon --stacktrace
 
       - name: Verify six signed APK identities and package versions
