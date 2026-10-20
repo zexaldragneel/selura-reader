@@ -1,6 +1,14 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## In-app update prompt — APK verified, Pages activation blocked (2026-10-20)
+- **Owner authorized** public release metadata only (version, notes, checksum, URL). Private repository and signed APK releases must remain private; no access tokens in the client.
+- **PR #27:** native Compose startup update dialog and bounded public JSON feed check, plus signing-verified manifest generator, offline-safe fail-closed behavior. Separate minimal `gh-pages` branch `1577556ef5fa07c915253229f86339364d06890d` includes ONLY `index.html`, `.nojekyll`, and `updates/latest.json`, initially referencing Build #16; branch existence DOES NOT mean Pages URL is publicly deployed.
+- **GitHub Actions Build #18:** run `39410549825` completed **failure overall** only because `Publish version metadata to GitHub Pages` failed at `actions/configure-pages@v5` with HTTP 404 "Get Pages site failed" — GitHub Pages not enabled/configured for the private repository. `Preserve pinned Mihon engine`, `Compile native manga reader`, and `Publish Selura Manga direct download` all **succeeded**; verified signed app available at https://github.com/john-selwyn/selura-reader/releases/download/test-native-pr-27-run-18/selura-manga.apk (67,170,644 bytes, SHA-256 `8c4e3a423f36a3ad9f6e174e68073fc4d7754556b8c483f0d5198cf28ccd95f1`). Manifest also generated as private CI artifact.
+- **Next required owner action:** open https://github.com/john-selwyn/selura-reader/settings/pages → Build and deployment → Source: **GitHub Actions**. Requires a GitHub plan allowing Pages from a private repo (e.g. GitHub Pro). Do not change repository to public. After Pages setup, rerun **failed publish job** of run #18 or trigger a future signed release and verify public feed URL `https://john-selwyn.github.io/selura-reader/updates/latest.json` returns valid JSON; only then test older Android app detects the newer version on a cold launch.
+- **Security/operational caveat:** GitHub's `actions/configure-pages` `enablement: true` **cannot self-enable** Pages using the default `GITHUB_TOKEN`; it needs a separate elevated token. Do not introduce PAT secrets solely to bypass the user's Pages settings. App startup notification is not yet live; successful signing/build does not imply deployment.
+
+
 ## Phone test — batch migration succeeded (2026-10-20)
 - User confirmed batch Copy to Selura NHentai ALL works in Build #15. EN and ALL are language variants, not duplicate extension installations.
 - Individual transferred page positions, bookmarks, categories and complete title counts have not been audited. Preserve original library, downloads and backup pending spot-checks.
