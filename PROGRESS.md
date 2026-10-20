@@ -1,5 +1,16 @@
 # Selura — Development Progress
-Last updated: 2026-10-18
+Last updated: 2026-10-20
+
+## Cursed Yuzono NHentai.net repair pilot — PR #25 (2026-10-20)
+- **Exact source identified by Android screenshots:** installed failing provider **NHentai — Cursed Yūzōnō 1.4.62**, targeting `https://nhentai.net`; separately installed `nHentai.com (unoriginal) — Keiyoushi 1.6.1` is NOT the same source. The former `nhentai.to` pilot targeted the wrong site and is retained only as unused experimental code; do not install it for this issue.
+- **Verified upstream source:** `yuzono/cursed-manga-extensions@5dad5cf65dce98bb05ba8edf1f38770585e032b9`, `src/all/nhentai/NHentai.kt`, with original Apache-2.0 license. Upstream `pageListParse()` constructs image URLs with `$imageServer`; original getter returns `nhConfig.imageServers.random()`, which chooses a possibly different CDN for each gallery page. This is a testable candidate cause, not confirmed by packet capture.
+- **Selura implementation:** First-party Kotlin source files in `selura_sources/nhentai/`, Yuzono-pinned fail-closed copier in `selura_sources/apply_source.py`, own build workflow `.github/workflows/selura-sources.yml`. Different signed package `eu.kanade.tachiyomi.extension.all.seluranhentai`, name **Selura NHentai**, with *different source IDs* from original so the existing library and extensions are not overwritten. Copies original manifest-resources/proguard into build checkout, retains Yuzono original.
+- **Reliability changes:** choose a consistent image CDN host once per gallery; bound image retries to 2 attempts per candidate and up to 5 distinct hosts from the source's own nHentai API config, all HTTPS and restricted to nHentai image domains; do not retry or circumvent HTTP 401/403/429. Fail with a clear incomplete-gallery error when API returns fewer page records than advertised.
+- **Verified GitHub Actions:** Build #8, run `39390201876`, completed **success** on `45ec93f7df98f6d10686c1a383d39484389b89b3`; source contracts, Java 25 Gradle `:src:all:seluranhentai:assembleRelease`, SHA256 signing-certificate check, Android package verification and GitHub release publication all succeeded. Direct separate source APK: https://github.com/john-selwyn/selura-reader/releases/download/test-selura-source-pr-25-run-8/selura-nhentai.apk (51,095 bytes; SHA-256 `25fb6b2ba8e6331b8d8059059287af256a0ffd26dac85f8673c5f350f532016a`).
+- **Next acceptance:** owner installs and authorizes the distinct Selura NHentai APK, browses source from Browse, opens same gallery in Selura vs website, checks every page and time to load, and reports any HTTP/error state. Actual on-device behavior of the **new** source remains UNVERIFIED. Do not delete old Yuzono NHentai, install over its APK, silently migrate source IDs, or claim that the source works until user tests.
+- **Owner-verified Selura baseline:** Mihon .tachibk library restored after clearing downloaded-only filter, chapter images load, reading progress and resume work, downloaded manga reads offline. Native Selura APK build #12 `39386818560` also succeeded and published a signed APK. Keep original manga library, history and package IDs intact.
+
+
 
 ## Repository
 https://github.com/john-selwyn/selura-reader
