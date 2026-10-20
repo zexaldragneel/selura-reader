@@ -1,5 +1,16 @@
 # Selura — Development Progress
-Last updated: 2026-10-18
+Last updated: 2026-10-20
+
+## First-party Selura source extension pilot — PR #25 (2026-10-20)
+- **Owner complaint:** manga from an extension called "nHentai" has incomplete or extremely slow page loading inside Selura, although the website loads quickly in the browser. Precise installed extension hostname/version not provided. This *may* be CDN requests, response headers, image fallback or slow/invalid page-list parsing; no root cause confirmed.
+- **Source verification:** Keiyoushi default source currently includes NHentai.to (https://nhentai.to), NHentai.xxx, and nHentai.com (unoriginal), which are distinct providers. The `NHentai.to` extension uses an existing fallback image interceptor and common `GalleryAdults` parser. Do not treat those as the `nhentai.net` website.
+- **Work in PR #25:** https://github.com/john-selwyn/selura-reader/pull/25, branch `feature/selura-nhentaito-source`. First-party Kotlin `selura_sources/nhentaito/NHentaiTo.kt` and `build.gradle.kts`, fail-closed installer `selura_sources/apply_source.py`, contract tests and dedicated `.github/workflows/selura-sources.yml`.
+- **Source strategy:** build a distinct APK `eu.kanade.tachiyomi.extension.all.seluranhentaito` / source name `Selura NHentai.to`, with unique source IDs and explicit NSFW content warning. Compile the Selura-owned adapter from the pinned Apache-2.0 Keiyoushi extension framework at `ff521c17bb3e503c01e658e8fac00b60a95829f3`. Avoid overwriting the existing Keiyoushi APK or migrating user library entries by default.
+- **Reliability mechanisms:** bounded retry for original image on network errors or server 5xx; candidate HTTPS fallback URLs restricted to original image host or `nhentai.to` subdomains, max five candidates; do NOT retry access-denied/rate-limit HTTP 401/403/429. Check extracted chapter image count against expected gallery size, try alternate parser once, and report incomplete galleries rather than showing apparently completed chapters with missing pages. Actual site behavior not yet phone-tested.
+- **CI:** GitHub Actions independent `Selura Source Extension APK` workflow #1 run `39388767762` passed Selura patch contract tests and signing certificate unlock; Gradle extension compilation **still running** at this documentation update. Signed source APK and direct release URL must not be claimed available until build/package/signature checks and GitHub Release complete.
+- **User-validated native Selura baseline remains intact:** restored Mihon manga library visible after clearing Downloaded-only filter, chapters/images load, reading progress resumes, and downloaded chapters can be read offline. All those owner tests were confirmed and recorded in PR #24. Current `main` retains previous Flutter code pending native promotion.
+- **Next:** (1) verify first-party extension CI compile/release, repair failures; (2) confirm user's actual broken extension name, hostname, version (may not be `nhentai.to`); (3) install **alongside** existing sources on phone, browse `Selura NHentai.to` independently, compare total pages/loading time, and only then consider further sources and source repository distribution. Respect external site's access controls and source terms.
+
 
 ## Repository
 https://github.com/john-selwyn/selura-reader
