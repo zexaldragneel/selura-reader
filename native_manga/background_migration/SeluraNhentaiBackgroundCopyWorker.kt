@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -57,19 +59,24 @@ class SeluraNhentaiBackgroundCopyWorker(
 
     override suspend fun doWork(): Result {
         val sourceId = inputData.getLong(SOURCE_ID, -1)
-        if (sourceId <= 0L) return Result.failure()
+        if (sourceId <= 0L) return setupFailure("Invalid source selection")
 
         val graph: AppGraph = context.metroGraph()
         graph.inject(this)
-        val source = sourceManager.get(sourceId) ?: return Result.failure()
-        if (!source.name.contains("nhentai", ignoreCase = true)) return Result.failure()
+        val source = sourceManager.get(sourceId) ?: return setupFailure("Original source is not installed")
+        if (!source.name.contains("nhentai", ignoreCase = true) ||
+            (source.name == "Selura NHentai" && source.lang == "all")
+        ) {
+            return setupFailure("Select the original NHentai source, not Selura NHentai ALL")
+        }
 
         // This is our separately signed extension, not the old Yuzono source.
         // Prefer ALL: it retains the exact source identity used for prior copies.
         val candidates = sourceManager.getOnlineSources().filter {
             it.name == "Selura NHentai" && it.lang == "all" && it.id != sourceId
         }
-        val target = candidates.singleOrNull() ?: return Result.failure()
+        val target = candidates.singleOrNull()
+            ?: return setupFailure("Install exactly one Selura NHentai ALL source before copying")
 
         val favorites = getFavorites.subscribe(sourceId).first()
             .filter { GALLERY_URL.matches(it.url) }
@@ -80,20 +87,33 @@ class SeluraNhentaiBackgroundCopyWorker(
 
         val prefs = context.getSharedPreferences(CHECKPOINT_PREFS, Context.MODE_PRIVATE)
         val cursorKey = "last_manga_" + sourceId + "_" + target.id
+        val failuresKey = "failed_manga_" + sourceId + "_" + target.id
         var lastProcessedId = prefs.getLong(cursorKey, 0L)
-        processedCount = favorites.count { it.id <= lastProcessedId }
+        // Persist failures alongside the cursor. A resumed pass handles only
+        // failed or not-yet-attempted galleries, not all 3,000 originals.
+        val validIds = favorites.mapTo(mutableSetOf()) { it.id }
+        val failedIds = prefs.getStringSet(failuresKey, emptySet()).orEmpty()
+            .mapNotNull { it.toLongOrNull() }
+            .filterTo(mutableSetOf()) { it in validIds }
+        val existingTargetUrls = getFavorites.subscribe(target.id).first()
+            .mapTo(mutableSetOf()) { it.url.trimEnd('/') }
+        processedCount = favorites.count { it.id <= lastProcessedId && it.id !in failedIds }
+        failedCount = failedIds.size
+        val pendingCount = favorites.count { it.id > lastProcessedId || it.id in failedIds }
+        var attemptedInRun = 0
         publishProgress()
 
         try {
             for (manga in favorites) {
-                if (manga.id <= lastProcessedId) continue
+                if (manga.id <= lastProcessedId && manga.id !in failedIds) continue
                 currentCoroutineContext().ensureActive()
 
                 try {
                     // Skip copies that already exist, including copies made in
                     // foreground batches or before a process restart.
-                    val existing = getManga.subscribe(manga.url, target.id).first()
-                    if (existing?.favorite != true) {
+                    val canonicalUrl = manga.url.trimEnd('/')
+                    if (canonicalUrl !in existingTargetUrls) {
+                        val existing = getManga.subscribe(manga.url, target.id).first()
                         val targetManga = existing ?: run {
                             val galleryId = manga.url.removePrefix("/g/").trimEnd('/')
                             val matching = target.getSearchManga(
@@ -108,22 +128,31 @@ class SeluraNhentaiBackgroundCopyWorker(
                         check(getManga.await(targetManga.id)?.favorite == true) {
                             "Target was not added to the library"
                         }
+                        existingTargetUrls.add(canonicalUrl)
                     }
+                    failedIds.remove(manga.id)
+                    processedCount++
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    failedCount++
+                    failedIds.add(manga.id)
                     logcat(LogPriority.WARN, e)
                 }
 
-                // Commit after each gallery. A killed/restarted worker resumes
-                // from the last checkpoint, without deleting original entries.
-                if (!prefs.edit().putLong(cursorKey, manga.id).commit()) {
-                    error("Unable to persist migration checkpoint")
+                // Checkpoint and failure set are one atomic SharedPreferences
+                // commit: no failed gallery is silently abandoned on restart.
+                failedCount = failedIds.size
+                val nextCursor = maxOf(lastProcessedId, manga.id)
+                if (!prefs.edit()
+                        .putLong(cursorKey, nextCursor)
+                        .putStringSet(failuresKey, failedIds.mapTo(mutableSetOf()) { it.toString() })
+                        .commit()
+                ) {
+                    error("Unable to persist migration checkpoint and failed galleries")
                 }
-                lastProcessedId = manga.id
-                processedCount++
-                if (processedCount % 5 == 0 || processedCount == totalCount) {
+                lastProcessedId = nextCursor
+                attemptedInRun++
+                if (attemptedInRun % 5 == 0 || attemptedInRun == pendingCount) {
                     publishProgress()
                     setForegroundSafely()
                 }
@@ -137,9 +166,9 @@ class SeluraNhentaiBackgroundCopyWorker(
             return Result.retry()
         }
 
-        // A subsequent "Copy in background" can retry previously failed items;
-        // existing target favorites are skipped without doing a network request.
-        prefs.edit().remove(cursorKey).apply()
+        // Retain the cursor and failed IDs after completion. Later runs retry
+        // only unresolved galleries and newly added entries, never re-copying
+        // the entire original library.
         publishProgress()
         context.notify(
             FINISHED_NOTIFICATION_ID,
@@ -175,10 +204,24 @@ class SeluraNhentaiBackgroundCopyWorker(
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentTitle("Selura NHentai background copy finished")
         .setContentText(
-            "Processed " + processedCount + " galleries; " + failedCount + " need retry",
+            "Completed " + processedCount + " / " + totalCount + " galleries; " + failedCount + " need retry",
         )
         .setAutoCancel(true)
         .build()
+
+    private fun setupFailure(message: String): Result {
+        ensureNotificationChannel()
+        context.notify(
+            FINISHED_NOTIFICATION_ID,
+            NotificationCompat.Builder(context, NOTIFICATION_CHANNEL)
+                .setSmallIcon(android.R.drawable.stat_notify_error)
+                .setContentTitle("Selura NHentai copy could not start")
+                .setContentText(message)
+                .setAutoCancel(true)
+                .build(),
+        )
+        return Result.failure(workDataOf("reason" to message))
+    }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         ensureNotificationChannel()
@@ -186,8 +229,8 @@ class SeluraNhentaiBackgroundCopyWorker(
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle("Copying NHentai library in background")
             .setContentText(
-                "Processed " + processedCount + " / " + totalCount +
-                    " · " + failedCount + " unmatched; you can keep reading",
+                "Completed " + processedCount + " / " + totalCount +
+                    " · " + failedCount + " need retry; keep reading",
             )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -222,6 +265,9 @@ class SeluraNhentaiBackgroundCopyWorker(
         fun start(context: Context, sourceId: Long) {
             val request = OneTimeWorkRequestBuilder<SeluraNhentaiBackgroundCopyWorker>()
                 .setInputData(workDataOf(SOURCE_ID to sourceId))
+                .setConstraints(
+                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
+                )
                 .addTag(UNIQUE_WORK)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
