@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Original vector-only atmospheric header, intentionally independent of
- * Coil/MangaCover and of all manga/extension storage. Nothing is animated
+ * manga image loading and of all manga/extension storage. Nothing is animated
  * or allocated per library item. Drawn just once above the category pager.
  */
 @Composable
