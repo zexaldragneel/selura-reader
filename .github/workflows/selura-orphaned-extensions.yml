@@ -111,8 +111,23 @@ jobs:
             "$APKSIGNER" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
             grep -F 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' "$RUNNER_TEMP/signature.txt"
             "$AAPT" dump badging "$apk" > "$RUNNER_TEMP/package.txt"
-            grep -F "package: name='eu.kanade.tachiyomi.extension.$lang.$module'" "$RUNNER_TEMP/package.txt"
-            grep -E "package:.*versionCode='$version'" "$RUNNER_TEMP/package.txt"
+            # Keiyoushi computes Android versionCode from libVersion (1.6)
+            # and effective extension version; shared themes add their own
+            # revision number (for example Madara adds +55). The first CI
+            # failed because it compared Android 109001 with input 3001.
+            metadata="$(sed -nE "s/^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'.*/\\1 \\2 \\3/p" "$RUNNER_TEMP/package.txt")"
+            read -r actual_pkg actual_code actual_name <<< "$metadata"
+            test "$actual_pkg" = "eu.kanade.tachiyomi.extension.$lang.$module"
+            if [[ ! "$actual_name" =~ ^1\\.6\\.([0-9]+)$ ]]; then
+              echo "::error::Unexpected extension versionName: $actual_name"
+              exit 1
+            fi
+            effective_version="${BASH_REMATCH[1]}"
+            if (( effective_version < version || effective_version > version + 1000 )); then
+              echo "::error::Unexpected theme-adjusted extension version: $effective_version"
+              exit 1
+            fi
+            test "$actual_code" -eq "$((106000 + effective_version))"
             cp "$apk" "release/$module.apk"
           done < "$RUNNER_TEMP/tasks.txt"
           test "$(find release -name '*.apk' | wc -l)" -eq 6
