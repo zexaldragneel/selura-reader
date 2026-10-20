@@ -134,10 +134,12 @@ class NativeMigrationTests(unittest.TestCase):
             "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt",
             """import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import eu.kanade.presentation.components.AppBar
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 
 class MigrateMangaScreen {
+        val navigator = LocalNavigator.currentOrThrow
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
