@@ -114,6 +114,94 @@ class NativeMigrationTests(unittest.TestCase):
     )
             }""",
         )
+        # Native batch migration fixtures. Each uses the exact audited Mihon
+        # v0.21.2 anchor; the test deliberately fails on upstream changes.
+        write(
+            "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaViewModel.kt",
+            """class MigrateMangaViewModel {
+    fun clearSelection() {
+        selection.update { emptySet() }
+    }
+
+    data class State(
+        val titles: List<Manga>,
+    ) {
+        val selectionMode = selection.isNotEmpty()
+    }
+}""",
+        )
+        write(
+            "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt",
+            """import eu.kanade.presentation.components.AppBar
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+
+class MigrateMangaScreen {
+        Scaffold(
+            topBar = { scrollBehavior ->
+                AppBar(
+                    title = state.source!!.name,
+                    navigateUp = {
+                        if (state.selectionMode) {
+                            viewModel.clearSelection()
+                        } else {
+                            navigator.pop()
+                        }
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            floatingActionButton = {
+            }
+        )
+}""",
+        )
+        write(
+            "app/src/main/java/mihon/feature/migration/list/MigrationListViewModel.kt",
+            """import mihon.domain.migration.usecases.MigrateMangaUseCase
+
+class MigrationListViewModel {
+        fun search() {
+            val searchResult = if (deepSearchMode) {
+                smartSearchEngine.deepSearch(source, manga.title)
+            } else {
+                smartSearchEngine.regularSearch(source, manga.title)
+            }
+        }
+}""",
+        )
+        write(
+            "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt",
+            """class MigrateMangaUseCase {
+            // Update chapters read, bookmark and dateFetch
+            if (MigrationFlag.CHAPTER in flags) {
+                val prevMangaChapters = getChaptersByMangaId.await(current.id)
+                val mangaChapters = getChaptersByMangaId.await(target.id)
+
+                val maxChapterRead = prevMangaChapters
+                    .filter { it.read }
+                    .maxOfOrNull { it.chapterNumber }
+
+                val chapterUpdates = mangaChapters
+                    .filter { it.isRecognizedNumber }
+                    .map { mangaChapter ->
+                        val prevChapter = prevMangaChapters
+                            .find { it.isRecognizedNumber && it.chapterNumber == mangaChapter.chapterNumber }
+
+                        ChapterUpdate(mangaChapter.id) {
+                            if (prevChapter != null) {
+                                dateFetch = prevChapter.dateFetch
+                                bookmark = prevChapter.bookmark
+                            }
+
+                            if (maxChapterRead != null && mangaChapter.chapterNumber <= maxChapterRead) {
+                                read = true
+                            }
+                        }
+                    }
+                updateChapter.awaitAll(chapterUpdates)
+            }
+}""",
+        )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt",
@@ -168,6 +256,42 @@ class NativeMigrationTests(unittest.TestCase):
         self.assertIn("favoriteCount = results.favoriteCount", screen)
         self.assertIn("Enable Library below", screen)
         self.assertIn("No manga entries were found", screen)
+
+    def test_batch_migration_select_all_and_exact_nhentai_gallery(self):
+        patch(self.root, 2022)
+        vm = (self.root /
+              "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaViewModel.kt").read_text()
+        screen = (self.root /
+                  "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt").read_text()
+        migration = (self.root /
+                     "app/src/main/java/mihon/feature/migration/list/MigrationListViewModel.kt").read_text()
+        usecase = (self.root /
+                   "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt").read_text()
+        self.assertIn("fun toggleSelectAll()", vm)
+        self.assertIn("mangaIds.all { it in selected }", vm)
+        self.assertIn("val allSelected: Boolean", vm)
+        self.assertIn('title = if (state.allSelected) "Deselect all" else "Select all"', screen)
+        self.assertIn("viewModel::toggleSelectAll", screen)
+        self.assertIn('source.name == "Selura NHentai"', migration)
+        self.assertIn('it.matches(Regex("^/g/[0-9]+/?$"))', migration)
+        self.assertIn("it.url.trimEnd('/') == manga.url.trimEnd('/')", migration)
+        self.assertIn("toDomainManga(source.id)", migration)
+        self.assertIn("val sameSeluraGallery", usecase)
+        self.assertIn("prevMangaChapters.size == 1 && mangaChapters.size == 1", usecase)
+        self.assertIn("lastPageRead = prevChapter.lastPageRead", usecase)
+        self.assertIn("read = prevChapter.read", usecase)
+        self.assertIn("bookmark = prevChapter.bookmark", usecase)
+        self.assertIn("if (!sameSeluraGallery && maxChapterRead != null", usecase)
+
+    def test_refuse_unexpected_upstream_batch_migration_marker(self):
+        vm = (self.root /
+              "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaViewModel.kt")
+        vm.write_text(vm.read_text().replace(
+            "selection.update { emptySet() }",
+            "selection.update { selected -> selected }",
+        ))
+        with self.assertRaises(IncompatibleUpstreamError):
+            patch(self.root, 2023)
 
     def test_refuse_modified_backup_validator_contract(self):
         validator = (
