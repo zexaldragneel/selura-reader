@@ -6,12 +6,12 @@ on:
       - main
       - feature/selura-keiyoushi-foundation
       - feature/selura-extension-batch
-      - feature/selura-expansion-12-sources
+      - feature/selura-orphaned-18-sources
     paths:
       - 'selura_extensions/expansion_12.py'
       - 'selura_extensions/tests/test_expansion_12.py'
       - 'selura_extensions/EXPANSION_12.md'
-      - '.github/workflows/selura-orphaned-extensions.yml'
+      - '.github/workflows/selura-expansion-12.yml'
   workflow_dispatch:
 
 permissions:
@@ -166,7 +166,7 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             tag="test-expansion-12-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
           else
-            tag="test-orphaned-12-dispatch-run-${{ github.run_number }}"
+            tag="test-expansion-12-dispatch-run-${{ github.run_number }}"
           fi
           sha256sum release/*.apk
           gh release create "$tag" release/*.apk \
