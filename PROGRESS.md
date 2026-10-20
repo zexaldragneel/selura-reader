@@ -1,6 +1,11 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Device acceptance: NHentai v2 is fast — 2026-10-20
+- **Owner confirms:** "Its good now its fast" after the Selura NHentai version 2 preview. The reported multi-second/unfinished page-loading issue is subjectively improved and owner considers image loading fast. Do not claim measured milliseconds or absolute page completeness; neither was supplied. Treat signed APK build #12 `39392347725` as the current owner-accepted baseline, alongside independently verified contract/Gradle/signing checks.
+- **Decision:** Preserve v2's working CDN fallback/timeout behavior; do not introduce speculative parallel downloads or more retries into this release. Potential next experiments — small adjacent-page prefetch, cache hit optimization, benchmarked source-CDN selection — require separate branch/release, rate-limit-safe test, and rollback path. The remote site can still be a bottleneck; optimizing network requests cannot guarantee faster page delivery.
+- **Compatibility:** Keep separate package/source IDs and original imported Library untouched. If user wishes to maintain old-library entries with new extension, discuss explicit source migration/trackers rather than silently rewiring metadata.
+
 ## Slow NHentai pages — follow-up iteration 2 (2026-10-20)
 - Owner reports first Selura NHentai extension still slow. Possible cause in our own initial fix: up to 10 sequential CDN image attempts with default timeouts; no packet capture or precise page data yet.
 - New versionCode 2: at most 3 provider-declared CDN hosts, 1 attempt per host, 4s connect/9s read timeouts, stop scheduling more attempts once ~18s elapsed, remember a successful CDN, retry only CDN 404/408/410/5xx/HTML-instead-of-image. Never retry 401/403/429. Log only host/status; do not log sensitive gallery URL/header data.
