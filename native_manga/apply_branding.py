@@ -87,6 +87,40 @@ def patch(root: pathlib.Path, version_code: int):
                      'rootProject.name = "Mihon"',
                      'rootProject.name = "SeluraManga" // Selura customization')
 
+    # Add a genuine in-app Keiyoushi setup entry. The native Mihon
+    # ExtensionStoresScreen fetches the actual protobuf index and requires
+    # confirmation, preserving upstream extension-signature/trust checks.
+    substitute_exact(
+        root,
+        "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt",
+        """                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.extensionStores),
+                        subtitle = pluralStringResource(MR.plurals.num_repos, reposCount.toInt(), reposCount),
+                        onClick = {
+                            navigator.push(ExtensionStoresScreen())
+                        },
+                    ),""",
+        """                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.extensionStores),
+                        subtitle = pluralStringResource(MR.plurals.num_repos, reposCount.toInt(), reposCount),
+                        onClick = {
+                            navigator.push(ExtensionStoresScreen())
+                        },
+                    ),
+                    // Selura customization: consent-gated, in-app Keiyoushi store setup.
+                    Preference.PreferenceItem.TextPreference(
+                        title = "Add Keiyoushi extensions",
+                        subtitle = "Review and add the official extension store",
+                        onClick = {
+                            navigator.push(
+                                ExtensionStoresScreen(
+                                    "https://github.com/keiyoushi/extensions/raw/repo/index.pb",
+                                ),
+                            )
+                        },
+                    ),""",
+    )
+
     icon = root / "app/src/main/res/drawable/selura_manga_icon.xml"
     icon.parent.mkdir(parents=True, exist_ok=True)
     icon.write_text(ICON_XML, encoding="utf-8")
