@@ -436,6 +436,141 @@ import mihon.domain.manga.model.toDomainManga
                 updateChapter.awaitAll(chapterUpdates)""",
     )
 
+    # Selura NHentai: one-tap foreground-service-backed WorkManager copy.
+    # Work is owned by Android rather than the migration screen's ViewModel,
+    # so the reader remains usable throughout very large library copies.
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.material3.Text\n",
+        """import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.runtime.LaunchedEffect\n",
+        """import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.runtime.getValue\n",
+        """import androidx.compose.runtime.getValue
+import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "        val navigator = LocalNavigator.currentOrThrow\n",
+        """        val navigator = LocalNavigator.currentOrThrow
+        var backgroundCopyConfirm by remember { mutableStateOf(false) }
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        """                                    enabled = !state.isEmpty,
+                                ),
+                            ),""",
+        """                                    enabled = !state.isEmpty,
+                                ),
+                                AppBar.OverflowAction(
+                                    title = "Copy NHentai in background",
+                                    enabled = !state.isEmpty &&
+                                        state.source?.name?.contains("nhentai", ignoreCase = true) == true,
+                                    onClick = { backgroundCopyConfirm = true },
+                                ),
+                            ),""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "        LaunchedEffect(Unit) {\n",
+        """        if (backgroundCopyConfirm) {
+            AlertDialog(
+                onDismissRequest = { backgroundCopyConfirm = false },
+                title = { Text("Copy NHentai while you read") },
+                text = {
+                    Text(
+                        "Copy numeric galleries to your installed Selura NHentai ALL source " +
+                            "one at a time in the background. Originals, downloads and " +
+                            "reading progress stay intact. Check the notification for " +
+                            "progress, Stop, and retry.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            backgroundCopyConfirm = false
+                            SeluraNhentaiBackgroundCopyWorker.start(
+                                context.applicationContext,
+                                sourceId,
+                            )
+                            context.toast("Background copy queued; you can continue reading")
+                        },
+                    ) { Text("Start background copy") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { backgroundCopyConfirm = false }) {
+                        Text("Cancel")
+                    }
+                },
+            )
+        }
+
+        LaunchedEffect(Unit) {
+""",
+    )
+
+    # AppGraph performs Metro injection for WorkManager workers in Mihon.
+    # Keep the existing dependency graph and its providers untouched.
+    app_graph = "app/src/main/java/mihon/app/di/AppGraph.kt"
+    substitute_exact(
+        root,
+        app_graph,
+        "import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker\n",
+        """import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
+import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
+""",
+    )
+    substitute_exact(
+        root,
+        app_graph,
+        "    fun inject(backupRestoreWorker: BackupRestoreWorker)\n",
+        """    fun inject(backupRestoreWorker: BackupRestoreWorker)
+    fun inject(seluraNhentaiBackgroundCopyWorker: SeluraNhentaiBackgroundCopyWorker)
+""",
+    )
+    background_source = (
+        pathlib.Path(__file__).resolve().parent /
+        "background_migration/SeluraNhentaiBackgroundCopyWorker.kt"
+    )
+    background_destination = (
+        root /
+        "app/src/main/java/mihon/feature/migration/background/SeluraNhentaiBackgroundCopyWorker.kt"
+    )
+    if not background_source.is_file() or background_destination.exists():
+        raise IncompatibleUpstreamError("Invalid Selura background migration worker source.")
+    background_destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(background_source, background_destination)
+
+    # Never delete the original downloaded galleries when users choose Copy,
+    # even if they previously selected the generic Remove Downloads option.
+    substitute_exact(
+        root,
+        migration_usecase,
+        "if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {",
+        "if (replace && MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {",
+    )
+
     # Selura startup update prompt. Mihon's update checker stays disabled
     # because it points to Mihon's releases; the first-party read-only manifest
     # is intended to be published independently with explicit owner consent.
