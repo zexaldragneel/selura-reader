@@ -1,5 +1,15 @@
 # Selura — Development Progress
 
+## Selura Extensions public store published — 2026-10-20
+
+- The owner created public `john-selwyn/selura-extensions` and added a fine-grained `SELURA_READER_READ_TOKEN` secret with Contents: Read-only access limited to private `selura-reader`. Token value was never shared in chat or committed.
+- Public store infrastructure PR #1 passed CI and merged (`ef9e3bfe86f7f52513f35a9e6f64b11314d4760a`). Publication trigger PR #2 passed CI and merged (`a69b5059287153e31228507b4fa4d4a8b94edd61`).
+- **GitHub Actions publication succeeded:** [run 39410027167](https://github.com/john-selwyn/selura-extensions/actions/runs/39410027167); verified publicly accessible `repo.json` and `index.json`, and separate signed APK/icon files on `repo` branch. Public URL: `https://raw.githubusercontent.com/john-selwyn/selura-extensions/repo/repo.json`.
+- Store lists `Selura NHentai` (1.4.2, Android versionCode 104002, `eu.kanade.tachiyomi.extension.all.seluranhentai`, 51,543 bytes, SHA-256 `827aa8a8f3ae2745ca9e810a89427bf08ee753ed90e8b8ebe8a0930b8dd276c6`) and `Selura MangaDex` (1.6.3, Android versionCode 106003, `eu.kanade.tachiyomi.extension.all.seluramangadex`, 96,998 bytes, SHA-256 `37693cd07883eca69cd49e0f9fd3e69b2b98640ecb40dd98502f6d388780cba3`). Git blob SHAs for both public APKs match the verified original build APK bytes. Signing certificate verified by publish job.
+- Original Keiyoushi and Yuzono extensions, old library source IDs, reading history and downloads were not changed. The user must **Android-test Add repository, available extension listing, new install/update, chapter load and reading progress** before declaring runtime integration verified. Existing Selura NHentai v2's previous subjective fast-loading confirmation remains a separate fact.
+- Public repository is independently hosted and updates controlled by Selura. **Build-time dependency** on pinned upstream source and tooling remains pending vendorization; future catalog updates need versioned signed builds and a publish review.
+
+
 ## Public Selura extension store infrastructure — 2026-10-20
 - Owner created **public** `john-selwyn/selura-extensions`, with GitHub administrator access confirmed; private `selura-reader` remains private.
 - Created and merged [public store PR #1](https://github.com/john-selwyn/selura-extensions/pull/1) as squash commit `ef9e3bfe86f7f52513f35a9e6f64b11314d4760a`. Source generator `scripts/generate_store.py` creates current Mihon-compatible JSON `repo.json` / `index.json`, source metadata, verified package/source IDs and extension icons. Two fixed signed APK inputs: NHentai v2 source Build #12 `39392347725` and MangaDex source Build #3 `39396358597`.
