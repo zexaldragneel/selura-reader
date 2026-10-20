@@ -23,12 +23,11 @@ import org.json.JSONObject
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
-// A deliberately public, read-only feed. Selura's repository is private:
-// unauthenticated GitHub release APIs will return 404, so DO NOT add a
-// personal access token or GitHub credentials to the Android APK.
-// Publishing this metadata is explicitly opt-in.
+// Public read-only metadata from Selura's own gh-pages branch.
+// The checked native release workflow writes this after APK signing verification.
+// No access tokens or private signing data are bundled into the Android APK.
 private const val SELURA_UPDATE_FEED =
-    "https://raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json"
+    "https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json"
 
 private data class SeluraUpdateOffer(
     val versionCode: Int,
