@@ -1,0 +1,142 @@
+name: Selura Keiyoushi-derived Extension APK
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/selura-nhentaito-source
+    paths:
+      - "selura_extensions/**"
+      - ".github/workflows/selura-keiyoushi-extension.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selura-keiyoushi-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout Selura source and signing material
+        uses: actions/checkout@v4
+
+      - name: Test safe source import
+        run: python3 -m unittest discover -s selura_extensions/tests -v
+
+      - name: Checkout pinned Apache-2.0 Keiyoushi foundation
+        uses: actions/checkout@v4
+        with:
+          repository: keiyoushi/extensions-source
+          ref: ff521c17bb3e503c01e658e8fac00b60a95829f3
+          path: keiyoushi-deps
+          persist-credentials: false
+
+      - name: Prepare isolated Selura MangaDex source
+        run: |
+          set -euo pipefail
+          test "$(git -C keiyoushi-deps rev-parse HEAD)" = "ff521c17bb3e503c01e658e8fac00b60a95829f3"
+          python3 selura_extensions/apply_keiyoushi.py keiyoushi-deps --version-code "${{ github.run_number }}"
+          grep -F 'name = "Selura MangaDex"' keiyoushi-deps/src/all/seluramangadex/build.gradle.kts
+          grep -F 'name = "MangaDex"' keiyoushi-deps/src/all/mangadex/build.gradle.kts
+          test -s keiyoushi-deps/src/all/seluramangadex/LICENSE
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unlock permanent Selura signing key
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$SELURA_SIGNING_PASSWORD"
+          test -s android/signing/selura-release.jks.asc
+          umask 077
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 0 \
+              --decrypt --output keiyoushi-deps/signingkey.jks \
+              android/signing/selura-release.jks.asc
+
+      - name: Compile and lint independent Selura MangaDex
+        working-directory: keiyoushi-deps
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+          KEY_STORE_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          ALIAS: selura-release
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew :src:all:seluramangadex:assembleRelease :src:all:seluramangadex:lintRelease --no-daemon --stacktrace
+
+      - name: Verify distinct signed APK identity
+        run: |
+          set -euo pipefail
+          APK="$(find keiyoushi-deps/src/all/seluramangadex/build/outputs/apk/release \
+            -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          test -n "$APK" && test -s "$APK"
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          APKSIGNER="$(find "$SDK_PATH/build-tools" -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$SDK_PATH/build-tools" -name aapt | sort -V | tail -n 1)"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/selura-extension-signature.txt"
+          grep -F 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' \
+            "$RUNNER_TEMP/selura-extension-signature.txt"
+          "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/selura-extension-package.txt"
+          grep -F "package: name='eu.kanade.tachiyomi.extension.all.seluramangadex'" \
+            "$RUNNER_TEMP/selura-extension-package.txt"
+          mkdir -p release
+          cp "$APK" release/selura-mangadex.apk
+          sha256sum release/selura-mangadex.apk
+
+      - name: Upload verified Selura APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-mangadex-source-apk
+          path: release/selura-mangadex.apk
+          if-no-files-found: error
+
+      - name: Remove decrypted signing key
+        if: always()
+        run: rm -f keiyoushi-deps/signingkey.jks
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: selura-mangadex-source-apk
+          path: release
+
+      - name: Publish independent preview APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="test-selura-mangadex-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            TAG="test-selura-mangadex-dispatch-run-${{ github.run_number }}"
+          fi
+          gh release create "$TAG" \
+            "release/selura-mangadex.apk#Selura MangaDex independently signed preview" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Selura MangaDex Preview · Build #${{ github.run_number }}" \
+            --notes "Selura-maintained preview derived from pinned Apache-2.0 Keiyoushi source. Independent package/source IDs; original Keiyoushi MangaDex is not replaced. See selura_extensions/README.md for attribution and testing." \
+            --prerelease
