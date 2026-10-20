@@ -80,7 +80,7 @@ def prepare(checkout: Path, version_code: int = 1, verify_git: bool = True) -> P
                 body = body.replace("versionCode = 0", f"versionCode = {version_code}")
                 # Do not intercept MangaDex links meant for a user's existing extension.
                 body, matches = re.subn(
-                    r"(?ms)^    deeplink \{\n.*?^    \}\n",
+                    r"(?ms)^    deeplink \{\n.*?^    \}\n\n?",
                     "", body,
                 )
                 if matches != 1:
