@@ -1,6 +1,15 @@
 # Selura — Development Progress
 Last updated: 2026-10-20
 
+## Public native update notification — verified Build #28 (2026-10-20)
+- **Owner screenshot and direct GitHub API check:** native PR #27 Build #28, run `39420253038`, finished **SUCCESS**. Jobs Preserve pinned Mihon engine, Compile native manga reader, Publish Selura Manga direct download, and Publish signed release metadata all **SUCCESS**.
+- **Verified release:** https://github.com/zexaldragneel/selura-reader/releases/download/test-native-pr-27-run-28/selura-manga.apk, asset 67,170,640 bytes, SHA-256 `8e4b4716b1b5eedc71419aa28669d02f8ebc1dcfc4b8840c8a7846eb36b9eb02`. App ID `com.selura.manga`, versionCode `1028`; build job explicitly checks the established signing certificate and Android package identity before the release job runs.
+- **Verified public feed (GitHub response):** `https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json` publicly returns `schemaVersion: 1`, applicationId `com.selura.manga`, versionCode `1028`, Build #28 release URL, and SHA-256 identical to the published release asset. Automatic feed publication succeeded; no GitHub Pages setup or extra public metadata repository is needed. GitHub Pages builds also succeeded in the owner's screenshot.
+- **Code in PR #27:** independent Compose cold-start update prompt compares installed versionCode with public JSON, validates URL and digest syntax, and opens the GitHub release in browser when newer. Never embed GitHub tokens or auto-install APKs. Preserve permanent Android signer and local manga library.
+- **Phone test pending:** Installing Build #28 over an earlier `com.selura.manga` with same signing certificate (without uninstall) and verifying startup/reading functionality and that **a later, newer signed Build #29 or later** triggers the prompt. Build #28 will correctly *not* prompt while feed also advertises 1028. Only user phone test can establish runtime behavior.
+- **Next actions:** owner safely install Build #28; confirm retained library, saved chapter progress, source extension access, and startup; make a later genuine signed build, verify feed version increases and popup offers that release. Do not claim end-to-end Android runtime validated yet.
+
+
 ## Owner identity cleanup — Zexal Dragneel (2026-10-20)
 - Repository was transferred intact to **zexaldragneel/selura-reader**, private, with the new connected GitHub account holding admin/push rights. Old GitHub repository URLs are obsolete; only the new owner path should be used going forward.
 - Owner requires **Zexal Dragneel / zexaldragneel** in current Selura code and repo links, with no old owner name. Updated current tracked documentation, updater code, release URL allowlist, signed release metadata generator, workflow metadata assertions and affected tests under the new owner. Related cleanup commits also applied to main, native, NHentai, Keiyoushi, six-source and gh-pages branches.
