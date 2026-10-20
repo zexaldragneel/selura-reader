@@ -16,6 +16,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
+import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.tachiyomi.util.system.notify
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import kotlinx.coroutines.CancellationException
@@ -29,18 +30,20 @@ import mihon.core.metro.metroGraph
 import mihon.domain.manga.model.toDomainManga
 import mihon.domain.migration.usecases.MigrateMangaUseCase
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
 import tachiyomi.domain.manga.interactor.GetFavorites
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.NetworkToLocalManga
+import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.source.service.SourceManager
 
 /**
- * A serialized, resumable, non-destructive NHentai copy.
- * The WorkManager job is independent from the migration screen/ViewModel:
- * it continues when the user reads manga, changes screens or backgrounds Selura.
- *
- * Only exact numeric gallery URLs are accepted. We never fuzzy-match titles,
- * replace original favorites, or remove any original downloads.
+ * Serialized, resumable NHentai library migration.
+ * Transfers metadata to a verified exact gallery match, then unfavorites the
+ * original entry. Original database rows and source downloads remain on disk.
+ * Older queued Copy requests are rejected rather than silently becoming Moves.
+ * The worker is independent from the migration screen and can run while reading.
  */
 class SeluraNhentaiBackgroundCopyWorker(
     private val context: Context,
@@ -52,12 +55,20 @@ class SeluraNhentaiBackgroundCopyWorker(
     @Inject private lateinit var getManga: GetManga
     @Inject private lateinit var networkToLocalManga: NetworkToLocalManga
     @Inject private lateinit var migrateManga: MigrateMangaUseCase
+    @Inject private lateinit var updateManga: UpdateManga
+    @Inject private lateinit var getCategories: GetCategories
+    @Inject private lateinit var getChaptersByMangaId: GetChaptersByMangaId
 
     private var processedCount = 0
     private var totalCount = 0
     private var failedCount = 0
 
     override suspend fun doWork(): Result {
+        // Existing WorkManager records from the old Copy APK do not contain
+        // this opt-in. Never turn a previously approved copy into a move.
+        if (inputData.getString(MODE) != MOVE_MODE) {
+            return setupFailure("Old Copy job stopped. Select Move NHentai in background.")
+        }
         val sourceId = inputData.getLong(SOURCE_ID, -1)
         if (sourceId <= 0L) return setupFailure("Invalid source selection")
 
@@ -86,49 +97,93 @@ class SeluraNhentaiBackgroundCopyWorker(
         setForegroundSafely()
 
         val prefs = context.getSharedPreferences(CHECKPOINT_PREFS, Context.MODE_PRIVATE)
-        val cursorKey = "last_manga_" + sourceId + "_" + target.id
-        val failuresKey = "failed_manga_" + sourceId + "_" + target.id
-        var lastProcessedId = prefs.getLong(cursorKey, 0L)
-        // Persist failures alongside the cursor. A resumed pass handles only
-        // failed or not-yet-attempted galleries, not all 3,000 originals.
+        // Separate Move checkpoints from earlier Copy checkpoints. All old
+        // favorites, including already-copied duplicates, must be reconciled.
+        val cursorKey = "last_moved_manga_" + sourceId + "_" + target.id
+        val failuresKey = "failed_move_manga_" + sourceId + "_" + target.id
         val validIds = favorites.mapTo(mutableSetOf()) { it.id }
         val failedIds = prefs.getStringSet(failuresKey, emptySet()).orEmpty()
             .mapNotNull { it.toLongOrNull() }
             .filterTo(mutableSetOf()) { it in validIds }
-        val existingTargetUrls = getFavorites.subscribe(target.id).first()
-            .mapTo(mutableSetOf()) { it.url.trimEnd('/') }
-        processedCount = favorites.count { it.id <= lastProcessedId && it.id !in failedIds }
+        // Original favorites are the durable queue: successful moves no longer
+        // appear here, regardless of crash timing or checkpoint state.
+        val existingTargets = getFavorites.subscribe(target.id).first()
+            .associateBy { it.url.trimEnd('/') }
+        processedCount = 0
         failedCount = failedIds.size
-        val pendingCount = favorites.count { it.id > lastProcessedId || it.id in failedIds }
         var attemptedInRun = 0
         publishProgress()
 
         try {
             for (manga in favorites) {
-                if (manga.id <= lastProcessedId && manga.id !in failedIds) continue
                 currentCoroutineContext().ensureActive()
 
                 try {
-                    // Skip copies that already exist, including copies made in
-                    // foreground batches or before a process restart.
+                    // Reuse the favorite created by the previous Copy build,
+                    // otherwise find the exact numeric gallery. Never fuzzy match.
                     val canonicalUrl = manga.url.trimEnd('/')
-                    if (canonicalUrl !in existingTargetUrls) {
-                        val existing = getManga.subscribe(manga.url, target.id).first()
-                        val targetManga = existing ?: run {
-                            val galleryId = manga.url.removePrefix("/g/").trimEnd('/')
-                            val matching = target.getSearchManga(
-                                1,
-                                galleryId,
-                                target.getFilterList(),
-                            ).mangas.singleOrNull { it.url.trimEnd('/') == manga.url.trimEnd('/') }
-                                ?: error("No exact gallery match")
-                            networkToLocalManga(matching.toDomainManga(target.id))
-                        }
-                        migrateManga(current = manga, target = targetManga, replace = false)
-                        check(getManga.await(targetManga.id)?.favorite == true) {
-                            "Target was not added to the library"
-                        }
-                        existingTargetUrls.add(canonicalUrl)
+                    val existing = existingTargets[canonicalUrl]
+                        ?: getManga.subscribe(manga.url, target.id).first()
+                    val targetManga = existing ?: run {
+                        val galleryId = manga.url.removePrefix("/g/").trimEnd('/')
+                        val matching = target.getSearchManga(
+                            1,
+                            galleryId,
+                            target.getFilterList(),
+                        ).mangas.singleOrNull { it.url.trimEnd('/') == canonicalUrl }
+                            ?: error("No exact gallery match")
+                        networkToLocalManga(matching.toDomainManga(target.id))
+                    }
+                    check(targetManga.url.trimEnd('/') == canonicalUrl &&
+                        targetManga.source == target.id && targetManga.id != manga.id
+                    ) { "Target gallery identity mismatch" }
+
+                    // Stage target-side metadata first. Strict mode propagates
+                    // errors rather than swallowing them. This NEVER deletes
+                    // original downloads or un-favorites the original entry.
+                    migrateManga(
+                        current = manga,
+                        target = targetManga,
+                        replace = false,
+                        strict = true,
+                    )
+                    val updatedTarget = getManga.await(targetManga.id)
+                    check(updatedTarget?.favorite == true &&
+                        updatedTarget.url.trimEnd('/') == canonicalUrl
+                    ) { "Target verification failed; original retained" }
+
+                    val originalCategories = getCategories.await(manga.id).map { it.id }.toSet()
+                    val targetCategories = getCategories.await(targetManga.id).map { it.id }.toSet()
+                    check(targetCategories.containsAll(originalCategories)) {
+                        "Categories did not transfer; original retained"
+                    }
+                    val originalChapters = getChaptersByMangaId.await(manga.id)
+                    val targetChapters = getChaptersByMangaId.await(targetManga.id)
+                    if (originalChapters.isNotEmpty()) {
+                        check(originalChapters.size == 1 && targetChapters.size == 1 &&
+                            originalChapters.single().url.trimEnd('/') ==
+                                targetChapters.single().url.trimEnd('/')
+                        ) { "Chapter mapping ambiguous; original retained" }
+                        val oldChapter = originalChapters.single()
+                        val newChapter = targetChapters.single()
+                        check(
+                            (!oldChapter.read || newChapter.read) &&
+                                (!oldChapter.bookmark || newChapter.bookmark) &&
+                                newChapter.lastPageRead >= oldChapter.lastPageRead
+                        ) { "Reading position or bookmark did not transfer; original retained" }
+                    }
+                    check(updatedTarget.notes == manga.notes || manga.notes.isEmpty()) {
+                        "Notes did not transfer; original retained"
+                    }
+                    // Only after all checks: remove ORIGINAL FAVORITE from
+                    // Library. The old manga database row and download files
+                    // remain untouched for rollback/recovery.
+                    check(getManga.await(manga.id)?.favorite == true) {
+                        "Original changed during migration; refusing to overwrite"
+                    }
+                    updateManga.awaitAll(listOf(MangaUpdate(manga.id) { favoriteAt = null }))
+                    check(getManga.await(manga.id)?.favorite == false) {
+                        "Original is still favorited; migration not finished"
                     }
                     failedIds.remove(manga.id)
                     processedCount++
@@ -139,20 +194,19 @@ class SeluraNhentaiBackgroundCopyWorker(
                     logcat(LogPriority.WARN, e)
                 }
 
-                // Checkpoint and failure set are one atomic SharedPreferences
-                // commit: no failed gallery is silently abandoned on restart.
+                // Persist failures after each item. The original favorites
+                // themselves are the queue, so a power loss between DB and
+                // SharedPreferences commits cannot permanently skip a title.
                 failedCount = failedIds.size
-                val nextCursor = maxOf(lastProcessedId, manga.id)
                 if (!prefs.edit()
-                        .putLong(cursorKey, nextCursor)
+                        .putLong(cursorKey, manga.id)
                         .putStringSet(failuresKey, failedIds.mapTo(mutableSetOf()) { it.toString() })
                         .commit()
                 ) {
                     error("Unable to persist migration checkpoint and failed galleries")
                 }
-                lastProcessedId = nextCursor
                 attemptedInRun++
-                if (attemptedInRun % 5 == 0 || attemptedInRun == pendingCount) {
+                if (attemptedInRun % 5 == 0 || attemptedInRun == totalCount) {
                     publishProgress()
                     setForegroundSafely()
                 }
@@ -166,9 +220,8 @@ class SeluraNhentaiBackgroundCopyWorker(
             return Result.retry()
         }
 
-        // Retain the cursor and failed IDs after completion. Later runs retry
-        // only unresolved galleries and newly added entries, never re-copying
-        // the entire original library.
+        // An interrupted move resumes from the remaining source favorites.
+        // Failed originals remain in Library, so no gallery is silently lost.
         publishProgress()
         context.notify(
             FINISHED_NOTIFICATION_ID,
@@ -202,9 +255,9 @@ class SeluraNhentaiBackgroundCopyWorker(
 
     private fun completionNotification() = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentTitle("Selura NHentai background copy finished")
+        .setContentTitle("Selura NHentai migration finished")
         .setContentText(
-            "Completed " + processedCount + " / " + totalCount + " galleries; " + failedCount + " need retry",
+            "Moved " + processedCount + " / " + totalCount + " galleries; " + failedCount + " need retry",
         )
         .setAutoCancel(true)
         .build()
@@ -227,9 +280,9 @@ class SeluraNhentaiBackgroundCopyWorker(
         ensureNotificationChannel()
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle("Copying NHentai library in background")
+            .setContentTitle("Migrating NHentai library in background")
             .setContentText(
-                "Completed " + processedCount + " / " + totalCount +
+                "Moved " + processedCount + " / " + totalCount +
                     " · " + failedCount + " need retry; keep reading",
             )
             .setOngoing(true)
@@ -254,23 +307,28 @@ class SeluraNhentaiBackgroundCopyWorker(
 
     companion object {
         private const val SOURCE_ID = "source_id"
-        private const val UNIQUE_WORK = "selura_nhentai_background_copy"
+        private const val MODE = "selura_nhentai_mode"
+        private const val MOVE_MODE = "move_v1"
+        private const val UNIQUE_WORK = "selura_nhentai_background_move"
+        private const val LEGACY_COPY_WORK = "selura_nhentai_background_copy"
         private const val NOTIFICATION_CHANNEL = "selura_background_migration"
         private const val PROGRESS_NOTIFICATION_ID = 18341
         private const val FINISHED_NOTIFICATION_ID = 18342
         private const val CHECKPOINT_PREFS = "selura_nhentai_copy_checkpoints"
         private val GALLERY_URL = Regex("^/g/[0-9]+/?$")
 
-        /** KEEP prevents accidentally starting parallel copies of 3,000+ titles. */
+        /** KEEP prevents starting parallel migrations of 3,000+ titles. */
         fun start(context: Context, sourceId: Long) {
+            val manager = WorkManager.getInstance(context)
+            manager.cancelUniqueWork(LEGACY_COPY_WORK)
             val request = OneTimeWorkRequestBuilder<SeluraNhentaiBackgroundCopyWorker>()
-                .setInputData(workDataOf(SOURCE_ID to sourceId))
+                .setInputData(workDataOf(SOURCE_ID to sourceId, MODE to MOVE_MODE))
                 .setConstraints(
                     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
                 )
                 .addTag(UNIQUE_WORK)
                 .build()
-            WorkManager.getInstance(context).enqueueUniqueWork(
+            manager.enqueueUniqueWork(
                 UNIQUE_WORK,
                 ExistingWorkPolicy.KEEP,
                 request,
