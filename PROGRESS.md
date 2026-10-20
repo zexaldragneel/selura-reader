@@ -1,4 +1,14 @@
 # Selura — Development Progress
+
+## Active milestone — Selura-maintained Keiyoushi foundation (2026-10-20)
+
+- Owner approved copying Keiyoushi's Apache-2.0 source as a *starting point*, gradually replacing upstream dependencies with our own maintained extension ecosystem. Existing fast Selura NHentai (Yuzono-derived) must remain intact.
+- Feature branch `feature/selura-keiyoushi-foundation` is stacked on PR #25; adds `selura_extensions/apply_keiyoushi.py`, contract tests, an independently signed MangaDex workflow and a provenance/roadmap README.
+- Keiyoushi snapshot pinned at `ff521c17bb3e503c01e658e8fac00b60a95829f3`. Initial derivative name `Selura MangaDex`; independent package `eu.kanade.tachiyomi.extension.all.seluramangadex`; no original extension overwrite and no automatic library-source migration.
+- Commits: `16e09a59961fd9db5df2b3381e253dc7dabf334b` (import script), `17c19fbe352c8b34439f5602024f8be9da37fa9e` (tests), `29f25e1bccafeb55eea53dc402fb0186173d4810` (CI workflow), `d85c1655e74fb15ddf726fd80958ddef4cf075e5` (docs).
+- **Verification status:** Code committed; automated tests, Gradle compilation, APK signing, source behavior on phone and release publishing are **not yet confirmed**. Check PR workflow first and repair failures before claiming availability.
+- **Independence limitation:** Phase 1 still checks out pinned Keiyoushi build framework/source in CI, so offline/fully independent source builds require later vendoring. Next: confirm CI, phone test preview, vendor necessary tooling into Selura repository, then publish an independent extension `index.pb` repository and safe source migration tooling. Do not remove Keiyoushi/Yuzono apps or user data.
+
 Last updated: 2026-10-20
 
 ## Device acceptance: NHentai v2 is fast — 2026-10-20
