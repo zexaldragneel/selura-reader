@@ -1,9 +1,9 @@
 {
   "applicationId": "com.selura.manga",
   "notes": "Selura Manga improvements and fixes. Review the GitHub release before installing.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-31-run-47",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-33-run-48",
   "schemaVersion": 1,
-  "sha256": "ef5cef90040c888d66ea2e4a54c096e4844c26404b066f08251e69f82751e9e7",
-  "versionCode": 1047,
-  "versionName": "Selura Manga Build 47"
+  "sha256": "c2849344d1549c34b822de1bb9fe5ad5da2e108850e588f3164e744d14ae4471",
+  "versionCode": 1048,
+  "versionName": "Selura Manga Build 48"
 }
