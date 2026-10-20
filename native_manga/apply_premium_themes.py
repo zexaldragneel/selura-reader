@@ -303,12 +303,12 @@ def patch(root: Path) -> None:
 
 /**
  * Title overlay for [MangaCompactGridItem]""",
-        """            },
-        )
-        PremiumLibraryProgress(
-            readCount = readCount,
-            totalChapters = totalChapters,
-            modifier = Modifier.align(Alignment.BottomCenter),
+        """                PremiumLibraryProgress(
+                    readCount = readCount,
+                    totalChapters = totalChapters,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            },
         )
     }
 }
