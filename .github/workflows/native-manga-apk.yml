@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   snapshot:
-    name: Preserve exact Mihon engine inside Selura
+    name: Preserve pinned Mihon engine inside Selura
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' &&
@@ -26,7 +26,28 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout pinned Mihon source
+      - name: Check for existing independent Selura source snapshot
+        id: existing_source
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: ${{ github.repository }}
+          ref: selura/mihon-v0.21.2-snapshot
+          path: preserved-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify self-contained source mirror
+        if: steps.existing_source.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test "$(git -C preserved-source rev-parse HEAD^{tree})" = "1ece370a126a3812966961ae65ff8553f5ac3ed4"
+          git -C preserved-source log -1 --format=%B | grep -F "Upstream Mihon commit: 9612d955db3165e1578fdf9ff19ca9b7762c4a46"
+          grep -q "Apache License" preserved-source/LICENSE
+          echo "Building entirely from the saved Selura-owned engine, with no upstream GitHub dependency."
+
+      - name: Checkout pinned Mihon source only for first-time snapshot
+        if: steps.existing_source.outcome != 'success'
         uses: actions/checkout@v4
         with:
           repository: mihonapp/mihon
@@ -36,6 +57,7 @@ jobs:
           persist-credentials: false
 
       - name: Verify and preserve standalone source tree in Selura
+        if: steps.existing_source.outcome != 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
