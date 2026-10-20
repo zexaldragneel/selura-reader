@@ -16,7 +16,59 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  snapshot:
+    name: Preserve exact Mihon engine inside Selura
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout pinned Mihon source
+        uses: actions/checkout@v4
+        with:
+          repository: mihonapp/mihon
+          ref: 9612d955db3165e1578fdf9ff19ca9b7762c4a46
+          path: upstream-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify and preserve standalone source tree in Selura
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SOURCE_DIR=upstream-source
+          UPSTREAM_COMMIT=9612d955db3165e1578fdf9ff19ca9b7762c4a46
+          UPSTREAM_TREE=b4bf371aaac2847aa46709810aad1409a6e51a45
+          MIRROR_REF=refs/heads/selura/mihon-v0.21.2-snapshot
+          test "$(git -C "$SOURCE_DIR" rev-parse HEAD)" = "$UPSTREAM_COMMIT"
+          test "$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})" = "$UPSTREAM_TREE"
+          grep -q "Apache License" "$SOURCE_DIR/LICENSE"
+          TARGET="https://github.com/${REPO}.git"
+          AUTH_HEADER="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          EXISTING="$(git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" ls-remote "$TARGET" "$MIRROR_REF" | cut -f1)"
+          if [ -n "$EXISTING" ]; then
+            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" fetch --depth=1 "$TARGET" "$EXISTING"
+            test "$(git -C "$SOURCE_DIR" rev-parse FETCH_HEAD^{tree})" = "$UPSTREAM_TREE" || {
+              echo "::error::Existing Selura source mirror differs from pinned upstream. Manual review required."
+              exit 1
+            }
+            echo "Existing Selura-owned source mirror has the verified full upstream tree."
+          else
+            # A new root commit, with the IDENTICAL source tree and no dependency
+            # on Mihon's Git history. Original LICENSE and notices remain intact.
+            SNAPSHOT="$(git -C "$SOURCE_DIR" -c user.name='Selura Source Snapshot' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit-tree "$UPSTREAM_TREE" -m "Preserve Mihon v0.21.2 source in Selura" -m "Upstream Mihon commit: $UPSTREAM_COMMIT; Apache-2.0 with original notices.")"
+            test "$(git -C "$SOURCE_DIR" rev-parse "$SNAPSHOT^{tree}")" = "$UPSTREAM_TREE"
+            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" push "$TARGET" "$SNAPSHOT:$MIRROR_REF"
+            echo "Created independent Selura-owned source snapshot."
+          fi
+
   build:
+    needs: snapshot
     name: Compile native manga reader
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -27,19 +79,20 @@ jobs:
       - name: Test Selura patch contracts
         run: python3 -m unittest discover -s native_manga/tests -v
 
-      - name: Checkout audited Mihon v0.21.2 upstream
+      - name: Checkout Selura-owned standalone Mihon source snapshot
         uses: actions/checkout@v4
         with:
-          repository: mihonapp/mihon
-          ref: 9612d955db3165e1578fdf9ff19ca9b7762c4a46
+          repository: ${{ github.repository }}
+          ref: selura/mihon-v0.21.2-snapshot
           path: native-upstream
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Verify pinned upstream provenance and original Apache-2.0 license
+      - name: Verify complete pinned source tree and original Apache-2.0 license
         run: |
           set -euo pipefail
-          test "$(git -C native-upstream rev-parse HEAD)" = "9612d955db3165e1578fdf9ff19ca9b7762c4a46"
+          test "$(git -C native-upstream rev-parse HEAD^{tree})" = "b4bf371aaac2847aa46709810aad1409a6e51a45"
+          git -C native-upstream log -1 --format=%B | grep -F "Upstream Mihon commit: 9612d955db3165e1578fdf9ff19ca9b7762c4a46"
           grep -q "Apache License" native-upstream/LICENSE
           test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt
           test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt
