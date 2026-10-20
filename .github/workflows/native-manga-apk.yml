@@ -1,0 +1,257 @@
+name: Selura Native Manga APK
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "native_manga/**"
+      - ".github/workflows/native-manga-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selura-native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  snapshot:
+    name: Preserve pinned Mihon engine inside Selura
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check for existing independent Selura source snapshot
+        id: existing_source
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: ${{ github.repository }}
+          ref: selura/mihon-v0.21.2-snapshot
+          path: preserved-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify self-contained source mirror
+        if: steps.existing_source.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test "$(git -C preserved-source rev-parse HEAD^{tree})" = "1ece370a126a3812966961ae65ff8553f5ac3ed4"
+          git -C preserved-source log -1 --format=%B | grep -F "Upstream Mihon commit: 9612d955db3165e1578fdf9ff19ca9b7762c4a46"
+          grep -q "Apache License" preserved-source/LICENSE
+          echo "Building entirely from the saved Selura-owned engine, with no upstream GitHub dependency."
+
+      - name: Checkout pinned Mihon source only for first-time snapshot
+        if: steps.existing_source.outcome != 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: mihonapp/mihon
+          ref: 9612d955db3165e1578fdf9ff19ca9b7762c4a46
+          path: upstream-source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify and preserve standalone source tree in Selura
+        if: steps.existing_source.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SOURCE_DIR=upstream-source
+          UPSTREAM_COMMIT=9612d955db3165e1578fdf9ff19ca9b7762c4a46
+          UPSTREAM_TREE=b4bf371aaac2847aa46709810aad1409a6e51a45
+          # Remove only Mihon's own CI workflows: GitHub's restricted Actions
+          # token cannot introduce foreign workflow YAML into this repository.
+          MIRROR_TREE=1ece370a126a3812966961ae65ff8553f5ac3ed4
+          MIRROR_REF=refs/heads/selura/mihon-v0.21.2-snapshot
+          test "$(git -C "$SOURCE_DIR" rev-parse HEAD)" = "$UPSTREAM_COMMIT"
+          test "$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})" = "$UPSTREAM_TREE"
+          grep -q "Apache License" "$SOURCE_DIR/LICENSE"
+          git -C "$SOURCE_DIR" rm --cached -r -q .github/workflows
+          test "$(git -C "$SOURCE_DIR" write-tree)" = "$MIRROR_TREE" || {
+            echo "::error::Pinned Mihon source snapshot unexpectedly changed."
+            exit 1
+          }
+          TARGET="https://github.com/${REPO}.git"
+          AUTH_HEADER="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          EXISTING="$(git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" ls-remote "$TARGET" "$MIRROR_REF" | cut -f1)"
+          if [ -n "$EXISTING" ]; then
+            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" fetch --depth=1 "$TARGET" "$MIRROR_REF"
+            test "$(git -C "$SOURCE_DIR" rev-parse FETCH_HEAD^{tree})" = "$MIRROR_TREE" || {
+              echo "::error::Existing Selura source mirror differs from pinned upstream. Manual review required."
+              exit 1
+            }
+            echo "Existing Selura-owned source mirror has the verified full upstream tree."
+          else
+            # A new root commit, with the entire upstream engine minus its workflows and no dependency
+            # on Mihon's Git history. Original LICENSE and notices remain intact.
+            SNAPSHOT="$(git -C "$SOURCE_DIR" -c user.name='Selura Source Snapshot' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit-tree "$MIRROR_TREE" -m "Preserve Mihon v0.21.2 source in Selura" -m "Upstream Mihon commit: $UPSTREAM_COMMIT; Apache-2.0 with original notices.")"
+            test "$(git -C "$SOURCE_DIR" rev-parse "$SNAPSHOT^{tree}")" = "$MIRROR_TREE"
+            git -C "$SOURCE_DIR" -c http.https://github.com/.extraheader="$AUTH_HEADER" push "$TARGET" "$SNAPSHOT:$MIRROR_REF"
+            echo "Created independent Selura-owned source snapshot."
+          fi
+
+  build:
+    needs: snapshot
+    name: Compile native manga reader
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout Selura migration scripts and permanent encrypted signing material
+        uses: actions/checkout@v4
+
+      - name: Test Selura patch contracts
+        run: python3 -m unittest discover -s native_manga/tests -v
+
+      - name: Checkout Selura-owned standalone Mihon source snapshot
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: selura/mihon-v0.21.2-snapshot
+          path: native-upstream
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify complete pinned source tree and original Apache-2.0 license
+        run: |
+          set -euo pipefail
+          test "$(git -C native-upstream rev-parse HEAD^{tree})" = "1ece370a126a3812966961ae65ff8553f5ac3ed4"
+          git -C native-upstream log -1 --format=%B | grep -F "Upstream Mihon commit: 9612d955db3165e1578fdf9ff19ca9b7762c4a46"
+          grep -q "Apache License" native-upstream/LICENSE
+          test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt
+          test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt
+
+      - name: Rebrand native Android fork without modifying extension and restore engines
+        env:
+          SELURA_NATIVE_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          python3 native_manga/apply_branding.py native-upstream \
+            --version-code "$((1000 + SELURA_NATIVE_VERSION_CODE))"
+          grep -q 'applicationId = "com.selura.manga"' native-upstream/app/build.gradle.kts
+          grep -q '<string name="app_name" translatable="false">Selura Manga</string>' \
+            native-upstream/i18n/src/commonMain/moko-resources/base/strings.xml
+
+      - name: Configure Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Configure native Gradle caching
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unlock Selura permanent signing certificate
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SELURA_SIGNING_PASSWORD}" ]; then
+            echo "::error::SELURA_SIGNING_PASSWORD secret is required."
+            exit 1
+          fi
+          test -s android/signing/selura-release.jks.asc
+          umask 077
+          mkdir -p "$RUNNER_TEMP/selura-native-signing"
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback \
+              --passphrase-fd 0 --decrypt \
+              --output "$RUNNER_TEMP/selura-native-signing/selura-release.jks" \
+              android/signing/selura-release.jks.asc
+          keytool -list \
+            -keystore "$RUNNER_TEMP/selura-native-signing/selura-release.jks" \
+            -alias selura-release -storepass:env SELURA_SIGNING_PASSWORD >/dev/null
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=selura-release\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/selura-native-signing/selura-release.jks" \
+            "$SELURA_SIGNING_PASSWORD" "$SELURA_SIGNING_PASSWORD" \
+            > native-upstream/keystore.properties
+
+      - name: Build native Android release APK from Mihon engine
+        working-directory: native-upstream
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          # Local distribution excludes upstream telemetry and upstream updater.
+          ./gradlew :app:assembleRelease --stacktrace --no-daemon \
+            -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
+
+      - name: Verify signed native app identity, version and certificate
+        env:
+          EXPECTED_VERSION: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          APK=native-upstream/app/build/outputs/apk/release/app-universal-release.apk
+          test -s "$APK"
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          APKSIGNER="$(find "$SDK_PATH/build-tools" -name apksigner | sort -V | tail -n 1)"
+          AAPT="$(find "$SDK_PATH/build-tools" -name aapt | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          test -x "$AAPT"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/selura-manga-certificate.txt"
+          grep -m1 'certificate SHA-256 digest:' "$RUNNER_TEMP/selura-manga-certificate.txt"
+          grep -F 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' \
+            "$RUNNER_TEMP/selura-manga-certificate.txt"
+          "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/selura-manga-manifest.txt"
+          grep -m1 -F "package: name='com.selura.manga' versionCode='$((1000 + EXPECTED_VERSION))'" \
+            "$RUNNER_TEMP/selura-manga-manifest.txt"
+          echo "Verified native manga package, in-place upgrade version and original signing key."
+          sha256sum "$APK"
+
+      - name: Upload signed manga APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-native-manga-apk
+          path: native-upstream/app/build/outputs/apk/release/app-universal-release.apk
+          if-no-files-found: error
+
+      - name: Securely erase decrypted signing material
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/selura-native-signing"
+          rm -f native-upstream/keystore.properties
+
+  release:
+    name: Publish Selura Manga direct download
+    needs: build
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed native APK
+        uses: actions/download-artifact@v4
+        with:
+          name: selura-native-manga-apk
+          path: release
+
+      - name: Name installation artifact
+        run: mv release/app-universal-release.apk release/selura-manga.apk
+
+      - name: Publish immutable signed APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="test-native-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            TAG="test-native-dispatch-run-${{ github.run_number }}"
+          fi
+          gh release create "$TAG" \
+            "release/selura-manga.apk#Selura Manga Signed Native APK" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Selura Manga Native Preview · Build #${{ github.run_number }}" \
+            --notes "Based on Mihon v0.21.2 (Apache-2.0), with Selura's distinct com.selura.manga application ID. Supports original Mihon backup restore and Mihon-compatible extension engines. This installs separately from legacy Selura and Mihon; user Android verification required. Preserve upstream attribution." \
+            --prerelease
