@@ -292,7 +292,7 @@ interface AppGraph {
         self.assertIn("CheckForUpdates()", main)
         self.assertIn("BuildConfig.VERSION_CODE", updater)
         self.assertIn("Selura Manga update available", updater)
-        self.assertIn('Text("Later")', updater)
+        self.assertIn('Text(if (downloading) "Cancel download" else "Later")', updater)
         self.assertIn("raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json", updater)
         self.assertIn('segments[1] != "selura-reader"', updater)
         self.assertNotIn("github_pat_", updater)
