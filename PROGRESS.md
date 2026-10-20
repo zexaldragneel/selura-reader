@@ -1,5 +1,15 @@
 # Selura — Development Progress
 
+## Expansion request — natural names and six new sources (2026-10-20)
+
+- Owner confirmed **both Selura Extensions install successfully after SHA-256 catalog correction**, completing the previous Android install acceptance. No existing manga or extension was removed.
+- Owner requested **a bunch of new extensions** and no longer wants the word "Selura" prepended to extension names. Chose six licensed pinned Keiyoushi sources: MANGA Plus by SHUEISHA, Webtoons.com, MangaFire, MangaPill, MangaKatana, Mangabat.
+- Private feature PR [#28](https://github.com/john-selwyn/selura-reader/pull/28) adds `selura_extensions/batch_sources.py`, six safe, distinct Gradle Android module IDs, non-colliding source ID versionId=2, upstream Apache-2.0 attribution, isolated signing and verification workflow, and unit tests. Source framework remains pinned to Keiyoushi `ff521c17bb3e503c01e658e8fac00b60a95829f3`.
+- Public feature PR [#4](https://github.com/john-selwyn/selura-extensions/pull/4) prepares an eight-source catalog (six new plus existing MangaDex and NHentai). Existing two **catalog display names** shorten to MangaDex/NHentai while preserving their real source IDs based on original Selura names and unmodified APKs. Installed older APK labels remain unchanged unless separately upgraded in the future.
+- **Build gate:** First private batch run `39412588375` caught test setup assertions and failed; corrected in `bec8a170`. Intermediate run `39412656633` cancelled after formatting fix; current full Gradle/signing run `39412954685` pending. Public catalog PR unit tests passed, but **DO NOT publish eight-source index until six signed APKs pass** and the pinned preview release exists.
+- Next: verify all six APK certificates/packages and public index, merge public PR with controlled publish trigger, verify eight accessible APKs and fingerprint, then owner tests installations/reading in Selura. Existing Keiyoushi/Yuzono stores, manga downloads/history and old source IDs remain untouched.
+
+
 ## Extension installation repair — SHA-256 store fingerprint (2026-10-20)
 - **Android evidence:** Selura Extension Stores accepted the public `repo.json` and displayed Selura NHentai and Selura MangaDex, but both install attempts failed (Refresh/Retry action icons on Browse > Extensions). This confirms store discovery but not install success.
 - **Root cause verified in upstream native Mihon source:** `ExtensionInstaller.downloadAndInstall()` rejects a downloaded extension whose APK signing certificate digest does not match `extension.store.signingKey`; `ExtensionLoader.getSignatures()` uses SHA-256. The Selura public store generator mistakenly published the 40-character SHA-1 fingerprint (`95366c895b24b05d2f37a4cdeb30ad9ad4d70d96`) instead of SHA-256, despite verifying SHA-256 privately.

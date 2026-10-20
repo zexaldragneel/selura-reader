@@ -1,0 +1,146 @@
+name: Selura Six-Source Extension Batch
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/selura-keiyoushi-foundation
+    paths:
+      - 'selura_extensions/batch_sources.py'
+      - 'selura_extensions/tests/test_batch_sources.py'
+      - '.github/workflows/selura-extension-batch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selura-extension-batch-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout private Selura source
+        uses: actions/checkout@v4
+
+      - name: Validate independent-source contract
+        run: python3 -m unittest discover -s selura_extensions/tests -p 'test_batch_sources.py' -v
+
+      - name: Checkout pinned licensed Keiyoushi source
+        uses: actions/checkout@v4
+        with:
+          repository: keiyoushi/extensions-source
+          ref: ff521c17bb3e503c01e658e8fac00b60a95829f3
+          path: keiyoushi-deps
+          persist-credentials: false
+
+      - name: Prepare six isolated sources, retaining attribution
+        run: |
+          set -euo pipefail
+          test "$(git -C keiyoushi-deps rev-parse HEAD)" = "ff521c17bb3e503c01e658e8fac00b60a95829f3"
+          python3 selura_extensions/batch_sources.py keiyoushi-deps --version-code $((1000 + ${{ github.run_number }})) --task-file "$RUNNER_TEMP/extension-tasks"
+          test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/extension-tasks")" -eq 6
+          test "$(grep -c ':lintRelease' "$RUNNER_TEMP/extension-tasks")" -eq 6
+
+      - name: Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unlock existing Selura signing key
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$SELURA_SIGNING_PASSWORD"
+          test -s android/signing/selura-release.jks.asc
+          umask 077
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 0 \
+              --decrypt --output keiyoushi-deps/signingkey.jks android/signing/selura-release.jks.asc
+
+      - name: Compile, lint and sign six individual extensions
+        working-directory: keiyoushi-deps
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+          KEY_STORE_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          ALIAS: selura-release
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          mapfile -t TASKS < "$RUNNER_TEMP/extension-tasks"
+          # Keiyoushi's formatter handles provider-specific Kotlin DSL layout
+          # before the strict Spotless and Android lint checks.
+          ./gradlew spotlessApply --no-daemon --stacktrace
+          ./gradlew "${TASKS[@]}" --no-daemon --stacktrace
+
+      - name: Verify six signed APK identities and package versions
+        run: |
+          set -euo pipefail
+          sdk_path="$ANDROID_HOME"
+          APKSIGNER="$(find "$sdk_path/build-tools" -name apksigner | sort -V | tail -1)"
+          AAPT="$(find "$sdk_path/build-tools" -name aapt | sort -V | tail -1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+          mkdir -p release
+          for item in all:seluramangaplus all:selurawebtoons all:seluramangafire en:seluramangapill en:seluramangakatana en:seluramangabat; do
+            lang="$(echo "$item" | cut -d: -f1)"
+            module="$(echo "$item" | cut -d: -f2)"
+            apk="$(find "keiyoushi-deps/src/$lang/$module/build/outputs/apk/release" -maxdepth 1 -type f -name '*.apk' | head -1)"
+            test -s "$apk"
+            "$APKSIGNER" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
+            grep -F 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' "$RUNNER_TEMP/signature.txt"
+            "$AAPT" dump badging "$apk" > "$RUNNER_TEMP/package.txt"
+            grep -F "package: name='eu.kanade.tachiyomi.extension.$lang.$module'" "$RUNNER_TEMP/package.txt"
+            cp "$apk" "release/$module.apk"
+          done
+          test "$(find release -name '*.apk' | wc -l)" -eq 6
+          sha256sum release/*.apk
+
+      - name: Upload signed APK batch
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-six-extensions
+          path: release/*.apk
+          if-no-files-found: error
+
+      - name: Erase decrypted key
+        if: always()
+        run: rm -f keiyoushi-deps/signingkey.jks
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: selura-six-extensions
+          path: release
+      - name: Publish six signed preview APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            tag="test-selura-batch-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            tag="test-selura-batch-dispatch-run-${{ github.run_number }}"
+          fi
+          gh release create "$tag" release/*.apk \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Selura source batch #${{ github.run_number }}" \
+            --notes "Six separate, independently signed extensions based on a pinned Apache-2.0 Keiyoushi snapshot. Natural source names, separate packages, new source IDs. Original extensions/library remain untouched. Requires Android device testing." \
+            --prerelease
