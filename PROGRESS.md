@@ -1,5 +1,13 @@
 # Selura — Development Progress
 
+## Public Selura extension store infrastructure — 2026-10-20
+- Owner created **public** `john-selwyn/selura-extensions`, with GitHub administrator access confirmed; private `selura-reader` remains private.
+- Created and merged [public store PR #1](https://github.com/john-selwyn/selura-extensions/pull/1) as squash commit `ef9e3bfe86f7f52513f35a9e6f64b11314d4760a`. Source generator `scripts/generate_store.py` creates current Mihon-compatible JSON `repo.json` / `index.json`, source metadata, verified package/source IDs and extension icons. Two fixed signed APK inputs: NHentai v2 source Build #12 `39392347725` and MangaDex source Build #3 `39396358597`.
+- Public workflow `.github/workflows/publish-store.yml` downloads two existing signed APKs from private GitHub releases with a **repository-scoped read-only token**, verifies the expected Selura SHA-256 signer and Android package/version, then publishes generated extension artifacts to a public `repo` branch. Main PR CI run `39408619896` passed; post-merge main CI run `39408662295` passed. Added Apache-2.0 LICENSE and upstream attribution.
+- **Remaining blocker:** Public store `repo` branch and its `repo.json` URL are NOT live yet. Owner must set GitHub Actions repository secret `SELURA_READER_READ_TOKEN` in public repo with fine-grained **Contents: Read-only** access to only the private `selura-reader` repo, then manually dispatch **Publish Selura Extension Store** on `main`. Never request token value in chat or move signing key.
+- After actual successful publish, verify public `repo.json`, `index.json`, both APK URLs, install/update via Selura's Extension Stores UI, and source compatibility. Do not uninstall existing extensions or modify saved manga/library data.
+
+
 ## Active milestone — Selura-maintained Keiyoushi foundation (2026-10-20)
 
 - Owner approved copying Keiyoushi's Apache-2.0 source as a *starting point*, gradually replacing upstream dependencies with our own maintained extension ecosystem. Existing fast Selura NHentai (Yuzono-derived) must remain intact.
