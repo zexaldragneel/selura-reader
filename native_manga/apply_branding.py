@@ -406,6 +406,12 @@ import mihon.domain.manga.model.toDomainManga
                     prevMangaChapters.single().url.trimEnd('/') ==
                         mangaChapters.single().url.trimEnd('/')
 
+                if (strict && prevMangaChapters.isNotEmpty()) {
+                    check(sameSeluraGallery) {
+                        "NHentai chapter identity mismatch; original Library entry kept"
+                    }
+                }
+
                 val chapterUpdates = mangaChapters
                     .filter { it.isRecognizedNumber || sameSeluraGallery }
                     .map { mangaChapter ->
@@ -419,10 +425,12 @@ import mihon.domain.manga.model.toDomainManga
                         ChapterUpdate(mangaChapter.id) {
                             if (prevChapter != null) {
                                 dateFetch = prevChapter.dateFetch
-                                bookmark = prevChapter.bookmark
+                                // A target already copied by an older APK may
+                                // have more recent progress; never roll it back.
+                                bookmark = mangaChapter.bookmark || prevChapter.bookmark
                                 if (sameSeluraGallery) {
-                                    lastPageRead = prevChapter.lastPageRead
-                                    read = prevChapter.read
+                                    lastPageRead = maxOf(mangaChapter.lastPageRead, prevChapter.lastPageRead)
+                                    read = mangaChapter.read || prevChapter.read
                                 }
                             }
 
@@ -434,6 +442,207 @@ import mihon.domain.manga.model.toDomainManga
                         }
                     }
                 updateChapter.awaitAll(chapterUpdates)""",
+    )
+
+    # Fail-closed path for background Move: reuse Mihon's metadata migration
+    # but force essential progress/categories/notes and propagate failures.
+    # Older regular migration callers still keep their existing behavior.
+    substitute_exact(
+        root,
+        migration_usecase,
+        "suspend operator fun invoke(current: Manga, target: Manga, replace: Boolean) {",
+        """suspend operator fun invoke(
+        current: Manga,
+        target: Manga,
+        replace: Boolean,
+        strict: Boolean = false,
+    ) {""",
+    )
+    substitute_exact(
+        root,
+        migration_usecase,
+        "val flags = sourcePreferences.migrationFlags.get()",
+        """val flags = sourcePreferences.migrationFlags.get().let { selected ->
+            if (strict) {
+                selected + setOf(
+                    MigrationFlag.CHAPTER,
+                    MigrationFlag.CATEGORY,
+                    MigrationFlag.NOTES,
+                    MigrationFlag.CUSTOM_COVER,
+                )
+            } else {
+                selected
+            }
+        }""",
+    )
+    substitute_exact(
+        root,
+        migration_usecase,
+        """                val categoryIds = getCategories.await(current.id).map { it.id }
+                setMangaCategories.await(target.id, categoryIds)""",
+        """                val categoryIds = getCategories.await(current.id).map { it.id }
+                val mergedCategoryIds = if (strict) {
+                    (getCategories.await(target.id).map { it.id } + categoryIds).distinct()
+                } else {
+                    categoryIds
+                }
+                setMangaCategories.await(target.id, mergedCategoryIds)""",
+    )
+    substitute_exact(
+        root,
+        migration_usecase,
+        """            if (e is CancellationException) {
+                throw e
+            }
+        }
+    }""",
+        """            if (e is CancellationException || strict) {
+                throw e
+            }
+        }
+    }""",
+    )
+
+    # In background Move we still use replace=false for the metadata stage,
+    # then the worker verifies the target before de-favoriting the original.
+    # This makes the critical transition crash-resumable and leaves downloaded
+    # files untouched even if the generic Remove Downloads flag was selected.
+    # Selura NHentai: background Move (target verified before original de-favorite).
+    # Work is owned by Android rather than the migration screen's ViewModel,
+    # so the reader remains usable throughout very large library copies.
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.material3.Text\n",
+        """import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.runtime.LaunchedEffect\n",
+        """import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "import androidx.compose.runtime.getValue\n",
+        """import androidx.compose.runtime.getValue
+import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "        val navigator = LocalNavigator.currentOrThrow\n",
+        """        val navigator = LocalNavigator.currentOrThrow
+        var backgroundCopyConfirm by remember { mutableStateOf(false) }
+""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        """                                    enabled = !state.isEmpty,
+                                ),
+                            ),""",
+        """                                    enabled = !state.isEmpty,
+                                ),
+                                AppBar.OverflowAction(
+                                    title = "Migrate NHentai in background",
+                                    onClick = {
+                                        if (state.source?.name?.contains("nhentai", ignoreCase = true) == true) {
+                                            backgroundCopyConfirm = true
+                                        }
+                                    },
+                                ),
+                            ),""",
+    )
+    substitute_exact(
+        root,
+        manga_list_screen,
+        "        LaunchedEffect(Unit) {\n",
+        """        if (backgroundCopyConfirm) {
+            AlertDialog(
+                onDismissRequest = { backgroundCopyConfirm = false },
+                title = { Text("Migrate NHentai while you read") },
+                text = {
+                    Text(
+                        "Move exact gallery matches from original NHentai to Selura NHentai ALL. " +
+                            "Targets are verified before original Library favorites are removed. " +
+                            "Original database entries and download files stay on disk, but " +
+                            "old-source offline downloads do not automatically transfer. " +
+                            "Back up Selura before starting; check notification for progress and Stop.",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            backgroundCopyConfirm = false
+                            SeluraNhentaiBackgroundCopyWorker.start(
+                                context.applicationContext,
+                                sourceId,
+                            )
+                            context.toast("Background migration queued; you can keep reading")
+                        },
+                    ) { Text("Start background migration") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { backgroundCopyConfirm = false }) {
+                        Text("Cancel")
+                    }
+                },
+            )
+        }
+
+        LaunchedEffect(Unit) {
+""",
+    )
+
+    # AppGraph performs Metro injection for WorkManager workers in Mihon.
+    # Keep the existing dependency graph and its providers untouched.
+    app_graph = "app/src/main/java/mihon/app/di/AppGraph.kt"
+    substitute_exact(
+        root,
+        app_graph,
+        "import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker\n",
+        """import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
+import mihon.feature.migration.background.SeluraNhentaiBackgroundCopyWorker
+""",
+    )
+    substitute_exact(
+        root,
+        app_graph,
+        "    fun inject(backupRestoreWorker: BackupRestoreWorker)\n",
+        """    fun inject(backupRestoreWorker: BackupRestoreWorker)
+    fun inject(seluraNhentaiBackgroundCopyWorker: SeluraNhentaiBackgroundCopyWorker)
+""",
+    )
+    background_source = (
+        pathlib.Path(__file__).resolve().parent /
+        "background_migration/SeluraNhentaiBackgroundCopyWorker.kt"
+    )
+    background_destination = (
+        root /
+        "app/src/main/java/mihon/feature/migration/background/SeluraNhentaiBackgroundCopyWorker.kt"
+    )
+    if not background_source.is_file() or background_destination.exists():
+        raise IncompatibleUpstreamError("Invalid Selura background migration worker source.")
+    background_destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(background_source, background_destination)
+
+    # Never delete original downloaded galleries during the initial metadata
+    # stage, even if generic Remove Downloads was previously enabled.
+    substitute_exact(
+        root,
+        migration_usecase,
+        "if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {",
+        "if (replace && MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {",
     )
 
     # Selura startup update prompt. Mihon's update checker stays disabled

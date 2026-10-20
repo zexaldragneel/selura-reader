@@ -132,10 +132,14 @@ class NativeMigrationTests(unittest.TestCase):
         )
         write(
             "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt",
-            """import eu.kanade.presentation.components.AppBar
+            """import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import eu.kanade.presentation.components.AppBar
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 
 class MigrateMangaScreen {
+        val navigator = LocalNavigator.currentOrThrow
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
@@ -153,6 +157,8 @@ class MigrateMangaScreen {
             floatingActionButton = {
             }
         )
+        LaunchedEffect(Unit) {
+        }
 }""",
         )
         write(
@@ -172,6 +178,9 @@ class MigrationListViewModel {
         write(
             "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt",
             """class MigrateMangaUseCase {
+    suspend operator fun invoke(current: Manga, target: Manga, replace: Boolean) {
+        val flags = sourcePreferences.migrationFlags.get()
+        try {
             // Update chapters read, bookmark and dateFetch
             if (MigrationFlag.CHAPTER in flags) {
                 val prevMangaChapters = getChaptersByMangaId.await(current.id)
@@ -200,6 +209,19 @@ class MigrationListViewModel {
                     }
                 updateChapter.awaitAll(chapterUpdates)
             }
+            if (MigrationFlag.CATEGORY in flags) {
+                val categoryIds = getCategories.await(current.id).map { it.id }
+                setMangaCategories.await(target.id, categoryIds)
+            }
+            if (MigrationFlag.REMOVE_DOWNLOAD in flags && currentSource != null) {
+                scope.launch { downloadManager.deleteManga(current, currentSource) }
+            }
+        } catch (e: Throwable) {
+            if (e is CancellationException) {
+                throw e
+            }
+        }
+    }
 }""",
         )
         write(
@@ -211,6 +233,14 @@ class MigrationListViewModel {
                     ShowDonationCampaign()
                 }
             }""",
+        )
+        write(
+            "app/src/main/java/mihon/app/di/AppGraph.kt",
+            """import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
+interface AppGraph {
+    fun inject(backupRestoreWorker: BackupRestoreWorker)
+}
+""",
         )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
@@ -315,10 +345,59 @@ class MigrationListViewModel {
         self.assertIn("toDomainManga(source.id)", migration)
         self.assertIn("val sameSeluraGallery", usecase)
         self.assertIn("prevMangaChapters.size == 1 && mangaChapters.size == 1", usecase)
-        self.assertIn("lastPageRead = prevChapter.lastPageRead", usecase)
-        self.assertIn("read = prevChapter.read", usecase)
-        self.assertIn("bookmark = prevChapter.bookmark", usecase)
+        self.assertIn("lastPageRead = maxOf(mangaChapter.lastPageRead, prevChapter.lastPageRead)", usecase)
+        self.assertIn("read = mangaChapter.read || prevChapter.read", usecase)
+        self.assertIn("bookmark = mangaChapter.bookmark || prevChapter.bookmark", usecase)
         self.assertIn("if (!sameSeluraGallery && maxChapterRead != null", usecase)
+
+    def test_background_nhentai_move_verifies_target_before_unfavoriting_source(self):
+        patch(self.root, 2024)
+        worker = (self.root /
+                  "app/src/main/java/mihon/feature/migration/background/SeluraNhentaiBackgroundCopyWorker.kt").read_text()
+        screen = (self.root /
+                  "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt").read_text()
+        graph = (self.root /
+                 "app/src/main/java/mihon/app/di/AppGraph.kt").read_text()
+        usecase = (self.root /
+                   "app/src/main/java/mihon/domain/migration/usecases/MigrateMangaUseCase.kt").read_text()
+        self.assertIn("Migrate NHentai in background", screen)
+        self.assertIn("SeluraNhentaiBackgroundCopyWorker.start(", screen)
+        self.assertIn("fun inject(seluraNhentaiBackgroundCopyWorker:", graph)
+        self.assertIn("class SeluraNhentaiBackgroundCopyWorker", worker)
+        self.assertIn("ExistingWorkPolicy.KEEP", worker)
+        self.assertIn("setForegroundSafely()", worker)
+        self.assertIn("last_moved_manga_", worker)
+        self.assertIn("replace = false", worker)
+        self.assertIn("matching.toDomainManga(target.id)", worker)
+        self.assertIn('Regex("^/g/[0-9]+/?$")', worker)
+        self.assertIn("sourceManager.getOnlineSources()", worker)
+        self.assertIn("createCancelPendingIntent(id)", worker)
+        self.assertIn("if (replace && MigrationFlag.REMOVE_DOWNLOAD in flags", usecase)
+        self.assertNotIn("replace = true", worker)
+        # Failure IDs and the cursor must survive cancellation together;
+        # re-entry skips successful entries, not failed entries.
+        self.assertIn('val failuresKey = "failed_move_manga_"', worker)
+        self.assertIn("getFavorites.subscribe(sourceId).first()", worker)
+        self.assertIn("putStringSet(failuresKey", worker)
+        self.assertIn(".putLong(cursorKey, manga.id)", worker)
+        self.assertIn("failedIds.add(manga.id)", worker)
+        self.assertIn("failedIds.remove(manga.id)", worker)
+        self.assertNotIn("remove(cursorKey)", worker)
+        self.assertIn("getFavorites.subscribe(target.id).first()", worker)
+        self.assertIn("val existing = existingTargets[canonicalUrl]", worker)
+        self.assertIn("setRequiredNetworkType(NetworkType.CONNECTED)", worker)
+        self.assertIn("setupFailure(", worker)
+        self.assertIn("updateManga.awaitAll(listOf(MangaUpdate(manga.id) { favoriteAt = null }))", worker)
+        self.assertIn("strict = true", worker)
+        self.assertIn("getChaptersByMangaId.await(targetManga.id)", worker)
+        self.assertIn("targetCategories.containsAll(originalCategories)", worker)
+        self.assertIn("inputData.getString(MODE) != MOVE_MODE", worker)
+        self.assertIn("cancelUniqueWork(LEGACY_COPY_WORK)", worker)
+        self.assertIn("selected + setOf(", usecase)
+        self.assertIn("MigrationFlag.CHAPTER,", usecase)
+        self.assertIn("MigrationFlag.CATEGORY,", usecase)
+        self.assertIn("if (e is CancellationException || strict)", usecase)
+        self.assertIn("getCategories.await(target.id)", usecase)
 
     def test_refuse_unexpected_upstream_batch_migration_marker(self):
         vm = (self.root /
