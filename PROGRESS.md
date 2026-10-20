@@ -1,5 +1,17 @@
 # Selura — Development Progress
-Last updated: 2026-10-18
+Last updated: 2026-10-20
+
+## Native manga-only migration — PR #24, first compiled milestone
+- **Product pivot:** Native manga-only Selura, no new EPUB/PDF work; preserve working legacy Flutter `main` and its signed APK. Native APK has distinct package ID `com.selura.manga`, so it installs alongside old `com.selura.reader` and `app.mihon`.
+- **Architecture:** compile pinned Mihon v0.21.2 (`9612d955db3165e1578fdf9ff19ca9b7762c4a46`) from source at GitHub Actions, apply fail-closed Selura branding and preserve original Apache-2.0 license; no standalone Flutter extension emulation. Unmodified Mihon native source engine implements extension installation, browsing/chapter readers, and original `.tachibk` backup restoration.
+- **Native PR:** https://github.com/john-selwyn/selura-reader/pull/24, branch `feature/selura-native-manga-migration`. Migration files `native_manga/` and `.github/workflows/native-manga-apk.yml`; Flutter code remains recoverable.
+- **Verified CI:** Selura Native Manga APK run #1 `39352273448`, commit `183745f3ccd7c98e2e0d7fb08a09b8da0e1127cb` **success** (source patch contracts, pinned Mihon checkout, Java 21 native Gradle release assembly, APK signature/app ID/version validation and GitHub Release publish). Direct signed APK: https://github.com/john-selwyn/selura-reader/releases/download/test-native-pr-24-run-1/selura-manga.apk; 67,154,260 bytes; SHA-256 `95a8cfe3a034e9e1dd53b8b468a025828365dfd42c6f02e2c31863690c4c0320`; signer cert SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
+- **Current refinement in same protected feature branch:** Settings → Browse → **Add Keiyoushi extensions** launches the actual upstream `ExtensionStoresScreen` with official `https://github.com/keiyoushi/extensions/raw/repo/index.pb` directly inside Selura. User must confirm; no silent install or Mihon app handoff. Changes: `5fd70e2` source patch, `c939344` contract tests, `d7acfede` instructions, and `2bd2393` current project context. **New CI result pending; not yet part of successful Build #1.**
+- **Outstanding blockers:** Real on-phone install/launch and `.tachibk` import; verified library/categories/history/positions; user-authorized Keiyoushi store add; real extension installation/trust and chapter/images/reading resume; Android in-place update from one native signed APK to next. Neither simulated patch tests nor the successful first APK compilation proves these device workflows.
+- **Next steps:** (1) get successful native signed CI for the Keiyoushi entry and verify matching package/certificate/version and release asset; (2) user export Mihon backup and install native Selura alongside both old apps; (3) test restoration and Keiyoushi browsing on Android; (4) fix observed runtime issues in PR #24 before merging or changing `main`; (5) then implement premium UI polish with regression coverage.
+- PR #21 and PR #22 are closed unmerged and only contain Flutter-based experiments or external links; PR #23 also closed unmerged. Do not reintroduce them into native manga release.
+
+---
 
 ## Repository
 https://github.com/john-selwyn/selura-reader
