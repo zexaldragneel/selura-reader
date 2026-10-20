@@ -55,7 +55,9 @@ class NativeMigrationTests(unittest.TestCase):
             "app/src/main/AndroidManifest.xml",
             '<manifest><application android:icon="@mipmap/ic_launcher" '
             'android:roundIcon="@mipmap/ic_launcher" '
-            'android:label="@string/app_name"/></manifest>\n',
+            'android:label="@string/app_name">'
+            '<provider android:authorities="\${applicationId}.provider" />'
+            '</application></manifest>\n',
         )
         write("settings.gradle.kts", 'rootProject.name = "Mihon"\n')
         write(
@@ -294,7 +296,21 @@ interface AppGraph {
         self.assertIn("raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json", updater)
         self.assertIn('segments[1] != "selura-reader"', updater)
         self.assertNotIn("github_pat_", updater)
-        self.assertNotIn("Intent.ACTION_INSTALL_PACKAGE", updater)
+        installer = (self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraApkInstaller.kt").read_text()
+        self.assertIn("SeluraApkInstaller.download(", updater)
+        self.assertIn("LinearProgressIndicator(", updater)
+        self.assertIn('Text("Download update")', updater)
+        self.assertIn('Text("Install")', updater)
+        self.assertIn("sha256 = digest.lowercase()", updater)
+        self.assertIn("MessageDigest.getInstance(\"SHA-256\")", installer)
+        self.assertIn("archiveIsSafe(context, partial, offer)", installer)
+        self.assertIn("PackageManager.GET_SIGNING_CERTIFICATES", installer)
+        self.assertIn("FileProvider.getUriForFile(", installer)
+        self.assertIn("Intent.ACTION_VIEW", installer)
+        self.assertIn("Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES", installer)
+        self.assertIn("currentCoroutineContext().ensureActive()", installer)
+        self.assertNotIn("openUri(update.releaseUrl)", updater)
 
     def test_refuse_modified_main_activity_update_entry(self):
         main = (self.root /
