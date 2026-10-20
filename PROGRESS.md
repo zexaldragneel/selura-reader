@@ -1,4 +1,41 @@
 # Selura — Development Progress
+
+## Extension installation repair — SHA-256 store fingerprint (2026-10-20)
+- **Android evidence:** Selura Extension Stores accepted the public `repo.json` and displayed Selura NHentai and Selura MangaDex, but both install attempts failed (Refresh/Retry action icons on Browse > Extensions). This confirms store discovery but not install success.
+- **Root cause verified in upstream native Mihon source:** `ExtensionInstaller.downloadAndInstall()` rejects a downloaded extension whose APK signing certificate digest does not match `extension.store.signingKey`; `ExtensionLoader.getSignatures()` uses SHA-256. The Selura public store generator mistakenly published the 40-character SHA-1 fingerprint (`95366c895b24b05d2f37a4cdeb30ad9ad4d70d96`) instead of SHA-256, despite verifying SHA-256 privately.
+- **Fix merged:** Public store [PR #3](https://github.com/john-selwyn/selura-extensions/pull/3), squash commit `9fe223f8e5f06bb307339bcd927b76264ca3a7f5`. The generator now publishes and checks the known Selura SHA-256 fingerprint `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` in BOTH `repo.json.meta.signingKeyFingerprint` and `index.json.signingKey`, with regression tests.
+- **CI:** PR test run `39411164796` PASSED; [public release publication `39411220988`](https://github.com/john-selwyn/selura-extensions/actions/runs/39411220988) PASSED; fetched the public catalog URLs and confirmed both 64-character SHA-256 values. Both APK Git blob SHAs remain unchanged (NHentai `c2d3527ab844e495ef1ed45b1c322cf4e3efe89c`, MangaDex `a6460cbe5e6b3b3cab302227b850ec3062426b11`); no APK rebuild or package ID changes.
+- **Crucial device cache detail:** ExtensionStoreRepositoryImpl keeps signingKey in a local database. The ordinary Extensions list refresh fetches extensions but not repository trust metadata. User must open **Browse → Extensions → Extension stores** and tap that screen's top-right **Refresh** (calls `UpdateExtensionStores/refreshAll`), then return to Extensions, refresh list and retry installing MangaDex. Do NOT uninstall original extensions or remove library. If still fails, capture Android installation message; compare manual APK install to distinguish downloading, trust, and package-installer issues.
+- **Verification remaining:** actual phone installation and chapter loading through public store not yet confirmed.
+
+
+## Selura Extensions public store published — 2026-10-20
+
+- The owner created public `john-selwyn/selura-extensions` and added a fine-grained `SELURA_READER_READ_TOKEN` secret with Contents: Read-only access limited to private `selura-reader`. Token value was never shared in chat or committed.
+- Public store infrastructure PR #1 passed CI and merged (`ef9e3bfe86f7f52513f35a9e6f64b11314d4760a`). Publication trigger PR #2 passed CI and merged (`a69b5059287153e31228507b4fa4d4a8b94edd61`).
+- **GitHub Actions publication succeeded:** [run 39410027167](https://github.com/john-selwyn/selura-extensions/actions/runs/39410027167); verified publicly accessible `repo.json` and `index.json`, and separate signed APK/icon files on `repo` branch. Public URL: `https://raw.githubusercontent.com/john-selwyn/selura-extensions/repo/repo.json`.
+- Store lists `Selura NHentai` (1.4.2, Android versionCode 104002, `eu.kanade.tachiyomi.extension.all.seluranhentai`, 51,543 bytes, SHA-256 `827aa8a8f3ae2745ca9e810a89427bf08ee753ed90e8b8ebe8a0930b8dd276c6`) and `Selura MangaDex` (1.6.3, Android versionCode 106003, `eu.kanade.tachiyomi.extension.all.seluramangadex`, 96,998 bytes, SHA-256 `37693cd07883eca69cd49e0f9fd3e69b2b98640ecb40dd98502f6d388780cba3`). Git blob SHAs for both public APKs match the verified original build APK bytes. Signing certificate verified by publish job.
+- Original Keiyoushi and Yuzono extensions, old library source IDs, reading history and downloads were not changed. The user must **Android-test Add repository, available extension listing, new install/update, chapter load and reading progress** before declaring runtime integration verified. Existing Selura NHentai v2's previous subjective fast-loading confirmation remains a separate fact.
+- Public repository is independently hosted and updates controlled by Selura. **Build-time dependency** on pinned upstream source and tooling remains pending vendorization; future catalog updates need versioned signed builds and a publish review.
+
+
+## Public Selura extension store infrastructure — 2026-10-20
+- Owner created **public** `john-selwyn/selura-extensions`, with GitHub administrator access confirmed; private `selura-reader` remains private.
+- Created and merged [public store PR #1](https://github.com/john-selwyn/selura-extensions/pull/1) as squash commit `ef9e3bfe86f7f52513f35a9e6f64b11314d4760a`. Source generator `scripts/generate_store.py` creates current Mihon-compatible JSON `repo.json` / `index.json`, source metadata, verified package/source IDs and extension icons. Two fixed signed APK inputs: NHentai v2 source Build #12 `39392347725` and MangaDex source Build #3 `39396358597`.
+- Public workflow `.github/workflows/publish-store.yml` downloads two existing signed APKs from private GitHub releases with a **repository-scoped read-only token**, verifies the expected Selura SHA-256 signer and Android package/version, then publishes generated extension artifacts to a public `repo` branch. Main PR CI run `39408619896` passed; post-merge main CI run `39408662295` passed. Added Apache-2.0 LICENSE and upstream attribution.
+- **Remaining blocker:** Public store `repo` branch and its `repo.json` URL are NOT live yet. Owner must set GitHub Actions repository secret `SELURA_READER_READ_TOKEN` in public repo with fine-grained **Contents: Read-only** access to only the private `selura-reader` repo, then manually dispatch **Publish Selura Extension Store** on `main`. Never request token value in chat or move signing key.
+- After actual successful publish, verify public `repo.json`, `index.json`, both APK URLs, install/update via Selura's Extension Stores UI, and source compatibility. Do not uninstall existing extensions or modify saved manga/library data.
+
+
+## Active milestone — Selura-maintained Keiyoushi foundation (2026-10-20)
+
+- Owner approved copying Keiyoushi's Apache-2.0 source as a *starting point*, gradually replacing upstream dependencies with our own maintained extension ecosystem. Existing fast Selura NHentai (Yuzono-derived) must remain intact.
+- Feature branch `feature/selura-keiyoushi-foundation` is stacked on PR #25; adds `selura_extensions/apply_keiyoushi.py`, contract tests, an independently signed MangaDex workflow and a provenance/roadmap README.
+- Keiyoushi snapshot pinned at `ff521c17bb3e503c01e658e8fac00b60a95829f3`. Initial derivative name `Selura MangaDex`; independent package `eu.kanade.tachiyomi.extension.all.seluramangadex`; no original extension overwrite and no automatic library-source migration.
+- Commits: `16e09a59961fd9db5df2b3381e253dc7dabf334b` (import script), `17c19fbe352c8b34439f5602024f8be9da37fa9e` (tests), `29f25e1bccafeb55eea53dc402fb0186173d4810` (CI workflow), `d85c1655e74fb15ddf726fd80958ddef4cf075e5` (docs).
+- **Verification status:** Code committed; automated tests, Gradle compilation, APK signing, source behavior on phone and release publishing are **not yet confirmed**. Check PR workflow first and repair failures before claiming availability.
+- **Independence limitation:** Phase 1 still checks out pinned Keiyoushi build framework/source in CI, so offline/fully independent source builds require later vendoring. Next: confirm CI, phone test preview, vendor necessary tooling into Selura repository, then publish an independent extension `index.pb` repository and safe source migration tooling. Do not remove Keiyoushi/Yuzono apps or user data.
+
 Last updated: 2026-10-20
 
 ## Device acceptance: NHentai v2 is fast — 2026-10-20
