@@ -133,6 +133,7 @@ class NativeMigrationTests(unittest.TestCase):
         write(
             "app/src/main/java/eu/kanade/tachiyomi/ui/browse/migration/manga/MigrateMangaScreen.kt",
             """import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import eu.kanade.presentation.components.AppBar
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 
