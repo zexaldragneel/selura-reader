@@ -3,7 +3,7 @@
 Selura now has a first-party Android startup update prompt. It is independent of Mihon's default updater, which remains disabled for the Selura build.
 
 ### Behavior
-- On a fresh app launch, attempt an HTTPS GET to `https://zexaldragneel.github.io/selura-reader/updates/latest.json`.
+- On a fresh app launch, attempt an HTTPS GET to `https://raw.githubusercontent.com/zexaldragneel/selura-updates/main/latest.json`.
 - Silently continue offline if the feed is missing/unreachable, if content is invalid, or if versionCode is not newer than installed `com.selura.manga`.
 - Show a themed Material update dialog with build name, release notes, **View update** and **Later**.
 - View update opens an allowlisted GitHub release page in the phone browser so the user can download and install the update with Android's normal installer. The app never silently replaces itself or needs installation permissions.
