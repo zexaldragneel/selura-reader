@@ -202,6 +202,16 @@ class MigrationListViewModel {
             }
 }""",
         )
+        write(
+            "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt",
+            """class MainActivity : BaseActivity() {
+                if (!isBenchmarkBuildType) {
+                    if (isLaunch) CheckForUpdates()
+                    ShowOnboarding()
+                    ShowDonationCampaign()
+                }
+            }""",
+        )
         for native in (
             "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt",
@@ -238,6 +248,33 @@ class MigrationListViewModel {
         self.assertNotIn("Intent.ACTION_VIEW", settings)
         self.assertNotIn("startActivity", settings)
         self.assertNotIn("installPackage", settings)
+
+    def test_selura_update_prompt_preserves_native_updater_separation(self):
+        patch(self.root, 2025)
+        main = (self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt").read_text()
+        updater = (self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraStartupUpdateCheck.kt").read_text()
+        self.assertIn("if (isLaunch) {", main)
+        self.assertIn("SeluraStartupUpdateCheck()", main)
+        self.assertIn("CheckForUpdates()", main)
+        self.assertIn("BuildConfig.VERSION_CODE", updater)
+        self.assertIn("Selura Manga update available", updater)
+        self.assertIn('Text("Later")', updater)
+        self.assertIn("github.io/selura-reader/updates/latest.json", updater)
+        self.assertIn('segments[1] != "selura-reader"', updater)
+        self.assertNotIn("github_pat_", updater)
+        self.assertNotIn("Intent.ACTION_INSTALL_PACKAGE", updater)
+
+    def test_refuse_modified_main_activity_update_entry(self):
+        main = (self.root /
+            "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt")
+        main.write_text(main.read_text().replace(
+            "if (isLaunch) CheckForUpdates()",
+            "if (isLaunch) Unit",
+        ))
+        with self.assertRaises(IncompatibleUpstreamError):
+            patch(self.root, 2026)
 
     def test_mihon_backup_preview_reports_library_counts(self):
         patch(self.root, 2011)
