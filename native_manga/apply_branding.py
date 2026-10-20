@@ -11,7 +11,6 @@ extensions, and official Mihon backup/restore implementation stay native.
 import argparse
 import os
 import pathlib
-import re
 import xml.etree.ElementTree as ET
 
 UPSTREAM_SHA = "9612d955db3165e1578fdf9ff19ca9b7762c4a46"
@@ -104,7 +103,15 @@ def patch(root: pathlib.Path, version_code: int):
     manifest = (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
     assert '@drawable/selura_manga_icon' in manifest
     assert 'android:label="@string/app_name"' in manifest
-    assert "manga" in str(root / "app")
+    for native_feature in (
+        "app/src/main/java/eu/kanade/tachiyomi/data/backup/restore/BackupRestorer.kt",
+        "app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt",
+        "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/webtoon/WebtoonConfig.kt",
+    ):
+        if not (root / native_feature).is_file():
+            raise IncompatibleUpstreamError(
+                f"Missing native Mihon feature: {native_feature}"
+            )
     print(f"Prepared {APP_LABEL} ({NATIVE_APPLICATION_ID}); versionCode {version_code}")
     print("Original native Mihon backup/restore and extension code remain intact.")
     print("Apache-2.0 license and contributor notices remain in upstream checkout.")
