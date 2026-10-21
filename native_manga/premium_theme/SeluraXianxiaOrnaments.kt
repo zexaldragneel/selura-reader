@@ -196,7 +196,7 @@ private fun DrawScope.cornerBracket(x: Float, y: Float, dx: Float, dy: Float, le
 fun Modifier.xianxiaToolbarBackdrop(artwork: Boolean): Modifier = drawBehind {
     val w = size.width
     val h = size.height
-    drawRect(Brush.verticalGradient(listOf(InkTop, InkMid, Color(0xFF060914))))
+    drawRect(Brush.verticalGradient(listOf(InkTop, InkMid, Color(0xFF090807))))
     if (artwork) {
         // A lacquer-red solar disc behind the cream wordmark, not a full-screen wash.
         val sunC = Offset(w * 0.17f, h * 0.47f)
@@ -241,7 +241,7 @@ fun Modifier.xianxiaToolbarBackdrop(artwork: Boolean): Modifier = drawBehind {
         // keep the action icons readable over the moon
         drawRect(
             Brush.horizontalGradient(
-                listOf(Color.Transparent, Color(0x99060914)),
+                listOf(Color.Transparent, Color(0xD0090807)),
                 startX = w * 0.55f,
                 endX = w,
             ),
@@ -284,15 +284,15 @@ fun Modifier.xianxiaCardFrame(): Modifier = drawWithContent {
 
 /** Category tab: dark inlay with gold hairline; active tab adds brackets and underline. */
 fun Modifier.xianxiaTabFrame(active: Boolean): Modifier = drawBehind {
-    val radius = CornerRadius(10.dp.toPx(), 10.dp.toPx())
+    val radius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
     drawRoundRect(
         brush = Brush.horizontalGradient(
-            if (active) listOf(Color(0xFF2A2012), Color(0xFF111A2E)) else listOf(Color(0xFF0C1322), Color(0xFF0A101D)),
+            if (active) listOf(Color(0xFF473021), Color(0xFF17110E)) else listOf(Color(0xFF1D1614), Color(0xFF100D0D)),
         ),
         cornerRadius = radius,
     )
     drawRoundRect(
-        color = if (active) GoldLight else GoldDark.copy(alpha = 0.55f),
+        color = if (active) GoldLight else GoldDark.copy(alpha = 0.62f),
         cornerRadius = radius,
         style = Stroke(width = if (active) 1.5.dp.toPx() else 1.dp.toPx()),
     )
@@ -408,7 +408,7 @@ fun XianxiaScenery(modifier: Modifier = Modifier) {
             pagoda(w * 0.86f, h * 0.82f, h * 0.43f, Color(0xFF09080E), 3)
             drawRect(
                 Brush.verticalGradient(
-                    listOf(Color.Transparent, Color(0x66AFC3E8), Color.Transparent),
+                    listOf(Color.Transparent, Color(0x88E5C99B), Color.Transparent),
                     startY = h * 0.5f,
                     endY = h * 0.95f,
                 ),
