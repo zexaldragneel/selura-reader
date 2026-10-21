@@ -60,31 +60,31 @@ fun seluraColorScheme(base: ColorScheme, selected: SeluraLibraryTheme): ColorSch
     when (selected) {
         SeluraLibraryTheme.DEFAULT -> base
         SeluraLibraryTheme.CELESTIAL_XIANXIA -> darkColorScheme(
-            primary = Color(0xFFEBC78B),
-            onPrimary = Color(0xFF211525),
-            primaryContainer = Color(0xFF54412D),
-            onPrimaryContainer = Color(0xFFFFE4B7),
-            secondary = Color(0xFF9DB9DA),
-            onSecondary = Color(0xFF101B30),
-            secondaryContainer = Color(0xFF263A54),
-            onSecondaryContainer = Color(0xFFD7E5FB),
-            tertiary = Color(0xFFFFD89B),
-            onTertiary = Color(0xFF201522),
-            background = Color(0xFF080F20),
-            onBackground = Color(0xFFFFE9CD),
-            surface = Color(0xFF10182B),
-            onSurface = Color(0xFFFFE9CD),
-            surfaceVariant = Color(0xFF25334A),
-            onSurfaceVariant = Color(0xFFC4C9D8),
-            outline = Color(0xFF91764F),
-            outlineVariant = Color(0xFF4D4050),
-            surfaceContainerLowest = Color(0xFF080F20),
-            surfaceContainerLow = Color(0xFF101B30),
-            surfaceContainer = Color(0xFF17233B),
-            surfaceContainerHigh = Color(0xFF233047),
-            surfaceContainerHighest = Color(0xFF303F56),
-            surfaceBright = Color(0xFF34445A),
-            surfaceDim = Color(0xFF080F20),
+            primary = Color(0xFFEED09A),
+            onPrimary = Color(0xFF22180E),
+            primaryContainer = Color(0xFF3F3021),
+            onPrimaryContainer = Color(0xFFFFE6BD),
+            secondary = Color(0xFFD3AC73),
+            onSecondary = Color(0xFF20130E),
+            secondaryContainer = Color(0xFF412C1F),
+            onSecondaryContainer = Color(0xFFF8E5C9),
+            tertiary = Color(0xFFD99374),
+            onTertiary = Color(0xFF21130E),
+            background = Color(0xFF090807),
+            onBackground = Color(0xFFF5E5C6),
+            surface = Color(0xFF161110),
+            onSurface = Color(0xFFF5E5C6),
+            surfaceVariant = Color(0xFF312923),
+            onSurfaceVariant = Color(0xFFDCC8A6),
+            outline = Color(0xFFAE8A50),
+            outlineVariant = Color(0xFF4F3B29),
+            surfaceContainerLowest = Color(0xFF090807),
+            surfaceContainerLow = Color(0xFF20130E),
+            surfaceContainer = Color(0xFF211815),
+            surfaceContainerHigh = Color(0xFF2D211A),
+            surfaceContainerHighest = Color(0xFF3E2D22),
+            surfaceBright = Color(0xFF493322),
+            surfaceDim = Color(0xFF090807),
         )
         SeluraLibraryTheme.NEON_NIGHT -> darkColorScheme(
             primary = Color(0xFFAF83FF),
@@ -120,8 +120,8 @@ fun seluraLibraryBackground(selected: SeluraLibraryTheme, artwork: Boolean): Bru
     when (selected) {
         SeluraLibraryTheme.DEFAULT -> Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
         SeluraLibraryTheme.CELESTIAL_XIANXIA -> Brush.verticalGradient(
-            if (artwork) listOf(Color(0xFF253954), Color(0xFF111B33), Color(0xFF080F20))
-            else listOf(Color(0xFF080F20), Color(0xFF080F20)),
+            if (artwork) listOf(Color(0xFF251B19), Color(0xFF170F10), Color(0xFF090807))
+            else listOf(Color(0xFF090807), Color(0xFF090807)),
         )
         SeluraLibraryTheme.NEON_NIGHT -> Brush.verticalGradient(
             if (artwork) listOf(Color(0xFF1C1642), Color(0xFF10142C), Color(0xFF080A18))
