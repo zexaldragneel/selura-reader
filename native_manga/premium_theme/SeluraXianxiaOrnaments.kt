@@ -67,9 +67,9 @@ private fun DrawScope.pagoda(cx: Float, baseY: Float, unit: Float, color: Color,
         drawRect(color, Offset(cx - w * 0.6f, bodyTop), Size(w * 1.2f, bodyH))
         val roof = Path().apply {
             moveTo(cx - w * 1.3f, bodyTop - roofH * 0.5f)
-            quadTo(cx - w * 0.7f, bodyTop + roofH * 0.15f, cx, bodyTop - roofH)
-            quadTo(cx + w * 0.7f, bodyTop + roofH * 0.15f, cx + w * 1.3f, bodyTop - roofH * 0.5f)
-            quadTo(cx, bodyTop + roofH * 0.1f, cx - w * 1.3f, bodyTop - roofH * 0.5f)
+            cubicTo(cx - w * 0.7f, bodyTop + roofH * 0.15f, cx - w * 0.7f, bodyTop + roofH * 0.15f, cx, bodyTop - roofH)
+            cubicTo(cx + w * 0.7f, bodyTop + roofH * 0.15f, cx + w * 0.7f, bodyTop + roofH * 0.15f, cx + w * 1.3f, bodyTop - roofH * 0.5f)
+            cubicTo(cx, bodyTop + roofH * 0.1f, cx, bodyTop + roofH * 0.1f, cx - w * 1.3f, bodyTop - roofH * 0.5f)
             close()
         }
         drawPath(roof, color)
