@@ -36,7 +36,7 @@ def load_release_changes(path: Path, tag: str) -> dict:
             or not item.strip()
             or item != item.strip()
             or len(item) > 180
-            or "\\n" in item
+            or "\n" in item
             for item in items
         ):
             raise ValueError(f"Invalid {name} changelog entry")
