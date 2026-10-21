@@ -42,6 +42,36 @@ class XianxiaV2Tests(unittest.TestCase):
                     "ImageBitmap", "rememberInfiniteTransition", "LaunchedEffect", "animate"):
             self.assertNotIn(bad, src)
 
+    def test_reference_refinement_preserves_real_covers_and_ink_gold_layout(self):
+        ornaments = module.ORNAMENTS.read_text(encoding="utf-8")
+        premium = (ROOT / "premium_theme" / "SeluraPremiumTheme.kt").read_text(encoding="utf-8")
+        patcher = (ROOT / "xianxia_v2.py").read_text(encoding="utf-8")
+        self.assertIn("BoxWithConstraints", ornaments)
+        self.assertIn("maxWidth >= 220.dp", ornaments)
+        self.assertIn('Text(text = "漫"', ornaments)
+        self.assertIn("MY MANGA COLLECTION", ornaments)
+        self.assertIn("fontSize = 25.sp", ornaments)
+        self.assertIn("Canvas(modifier.fillMaxWidth().height(62.dp))", ornaments)
+        self.assertIn("private fun DrawScope.lantern", ornaments)
+        self.assertIn("private fun DrawScope.blossomBranch", ornaments)
+        self.assertIn("Color(0xFFA52924)", ornaments)
+        self.assertIn("Color(0xFF090807)", premium)
+        self.assertIn("Color(0xFF0C0908)", patcher)
+        self.assertIn("maxLines = if (celestial) 3 else 2", patcher)
+        self.assertIn("MaterialTheme.typography.labelSmall.copy", patcher)
+        self.assertIn("Modifier.size(21.dp)", patcher)
+        self.assertIn("if (isActive) {{", patcher)
+        self.assertIn("Arrangement.spacedBy(4.dp)", patcher)
+        # The historical source family, cover loader, manga DB and readers are not patched.
+        self.assertEqual(len(module.FILES), 5)
+        for forbidden in ("MangaCover.Book(", "CoverImage", "thumbnailUrl", "readCount",
+                          "totalChapters", "PremiumLibraryProgress", "ImageRequest",
+                          "apply_migration", "setManga", "downloadManager"):
+            self.assertNotIn(forbidden, patcher)
+            self.assertNotIn(forbidden, ornaments)
+        # Turning visual background artwork off must still suppress decorative sky.
+        self.assertIn("if (artwork)", ornaments)
+
     def test_celestial_only_gating(self):
         script = (ROOT / "xianxia_v2.py").read_text()
         self.assertIn('CELESTIAL = "SeluraLibraryTheme.CELESTIAL_XIANXIA"', script)
