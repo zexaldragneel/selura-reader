@@ -5,7 +5,7 @@ Selura now has a first-party Android startup update prompt. It is independent of
 ### Behavior
 - On a fresh app launch, attempt an HTTPS GET to `https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json`.
 - Silently continue offline if the feed is missing/unreachable, if content is invalid, or if versionCode is not newer than installed `com.selura.manga`.
-- Show a themed Material update dialog with build name, release notes, **Download update** and **Later**.
+- Show a themed Material update dialog with build name, a bounded **What's new** panel grouped into **Added / Improved / Fixed**, and **Download update** / **Later**. Long changelogs scroll inside the dialog; older feeds without structured notes display the legacy text summary.
 - The download streams directly from the exact GitHub release APK into Selura's private `cacheDir/selura-apk-updates`, with progress percentage/MB, cancel, verification and retry states. No web browser or system Downloads app is needed.
 - The expected `sha256` from the public feed is checked against the streamed APK bytes; Selura additionally verifies `com.selura.manga`, increasing versionCode and the installed app's signing certificate before launching an installation.
 - For installation, Selura grants only temporary read access to its verified APK via the existing `com.selura.manga.provider` FileProvider. Android's package installer shows the required user confirmation; on Android 8+ the first install can require granting **Allow from this source** to Selura in system Settings. Silent APK installation is neither attempted nor supported.
@@ -16,8 +16,8 @@ Selura now has a first-party Android startup update prompt. It is independent of
 
 The owner has chosen a public repository and approved version metadata. The update prompt only activates once the `gh-pages` branch contains a newer signed build's metadata and the URL is reachable.
 
-The verified native APK workflow maintains the public feed in the `gh-pages` branch, without requiring GitHub Pages configuration. The JSON contains only:
-`schemaVersion`, `applicationId`, `versionCode`, `versionName`, `notes`, `releaseUrl`, and signed APK `sha256`. GitHub Actions generates it only *after* APK build and signing verification and release publication. It archives `selura-update-feed-private` as an Actions artifact before atomically publishing JSON to the same public repository's `gh-pages` branch. It never commits decrypted signing material.
+The verified native APK workflow maintains the public feed in the `gh-pages` branch, without requiring GitHub Pages configuration. The JSON contains only release metadata:
+`schemaVersion`, `applicationId`, `versionCode`, `versionName`, `notes`, `releaseUrl`, signed APK `sha256`, and optional **`changes`** (`added`, `improved`, `fixed`) with individually bounded public strings. No GitHub token, signing key or library data is included. GitHub Actions generates it only *after* APK build and signing verification and release publication. It archives `selura-update-feed-private` as an Actions artifact before atomically publishing JSON to the same public repository's `gh-pages` branch. It never commits decrypted signing material.
 
 The release is public; when a user taps Download update, Selura derives the fixed APK asset path from the allowlisted release tag and follows only trusted HTTPS GitHub asset hosts. No sign-in is necessary.
 
@@ -35,3 +35,11 @@ The release is public; when a user taps Download update, Selura derives the fixe
 
 ### Maintained build workflow
 The native release workflow `.github/workflows/native-manga-apk.yml` generates metadata from `native_manga/selura_updater/write_update_feed.py` after the signed APK has been verified and published, then commits only `updates/latest.json` to the `gh-pages` branch when the versionCode increases.
+
+### Maintaining accurate update details
+
+Before publishing a new native pull-request build, edit `native_manga/selura_updater/release_notes.json` with the **actual PR number** and short, user-facing feature, improvement, and fix descriptions. Empty categories are allowed, but every release must contain at least one accurate note; do not claim a fix that the APK does not contain.
+
+The release workflow rejects stale notes belonging to a different PR, malformed/oversized notes, or a mismatched APK/package/signature. GitHub Actions generates the public `changes` payload only after the APK is verified. Manual workflow dispatches retain the fallback summary for compatibility. Signed in-app APK downloads and Android's installation approval remain unchanged.
+
+**Existing users:** The installed app must be upgraded to a version containing the new popup UI before it can display structured release notes. The previous APK uses its existing generic `notes` field; this is backward compatible.
