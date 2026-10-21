@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,10 +47,10 @@ import androidx.compose.ui.unit.sp
 private val GoldLight = Color(0xFFF6D79D)
 private val GoldMid = Color(0xFFD6A85E)
 private val GoldDark = Color(0xFF8E6938)
-private val InkTop = Color(0xFF05070F)
-private val InkMid = Color(0xFF0B1224)
+private val InkTop = Color(0xFF080707)
+private val InkMid = Color(0xFF17100F)
 private val Cream = Color(0xFFF7EBD0)
-private val Crimson = Color(0xFFB3202A)
+private val Crimson = Color(0xFFA52924)
 private val Blossom = Color(0xFFE88DA3)
 
 // ---------------------------------------------------------------- drawing
@@ -121,6 +122,64 @@ private fun DrawScope.petal(x: Float, y: Float, r: Float, alpha: Float) {
     drawCircle(Cream, radius = r * 0.35f, center = Offset(x, y), alpha = alpha * 0.8f)
 }
 
+/** One slim lacquer lantern suspended from a gold thread. Static and bounded. */
+private fun DrawScope.lantern(x: Float, y: Float, unit: Float) {
+    val wire = GoldDark.copy(alpha = 0.9f)
+    val sw = (unit * 0.025f).coerceAtLeast(1f)
+    drawLine(wire, Offset(x, y - unit * 0.55f), Offset(x, y - unit * 0.05f), sw)
+    drawCircle(GoldLight, radius = sw * 1.5f, center = Offset(x, y))
+    drawCircle(
+        brush = Brush.radialGradient(
+            listOf(Crimson.copy(alpha = 0.29f), Color.Transparent),
+            center = Offset(x, y + unit * 0.25f),
+            radius = unit * 0.85f,
+        ),
+        center = Offset(x, y + unit * 0.25f),
+        radius = unit * 0.85f,
+    )
+    drawRoundRect(
+        color = Crimson,
+        topLeft = Offset(x - unit * 0.22f, y + unit * 0.04f),
+        size = Size(unit * 0.44f, unit * 0.6f),
+        cornerRadius = CornerRadius(unit * 0.1f),
+    )
+    drawRoundRect(
+        color = GoldMid,
+        topLeft = Offset(x - unit * 0.24f, y),
+        size = Size(unit * 0.48f, unit * 0.08f),
+        cornerRadius = CornerRadius(unit * 0.03f),
+    )
+    drawLine(GoldLight.copy(alpha = 0.8f), Offset(x, y + unit * 0.1f), Offset(x, y + unit * 0.6f), sw)
+    drawLine(wire, Offset(x, y + unit * 0.63f), Offset(x, y + unit * 0.83f), sw)
+}
+
+/** Spring branches and blossoms, positioned only within the decorative sky. */
+private fun DrawScope.blossomBranch(x: Float, y: Float, unit: Float, fromRight: Boolean) {
+    val direction = if (fromRight) -1f else 1f
+    val stem = Color(0xFF76523E)
+    val sw = (unit * 0.027f).coerceAtLeast(1f)
+    val tip = Offset(x + direction * unit * 0.95f, y + unit * 0.49f)
+    val main = Path().apply {
+        moveTo(x, y)
+        cubicTo(
+            x + direction * unit * 0.28f, y + unit * 0.04f,
+            x + direction * unit * 0.63f, y + unit * 0.52f,
+            tip.x, tip.y,
+        )
+    }
+    drawPath(main, stem, style = Stroke(width = sw, cap = StrokeCap.Round))
+    for (i in 1..4) {
+        val t = i / 5f
+        val bx = x + direction * unit * t * 0.95f
+        val by = y + unit * (t * t * 0.55f)
+        val branchTip = Offset(bx + direction * unit * 0.22f, by - unit * 0.2f)
+        drawLine(stem, Offset(bx, by), branchTip, sw * 0.72f)
+        val r = (unit * 0.036f).coerceAtLeast(1.4f)
+        petal(branchTip.x, branchTip.y, r, 0.85f)
+        petal(branchTip.x + direction * r * 1.45f, branchTip.y + r * 0.4f, r * 0.78f, 0.8f)
+    }
+}
+
 private fun DrawScope.cornerBracket(x: Float, y: Float, dx: Float, dy: Float, len: Float, sw: Float) {
     val path = Path().apply {
         moveTo(x, y + dy * len)
@@ -139,27 +198,37 @@ fun Modifier.xianxiaToolbarBackdrop(artwork: Boolean): Modifier = drawBehind {
     val h = size.height
     drawRect(Brush.verticalGradient(listOf(InkTop, InkMid, Color(0xFF060914))))
     if (artwork) {
-        val sunC = Offset(w * 0.2f, h * 0.45f)
+        // A lacquer-red solar disc behind the cream wordmark, not a full-screen wash.
+        val sunC = Offset(w * 0.17f, h * 0.47f)
         drawCircle(
             Brush.radialGradient(
-                listOf(Color(0xCCB3202A), Color(0x00B3202A)),
+                listOf(Crimson.copy(alpha = 0.44f), Color.Transparent),
                 center = sunC,
-                radius = h * 1.15f,
+                radius = h * 0.88f,
             ),
-            radius = h * 1.15f,
+            radius = h * 0.88f,
             center = sunC,
         )
-        val moonC = Offset(w * 0.82f, h * 0.02f)
+        drawCircle(Crimson.copy(alpha = 0.75f), radius = h * 0.37f, center = sunC)
+        drawCircle(
+            GoldDark.copy(alpha = 0.48f),
+            radius = h * 0.37f,
+            center = sunC,
+            style = Stroke(width = 0.8.dp.toPx()),
+        )
+        // Small pale moon and a dark ink mask preserve the search/menu contrast.
+        val moonC = Offset(w * 0.71f, h * 0.16f)
         drawCircle(
             Brush.radialGradient(
-                listOf(Color(0x55F7EBD0), Color(0x00F7EBD0)),
+                listOf(Color(0x55F7EBD0), Color.Transparent),
                 center = moonC,
-                radius = h * 1.1f,
+                radius = h * 0.66f,
             ),
-            radius = h * 1.1f,
+            radius = h * 0.66f,
             center = moonC,
         )
-        drawCircle(Color(0xFFEDE6D0), radius = h * 0.5f, center = moonC, alpha = 0.9f)
+        drawCircle(Cream.copy(alpha = 0.67f), radius = h * 0.17f, center = moonC)
+        blossomBranch(w * 0.99f, -h * 0.13f, h * 0.67f, fromRight = true)
         val sw = 1.2.dp.toPx()
         wisp(w * 0.02f, h * 0.92f, h * 0.9f, GoldMid.copy(alpha = 0.5f), sw)
         wisp(w * 0.42f, h * 0.2f, h * 0.7f, GoldMid.copy(alpha = 0.3f), sw)
@@ -249,7 +318,7 @@ fun Modifier.xianxiaTabFrame(active: Boolean): Modifier = drawBehind {
 
 @Composable
 fun XianxiaPagodaGlyph(tint: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(18.dp)) {
+    Canvas(modifier.size(14.dp)) {
         pagoda(size.width / 2f, size.height, size.height * 0.98f, tint, 3)
     }
 }
@@ -257,10 +326,12 @@ fun XianxiaPagodaGlyph(tint: Color, modifier: Modifier = Modifier) {
 /** Brush-style "Library" wordmark with letterspaced subtitle, count pill and seal. */
 @Composable
 fun XianxiaLibraryTitle(title: String, count: Int?) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    BoxWithConstraints {
+        val hasRoomForCount = maxWidth >= 220.dp
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
         Column(modifier = Modifier.weight(1f, false)) {
             Text(
                 text = title,
@@ -270,8 +341,8 @@ fun XianxiaLibraryTitle(title: String, count: Int?) {
                     fontFamily = FontFamily.Serif,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Black,
-                    fontSize = 30.sp,
-                    lineHeight = 32.sp,
+                    fontSize = 25.sp,
+                    lineHeight = 29.sp,
                     color = Cream,
                     shadow = Shadow(Color.Black, Offset(2f, 3f), 6f),
                 ),
@@ -281,13 +352,13 @@ fun XianxiaLibraryTitle(title: String, count: Int?) {
                 maxLines = 1,
                 style = TextStyle(
                     fontFamily = FontFamily.Serif,
-                    fontSize = 8.sp,
-                    letterSpacing = 2.sp,
+                    fontSize = 7.sp,
+                    letterSpacing = 1.15.sp,
                     color = GoldMid,
                 ),
             )
         }
-        if (count != null) {
+        if (count != null && hasRoomForCount) {
             Box(
                 modifier = Modifier
                     .border(1.dp, GoldMid, RoundedCornerShape(50))
@@ -298,11 +369,12 @@ fun XianxiaLibraryTitle(title: String, count: Int?) {
         }
         Box(
             modifier = Modifier
-                .size(18.dp)
+                .size(19.dp)
                 .background(Crimson, RoundedCornerShape(3.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Text(text = "漫", fontSize = 11.sp, color = Cream, maxLines = 1)
+        }
         }
     }
 }
@@ -314,12 +386,12 @@ fun XianxiaLibraryTitle(title: String, count: Int?) {
 @Composable
 fun XianxiaScenery(modifier: Modifier = Modifier) {
     val artwork = LocalSeluraLibraryAppearance.current?.backgroundArtwork != false
-    Canvas(modifier.fillMaxWidth().height(76.dp)) {
+    Canvas(modifier.fillMaxWidth().height(62.dp)) {
         val w = size.width
         val h = size.height
-        drawRect(Brush.verticalGradient(listOf(Color(0xFF060914), Color(0xFF0B1426), Color(0xFF070B17))))
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF140E0E), Color(0xFF201613), Color(0xFF09090C))))
         if (artwork) {
-            val moonC = Offset(w * 0.78f, h * 0.15f)
+            val moonC = Offset(w * 0.79f, h * 0.31f)
             drawCircle(
                 Brush.radialGradient(
                     listOf(Color(0x44F7EBD0), Color(0x00F7EBD0)),
@@ -329,11 +401,11 @@ fun XianxiaScenery(modifier: Modifier = Modifier) {
                 radius = h * 1.2f,
                 center = moonC,
             )
-            ridge(0.52f, h * 0.22f, false, Color(0xFF111B31))
-            pagoda(w * 0.18f, h * 0.62f, h * 0.7f, Color(0xFF0C1427), 4)
-            pagoda(w * 0.62f, h * 0.6f, h * 0.55f, Color(0xFF0C1427), 3)
-            ridge(0.7f, h * 0.18f, true, Color(0xFF080D1A))
-            pagoda(w * 0.86f, h * 0.78f, h * 0.45f, Color(0xFF050811), 3)
+            ridge(0.52f, h * 0.22f, false, Color(0xFF302828))
+            pagoda(w * 0.2f, h * 0.74f, h * 0.68f, Color(0xFF1A151A), 4)
+            pagoda(w * 0.62f, h * 0.73f, h * 0.55f, Color(0xFF1A151A), 3)
+            ridge(0.7f, h * 0.18f, true, Color(0xFF100D13))
+            pagoda(w * 0.86f, h * 0.82f, h * 0.43f, Color(0xFF09080E), 3)
             drawRect(
                 Brush.verticalGradient(
                     listOf(Color.Transparent, Color(0x66AFC3E8), Color.Transparent),
@@ -342,6 +414,9 @@ fun XianxiaScenery(modifier: Modifier = Modifier) {
                 ),
                 alpha = 0.18f,
             )
+            blossomBranch(w * 0.98f, -h * 0.22f, h * 0.78f, fromRight = true)
+            lantern(w * 0.71f, h * 0.26f, h * 0.24f)
+            lantern(w * 0.76f, h * 0.33f, h * 0.19f)
             val sw = 1.dp.toPx()
             wisp(w * 0.36f, h * 0.55f, h * 0.7f, GoldMid.copy(alpha = 0.35f), sw)
             wisp(w * 0.74f, h * 0.88f, h * 0.6f, GoldMid.copy(alpha = 0.3f), sw)
