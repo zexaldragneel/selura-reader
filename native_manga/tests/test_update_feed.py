@@ -75,7 +75,7 @@ class UpdateMetadataTests(unittest.TestCase):
             {**valid, "added": [], "fixed": []},
             {**valid, "added": ["ok"], "privateToken": "secret"},
             {**valid, "added": "unexpected plain string"},
-            {**valid, "added": ["a newline\\nin release notes"]},
+            {**valid, "added": ["a newline\nin release notes"]},
         ]
         for payload in invalid:
             with self.subTest(payload=str(payload)[:65]):
