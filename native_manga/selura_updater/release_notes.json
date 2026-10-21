@@ -1,0 +1,15 @@
+{
+  "prNumber": 42,
+  "added": [
+    "A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
+    "Release-specific details shown before you download or install an update."
+  ],
+  "improved": [
+    "Scrollable, readable changelogs that fit smaller Android screens.",
+    "Update notes generated from reviewed release metadata instead of a generic message."
+  ],
+  "fixed": [
+    "Incorrect or stale notes from a different pull request are rejected during publishing.",
+    "Older update feeds without detailed notes still display their original summary."
+  ]
+}

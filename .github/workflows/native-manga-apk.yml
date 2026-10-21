@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -288,11 +288,19 @@ jobs:
           else
             TAG="test-native-dispatch-run-${{ github.run_number }}"
           fi
+          # PR releases require human-reviewed release-specific changes.
+          # A stacked PR must update release_notes.json for its own PR number.
+          # Workflow dispatch without a PR continues with legacy notes.
+          CHANGELOG_ARGS=()
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGELOG_ARGS=(--changes-file native_manga/selura_updater/release_notes.json)
+          fi
           python3 native_manga/selura_updater/write_update_feed.py \
             --version-code "$((1000 + RUN_NUMBER))" \
             --tag "$TAG" \
             --apk release/selura-manga.apk \
-            --output public-feed/updates/latest.json
+            --output public-feed/updates/latest.json \
+            "${CHANGELOG_ARGS[@]}"
 
       - name: Save update manifest as private artifact (public feed opt-in only)
         uses: actions/upload-artifact@v4
@@ -336,12 +344,23 @@ jobs:
           from pathlib import Path
 
           source = Path("incoming/latest.json")
-          if not source.is_file() or source.stat().st_size > 3000:
+          if not source.is_file() or source.stat().st_size > 4000:
               raise SystemExit("Invalid public metadata file")
           data = json.loads(source.read_text(encoding="utf-8"))
           keys = {"schemaVersion", "applicationId", "versionCode", "versionName",
                   "notes", "releaseUrl", "sha256"}
-          assert set(data) == keys
+          if "${{ github.event_name }}" == "pull_request":
+              assert set(data) == keys | {"changes"}
+              groups = data["changes"]
+              assert set(groups) == {"added", "improved", "fixed"}
+              assert all(
+                  isinstance(groups[name], list) and len(groups[name]) <= 5
+                  and all(isinstance(item, str) and 0 < len(item) <= 180 for item in groups[name])
+                  for name in ("added", "improved", "fixed")
+              )
+              assert 1 <= sum(len(items) for items in groups.values()) <= 12
+          else:
+              assert set(data) == keys
           assert data["schemaVersion"] == 1
           assert data["applicationId"] == "com.selura.manga"
           assert type(data["versionCode"]) is int

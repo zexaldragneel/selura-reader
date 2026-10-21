@@ -1,8 +1,9 @@
+import json
 import pathlib
 import tempfile
 import unittest
 
-from native_manga.selura_updater.write_update_feed import create_manifest
+from native_manga.selura_updater.write_update_feed import create_manifest, load_release_changes
 
 
 class UpdateMetadataTests(unittest.TestCase):
@@ -40,6 +41,57 @@ class UpdateMetadataTests(unittest.TestCase):
         for version in (0, 1000, -1, 2_100_000_000):
             with self.subTest(version=version), self.assertRaises(ValueError):
                 create_manifest(version_code=version, tag="test-native-pr-24-run-17", apk=self.apk)
+
+    def test_structured_release_notes_are_scoped_to_correct_pull_request(self):
+        notes_file = pathlib.Path(self.dir.name) / "notes.json"
+        notes_file.write_text(json.dumps({
+            "prNumber": 42,
+            "added": ["Detailed What's New panel before installing"],
+            "improved": ["Scrollable update dialog"],
+            "fixed": ["Rejects stale PR release notes"],
+        }), encoding="utf-8")
+        changes = load_release_changes(notes_file, "test-native-pr-42-run-77")
+        result = create_manifest(
+            version_code=1077,
+            tag="test-native-pr-42-run-77",
+            apk=self.apk,
+            changes=changes,
+        )
+        self.assertEqual(result["changes"]["added"], ["Detailed What's New panel before installing"])
+        self.assertEqual(result["changes"]["fixed"], ["Rejects stale PR release notes"])
+        self.assertIn("What's new:", result["notes"])
+        self.assertEqual(result["schemaVersion"], 1)
+        with self.assertRaisesRegex(ValueError, "another pull request"):
+            load_release_changes(notes_file, "test-native-pr-43-run-78")
+
+    def test_reject_unbounded_or_unreviewed_release_notes(self):
+        notes_file = pathlib.Path(self.dir.name) / "notes.json"
+        valid = {"prNumber": 42, "added": ["New update summary"], "improved": [], "fixed": []}
+        invalid = [
+            {**valid, "prNumber": 41},
+            {**valid, "added": [""]},
+            {**valid, "added": ["a" * 181]},
+            {**valid, "added": ["x"] * 6},
+            {**valid, "added": [], "fixed": []},
+            {**valid, "added": ["ok"], "privateToken": "secret"},
+            {**valid, "added": "unexpected plain string"},
+            {**valid, "added": ["a newline\nin release notes"]},
+        ]
+        for payload in invalid:
+            with self.subTest(payload=str(payload)[:65]):
+                notes_file.write_text(json.dumps(payload), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    load_release_changes(notes_file, "test-native-pr-42-run-77")
+
+    def test_structured_notes_do_not_change_signed_apk_identity(self):
+        changes = {"added": ["New details"], "improved": [], "fixed": []}
+        original = create_manifest(version_code=1077, tag="test-native-pr-42-run-77", apk=self.apk)
+        enriched = create_manifest(
+            version_code=1077, tag="test-native-pr-42-run-77", apk=self.apk,
+            changes=changes,
+        )
+        for key in ("applicationId", "versionCode", "versionName", "releaseUrl", "sha256"):
+            self.assertEqual(original[key], enriched[key])
 
     def test_refuse_missing_apk(self):
         self.apk.unlink()

@@ -3,6 +3,9 @@ package eu.kanade.tachiyomi.ui.main
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,15 +38,42 @@ import javax.net.ssl.HttpsURLConnection
 private const val SELURA_UPDATE_FEED =
     "https://raw.githubusercontent.com/zexaldragneel/selura-reader/gh-pages/updates/latest.json"
 
+internal data class SeluraReleaseChanges(
+    val added: List<String>,
+    val improved: List<String>,
+    val fixed: List<String>,
+) {
+    val hasDetails: Boolean get() = added.isNotEmpty() || improved.isNotEmpty() || fixed.isNotEmpty()
+}
+
 internal data class SeluraUpdateOffer(
     val versionCode: Int,
     val versionName: String,
     val notes: String,
+    val changes: SeluraReleaseChanges?,
     val releaseUrl: String,
     val sha256: String,
 )
 
 private object SeluraReleaseFeed {
+    // The feed is public untrusted text. Bound every group before rendering it.
+    private fun changeItems(changes: JSONObject, name: String): List<String> {
+        val list = changes.optJSONArray(name) ?: return emptyList()
+        return (0 until minOf(list.length(), 5)).mapNotNull { index ->
+            val value = list.optString(index).trim().take(180)
+            value.takeIf { it.isNotBlank() }
+        }
+    }
+
+    private fun parseChanges(json: JSONObject): SeluraReleaseChanges? {
+        val sections = json.optJSONObject("changes") ?: return null
+        return SeluraReleaseChanges(
+            added = changeItems(sections, "added"),
+            improved = changeItems(sections, "improved"),
+            fixed = changeItems(sections, "fixed"),
+        ).takeIf { it.hasDetails }
+    }
+
     fun check(installedVersion: Int): SeluraUpdateOffer? {
         val connection = URL(SELURA_UPDATE_FEED).openConnection() as HttpsURLConnection
         connection.connectTimeout = 4_000
@@ -88,12 +118,33 @@ private object SeluraReleaseFeed {
                 versionName = json.optString("versionName")
                     .take(60).ifBlank { "Build $versionCode" },
                 notes = json.optString("notes").take(1200),
+                changes = parseChanges(json),
                 releaseUrl = uri.toString(),
                 sha256 = digest.lowercase(),
             )
         } finally {
             connection.disconnect()
         }
+    }
+}
+
+// The notes live in the signed-release metadata feed, not hardcoded app text.
+// Older manifests with only a generic "notes" field still work.
+@Composable
+private fun SeluraChangeGroup(title: String, details: List<String>) {
+    if (details.isEmpty()) return
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 10.dp, bottom = 3.dp),
+    )
+    details.forEach { detail ->
+        Text(
+            text = "• $detail",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+        )
     }
 }
 
@@ -170,12 +221,31 @@ fun SeluraStartupUpdateCheck() {
         text = {
             Column {
                 Text("New version: " + update.versionName)
-                if (stage == UpdateStage.OFFER && update.notes.isNotBlank()) {
-                    Text(
-                        text = update.notes,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
+                if (stage == UpdateStage.OFFER) {
+                    val changes = update.changes
+                    if (changes?.hasDetails == true) {
+                        Text(
+                            text = "What's new",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                        Column(
+                            modifier = Modifier
+                                .heightIn(max = 260.dp)
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            SeluraChangeGroup("Added", changes.added)
+                            SeluraChangeGroup("Improved", changes.improved)
+                            SeluraChangeGroup("Fixed", changes.fixed)
+                        }
+                    } else if (update.notes.isNotBlank()) {
+                        // Older feed versions may not include structured changes.
+                        Text(
+                            text = update.notes,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
                 }
                 when (stage) {
                     UpdateStage.OFFER -> Text(
