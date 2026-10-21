@@ -48,6 +48,16 @@ class FiveProvidersTests(unittest.TestCase):
                 encoding="utf-8",
             )
             self.original[(language, upstream)] = gradle
+            if upstream == "comix":
+                kotlin = root / module.COMIX_SOURCE_PATH
+                kotlin.parent.mkdir(parents=True, exist_ok=True)
+                kotlin.write_text(
+                    "package eu.kanade.tachiyomi.extension.en.comix\\n"
+                    "        for (attempt in 1..10) {\\n"
+                    "            if (response.code !in SERVER_ERROR_CODES && response.code != 404) break\\n"
+                    "            response.close()\\n"
+                    "        }\\n", encoding="utf-8",
+                )
 
     def test_exact_five_sources_with_unique_identity_and_no_overlaps(self):
         self.assertEqual(module.SOURCE_VERSION_ID, 7303)
@@ -117,6 +127,26 @@ class FiveProvidersTests(unittest.TestCase):
         module.prepare(self.root, 5303, verify_git=False)
         with self.assertRaises(module.SourceContractError):
             module.prepare(self.root, 5304, verify_git=False)
+
+    def test_comix_404_fallback_improves_speed_without_changing_identity(self):
+        upstream_path = self.root / "src/en/comix" / module.COMIX_SOURCE_PATH
+        upstream_text = upstream_path.read_text(encoding="utf-8")
+        module.prepare(self.root, 5303, verify_git=False)
+        maintained = (self.root / "src/en/seluracomixto" / module.COMIX_SOURCE_PATH).read_text(encoding="utf-8")
+        self.assertIn("if (response.code == 404 && attempt > 1) break", maintained)
+        self.assertIn("response.code !in SERVER_ERROR_CODES", maintained)
+        self.assertIn("response.close()", maintained)
+        self.assertEqual(maintained.count("if (response.code == 404 && attempt > 1) break"), 1)
+        self.assertNotIn("if (response.code == 404 && attempt > 1) break", upstream_text)
+        self.assertEqual(upstream_path.read_text(encoding="utf-8"), upstream_text)
+
+    def test_changed_comix_retry_contract_fails_without_copying(self):
+        upstream_path = self.root / "src/en/comix" / module.COMIX_SOURCE_PATH
+        upstream_path.write_text("upstream changed the image retry implementation", encoding="utf-8")
+        with self.assertRaises(module.SourceContractError):
+            module.prepare(self.root, 5303, verify_git=False)
+        self.assertFalse((self.root / "src/en/seluracomixto").exists())
+        self.assertFalse((self.root / "src/all/selurakagane").exists())
 
     def test_generated_ids_do_not_use_prior_expansion_seed(self):
         module_name = "seluracomixto"
