@@ -72,7 +72,8 @@ def rewrite_gradle(source: str, language: str, upstream: str, isolated: str,
         source = re.sub(r'(?m)^(\s*)pkgName\s*=\s*"[^"]+"\s*$',
                         lambda m: m.group(1) + 'pkgName = "' + own_pkg + '"', source)
     else:
-        source = source.replace(expected, expected + '\n    pkgName = "' + own_pkg + '"', 1)
+        visible_name = 'name = "' + display + '"'
+        source = source.replace(visible_name, visible_name + '\n    pkgName = "' + own_pkg + '"', 1)
     source = re.sub(r"(?m)^(\s*)versionCode\s*=\s*\d+\s*$",
                     lambda m: m.group(1) + "versionCode = " + str(version_code), source)
     # Keep the exact upstream display names: never prepend 'Selura '.
