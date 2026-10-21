@@ -87,8 +87,8 @@ def patch(root: Path) -> None:
         "                modifier = if (custom) {\n",
         f"                modifier = if (premium == {CELESTIAL}) {{\n"
         "                    Modifier\n"
-        "                        .padding(horizontal = 3.dp, vertical = 4.dp)\n"
-        "                        .clip(RoundedCornerShape(10.dp))\n"
+        "                        .padding(horizontal = 2.dp, vertical = 2.dp)\n"
+        "                        .clip(RoundedCornerShape(8.dp))\n"
         "                        .xianxiaTabFrame(isActive)\n"
         "                } else if (custom) {\n", k)
     s = once(s,
@@ -102,14 +102,15 @@ def patch(root: Path) -> None:
                     if (premium == {CELESTIAL}) {{
                         androidx.compose.foundation.layout.Row(
                             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
                         ) {{
-                            XianxiaPagodaGlyph(
-                                tint = if (isActive) Color(0xFFF6D79D) else Color(0xFFB9955A),
-                            )
+                            if (isActive) {{
+                                XianxiaPagodaGlyph(tint = Color(0xFFF6D79D))
+                            }}
                             androidx.compose.material3.ProvideTextStyle(
-                                MaterialTheme.typography.labelLarge.copy(
+                                MaterialTheme.typography.labelMedium.copy(
                                     fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                                    fontSize = 12.sp,
                                 ),
                             ) {{
                                 TabText(
@@ -153,6 +154,14 @@ def patch(root: Path) -> None:
     s = once(s, "            .fillMaxHeight(0.33f)",
         "            .fillMaxHeight(if (celestial) 0.45f else 0.33f)", k)
     s = once(s,
+        """            minLines = 1,
+        )
+        if (onClickContinueReading != null) {""",
+        """            minLines = 1,
+            maxLines = if (celestial) 3 else 2,
+        )
+        if (onClickContinueReading != null) {""", k)
+    s = once(s,
         "            style = MaterialTheme.typography.titleSmall.copy(\n                color = Color.White,",
         "            style = MaterialTheme.typography.titleSmall.copy(\n"
         "                color = if (celestial) Color(0xFFF3E6C8) else Color.White,\n"
@@ -179,15 +188,41 @@ def patch(root: Path) -> None:
         "        }", k)
     changed[k] = s
 
-    # Navigation: darker ink container for Celestial; icons/callbacks/badges untouched.
+    # Navigation: compact ink/chrome typography; callbacks, badges and touch targets untouched.
     k = "home"
     s = changed[k]
+    s = once(s,
+        "import androidx.compose.foundation.layout.Arrangement\\n",
+        "import androidx.compose.foundation.layout.Arrangement\\n"
+        "import androidx.compose.foundation.layout.size\\n", k)
+    s = once(s,
+        "import androidx.compose.ui.unit.dp\\n",
+        "import androidx.compose.ui.unit.dp\\n"
+        "import androidx.compose.ui.unit.sp\\n", k)
+    s = once(s,
+        """                    painter = tab.options.icon!!,
+                    contentDescription = tab.options.title,""",
+        """                    painter = tab.options.icon!!,
+                    contentDescription = tab.options.title,
+                    modifier = if (premium == SeluraLibraryTheme.CELESTIAL_XIANXIA) {
+                        Modifier.size(21.dp)
+                    } else {
+                        Modifier
+                    },""", k)
+    s = once(s,
+        """MaterialTheme.typography.labelLarge.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                        )""",
+        """MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                            fontSize = 11.sp,
+                        )""", k)
     s = once(s,
         "                        navigationBarContainerColor = if (isPremium) {\n"
         "                            MaterialTheme.colorScheme.surfaceContainer",
         "                        navigationBarContainerColor = if (isPremium) {\n"
         f"                            if (appearance?.theme == {CELESTIAL}) {{\n"
-        "                                androidx.compose.ui.graphics.Color(0xFF070A14)\n"
+        "                                androidx.compose.ui.graphics.Color(0xFF0C0908)\n"
         "                            } else {\n"
         "                                MaterialTheme.colorScheme.surfaceContainer\n"
         "                            }", k)
