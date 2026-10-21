@@ -1,5 +1,19 @@
 # Selura — Development Progress
-Last updated: 2026-10-18
+Last updated: 2026-10-21
+
+## Latest milestone — Comix.to image fallback update, public 43-extension catalog (2026-10-21)
+
+**Native application:** The current verified native app is signed **Build #82** (reader PR #42, [CI 39597146509](https://github.com/zexaldragneel/selura-reader/actions/runs/39597146509), [release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-42-run-82), application ID `com.selura.manga`, versionCode 1082). The Xianxia interface and structured Added/Improved/Fixed update popup were included in the signed build; a later on-device update-popup test is still required. Native PRs #42 and #43 remain unmerged/stacked; repository `main` retains historical Flutter code.
+
+**43-extension audit:** On the public `repo` branch of `zexaldragneel/selura-extensions`, verified 43 nonempty signed APK files, 43 icons, **43 unique Android packages and 341 unique source IDs**. The original first 38 entries' serialized JSON records matched the pre-five-store commit exactly, without even a source-ID metadata change. The catalog URL, signer certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` and `com.selura.manga` identity are preserved.
+
+**Comix.to improvement:** Targeted a retry bottleneck in pinned Keiyoushi source `Comix.kt`: HTTP 404 could be retried ten times at 1.5 seconds each before trying its existing alternate image CDN paths. The isolated importer in reader PR #43 now fails closed if the pinned source code differs and allows just **one** same-path 404 retry before its existing fallback logic; 502/503/522/523 handling and 403/authentication behavior are untouched. New regression tests verify transformation and untouched upstream/source identity. Implementation commits `4ca780faf36d12c8c5eef06d167208f82da19a59` and `54661f8878e7c9ebbc6de486fa3ca9a64643730e`.
+
+**Build verified:** Reader extension workflow [run #6 / 39613983973](https://github.com/zexaldragneel/selura-reader/actions/runs/39613983973) completed **SUCCESS** on both Kotlin Gradle assemble/lint/signature shards and immutable prerelease publication. [Signed source release `test-expansion-5-pr-43-run-6`](https://github.com/zexaldragneel/selura-reader/releases/tag/test-expansion-5-pr-43-run-6) contains five checked assets. Updated `seluracomixto.apk`: 119,412 bytes, SHA-256 `d18aa5a10f8b88b07767902f7e9a19c02ef69a024a17bba980fba8bbf1d79014`, same public package `eu.kanade.tachiyomi.extension.en.seluracomixto` and source ID.
+
+**Store release verified:** [Extension store PR #8](https://github.com/zexaldragneel/selura-extensions/pull/8) merged at `26171b6440e5e5cf09ab062086d5188ad449e9c1` with explicit publishing token. [Store CI #27 / 39615215850](https://github.com/zexaldragneel/selura-extensions/actions/runs/39615215850) completed SUCCESS in test and publish jobs. Public `repo` commit `ddfcac93ced930dc4527e728a7e14f856ff55b59` was read back against preceding commit `5068be76851966938d305bf21c8289353237b89b`: **only Comix.to catalog versionCode 110001 → 110006 and its APK Git blob changed**. All 42 other signed APK blobs and all 43 icons were identical, total source count and ID identity unchanged.
+
+**Android runtime evidence:** User confirmed original Comix.to source loads on their phone. The just-published retry optimization has **not** yet been user-tested on Android. Full chapter page/image recovery speed, offline download, and remaining new providers still require device tests. No native APK update, library migration, reinstall, backup restore or user-data modifications were needed for the extension store rollout. Website 403/login/captcha restrictions must be respected.
 
 ## Repository
 https://github.com/zexaldragneel/selura-reader
