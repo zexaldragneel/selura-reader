@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate 5 expansion sources and source ID isolation
-        run: python3 -m unittest discover -s selura_extensions/tests -p 'test_expansion_12.py' -v
+        run: python3 -m unittest discover -s selura_extensions/tests -p 'test_expansion_5.py' -v
 
       - name: Check out the approved Apache-2.0 upstream revision
         uses: actions/checkout@v4
@@ -102,6 +102,7 @@ jobs:
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)"
           test -x "$APKSIGNER" && test -x "$AAPT"
           mkdir -p release
+          expected=$(( ${{ matrix.shard }} == 0 ? 3 : 2 ))
           version="$((4000 + ${{ github.run_number }}))"
           while IFS= read -r task; do
             [[ "$task" == *:assembleRelease ]] || continue
