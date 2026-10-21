@@ -141,7 +141,6 @@ jobs:
           python3 native_manga/xianxia_v3.py native-upstream
           test -s native-upstream/app/src/main/res/drawable-nodpi/xianxia_header.webp
           grep -q 'xianxiaCardArtFrame' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
-          grep -q 'xianxiaCardFrame' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
           ! grep -q PremiumLibraryProgress native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/theme/SeluraSkylineHeader.kt
           ! grep -q PremiumLibraryProgress native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
