@@ -1,9 +1,23 @@
 {
   "applicationId": "com.selura.manga",
-  "notes": "Selura Manga improvements and fixes. Review the GitHub release before installing.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-41-run-76",
+  "changes": {
+    "added": [
+      "A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
+      "Release-specific details shown before you download or install an update."
+    ],
+    "fixed": [
+      "Incorrect or stale notes from a different pull request are rejected during publishing.",
+      "Older update feeds without detailed notes still display their original summary."
+    ],
+    "improved": [
+      "Scrollable, readable changelogs that fit smaller Android screens.",
+      "Update notes generated from reviewed release metadata instead of a generic message."
+    ]
+  },
+  "notes": "What's new: A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-42-run-82",
   "schemaVersion": 1,
-  "sha256": "c48f1f3decc33cac4412fdc6b604727701b8693cc8f2e4d444ec4c9a55bea104",
-  "versionCode": 1076,
-  "versionName": "Selura Manga Build 76"
+  "sha256": "054987202689f009d4d24b5ce5ac28ef2ec664094e56cb9f3bb71496c135a14b",
+  "versionCode": 1082,
+  "versionName": "Selura Manga Build 82"
 }
