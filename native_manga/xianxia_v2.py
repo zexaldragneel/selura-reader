@@ -79,6 +79,10 @@ def patch(root: Path) -> None:
     k = "tabs"
     s = changed[k]
     s = once(s,
+        "import androidx.compose.ui.unit.dp\n",
+        "import androidx.compose.ui.unit.dp\n"
+        "import androidx.compose.ui.unit.sp\n", k)
+    s = once(s,
         "import eu.kanade.presentation.theme.SeluraLibraryTheme\n",
         "import eu.kanade.presentation.theme.SeluraLibraryTheme\n"
         "import eu.kanade.presentation.theme.XianxiaPagodaGlyph\n"
