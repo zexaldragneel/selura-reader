@@ -153,7 +153,7 @@ class DownloadRecoveryTests(unittest.TestCase):
             "app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt",
             "app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt",
         })
-        for path in ("/reader/", "/source/", "/library/", "/database/", "/migration/"):
+        for path in ("/ui/reader/", "/source/", "/library/", "/database/", "/migration/"):
             self.assertNotIn(path, script)
         for unsafe in ("deleteDownloaded", "removeChapter", "clearStorage", "File.delete("):
             self.assertNotIn(unsafe, script)
