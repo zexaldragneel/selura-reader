@@ -1,0 +1,148 @@
+name: Selura Hive Scans Download Repair
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/selura-orphaned-18-sources
+    paths:
+      - 'selura_extensions/hivescans_download_fix.py'
+      - 'selura_extensions/tests/test_hivescans_download_fix.py'
+      - 'selura_extensions/HIVESCANS_DOWNLOAD_FIX.md'
+      - '.github/workflows/selura-hivescans-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selura-hive-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout Selura
+        uses: actions/checkout@v4
+
+      - name: Test Hive Scans patch and source identity
+        run: |
+          python3 -m unittest discover -s selura_extensions/tests -p 'test_hivescans_download_fix.py' -v
+          python3 -m unittest discover -s selura_extensions/tests -p 'test_orphaned_sources.py' -v
+
+      - name: Checkout audited Keiyoushi Apache-2.0 source
+        uses: actions/checkout@v4
+        with:
+          repository: keiyoushi/extensions-source
+          ref: ff521c17bb3e503c01e658e8fac00b60a95829f3
+          path: keiyoushi-deps
+          persist-credentials: false
+
+      - name: Prepare only Hive Scans APK update
+        run: |
+          set -euo pipefail
+          test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
+          python3 selura_extensions/hivescans_download_fix.py keiyoushi-deps \
+            --version-code "$((4000 + ${{ github.run_number }}))" \
+            --task-file "$RUNNER_TEMP/hive-tasks.txt"
+          test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/hive-tasks.txt")" -eq 1
+          test "$(grep -c ':lintRelease' "$RUNNER_TEMP/hive-tasks.txt")" -eq 1
+
+      - name: Setup Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unlock permanent Selura signing key
+        env:
+          SELURA_SIGNING_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$SELURA_SIGNING_PASSWORD"
+          test -s android/signing/selura-release.jks.asc
+          umask 077
+          printf '%s' "$SELURA_SIGNING_PASSWORD" |
+            gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 0 \
+              --decrypt --output keiyoushi-deps/signingkey.jks android/signing/selura-release.jks.asc
+
+      - name: Compile and lint repaired real Kotlin extension
+        working-directory: keiyoushi-deps
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+          KEY_STORE_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SELURA_SIGNING_PASSWORD }}
+          ALIAS: selura-release
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          mapfile -t TASKS < "$RUNNER_TEMP/hive-tasks.txt"
+          ./gradlew spotlessApply --no-daemon --stacktrace
+          ./gradlew "${TASKS[@]}" --no-daemon --stacktrace
+
+      - name: Verify signed APK identity and higher versionCode
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)"
+          test -x "$APKSIGNER" && test -x "$AAPT"
+          apk="$(find keiyoushi-deps/src/en/selurahivescans/build/outputs/apk/release -maxdepth 1 -name '*.apk' -type f | head -1)"
+          test -s "$apk"
+          "$APKSIGNER" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
+          grep -Fi 'certificate SHA-256 digest: da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42' "$RUNNER_TEMP/signature.txt"
+          "$AAPT" dump badging "$apk" > "$RUNNER_TEMP/package.txt"
+          line="$(grep '^package: ' "$RUNNER_TEMP/package.txt" | head -1)"
+          [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.selurahivescans'"* ]]
+          version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
+          versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
+          test "$version" -gt 109031
+          [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
+          mkdir -p release
+          cp "$apk" release/selurahivescans.apk
+          sha256sum release/selurahivescans.apk
+
+      - name: Upload verified Hive Scans APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-hive-signed
+          path: release/selurahivescans.apk
+          if-no-files-found: error
+
+      - name: Remove decrypted keystore
+        if: always()
+        run: rm -f keiyoushi-deps/signingkey.jks
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: selura-hive-signed
+          path: release
+      - name: Publish immutable verified Hive Scans APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -s release/selurahivescans.apk
+          test "$(find release -name '*.apk' | wc -l)" -eq 1
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            tag="test-hivescans-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          else
+            tag="test-hivescans-dispatch-run-${{ github.run_number }}"
+          fi
+          gh release create "$tag" release/selurahivescans.apk \
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" \
+            --title "Hive Scans chapter page download fix #${{ github.run_number }}" \
+            --notes "Real Kotlin Hive Scans public HTML chapter-image fix; same Android package, permanent Selura signer and source version 7301. No existing library or source migration. Device download acceptance pending." --prerelease
