@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -137,6 +137,11 @@ jobs:
           python3 native_manga/optimize_reader.py native-upstream
           python3 native_manga/apply_premium_themes.py native-upstream
           python3 native_manga/refine_premium_themes.py native-upstream
+          python3 native_manga/xianxia_v2.py native-upstream
+          python3 native_manga/xianxia_v3.py native-upstream
+          test -s native-upstream/app/src/main/res/drawable-nodpi/xianxia_header.webp
+          grep -q 'xianxiaCardArtFrame' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
+          ! grep -q PremiumLibraryProgress native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/theme/SeluraSkylineHeader.kt
           ! grep -q PremiumLibraryProgress native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
           grep -q 'seluraColorScheme' native-upstream/app/src/main/java/eu/kanade/presentation/theme/TachiyomiTheme.kt
