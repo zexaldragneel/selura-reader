@@ -192,13 +192,13 @@ def patch(root: Path) -> None:
     k = "home"
     s = changed[k]
     s = once(s,
-        "import androidx.compose.foundation.layout.Arrangement\\n",
-        "import androidx.compose.foundation.layout.Arrangement\\n"
-        "import androidx.compose.foundation.layout.size\\n", k)
+        "import androidx.compose.foundation.layout.Arrangement\n",
+        "import androidx.compose.foundation.layout.Arrangement\n"
+        "import androidx.compose.foundation.layout.size\n", k)
     s = once(s,
-        "import androidx.compose.ui.unit.dp\\n",
-        "import androidx.compose.ui.unit.dp\\n"
-        "import androidx.compose.ui.unit.sp\\n", k)
+        "import androidx.compose.ui.unit.dp\n",
+        "import androidx.compose.ui.unit.dp\n"
+        "import androidx.compose.ui.unit.sp\n", k)
     s = once(s,
         """                    painter = tab.options.icon!!,
                     contentDescription = tab.options.title,""",
