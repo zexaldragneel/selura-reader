@@ -17,6 +17,24 @@ UPSTREAM = "https://github.com/keiyoushi/extensions-source"
 SETTINGS_MARKER = "\nloadAllIndividualExtensions()\n"
 SOURCE_VERSION_ID = 7303  # immutable for this new source family; do not change after publication
 
+# Pinned Comix's CDN fallback checks multiple image path variants on HTTP 404.
+# Retrying each unchanged 404 URL ten times adds avoidable delays before the
+# existing alternate-path logic runs. Preserve one retry for transient 404s.
+COMIX_RETRY_OLD = "if (response.code !in SERVER_ERROR_CODES && response.code != 404) break"
+COMIX_RETRY_NEW = (
+    COMIX_RETRY_OLD + "\n"
+    "            // Try a missing image once more, then let existing CDN path/host fallbacks run.\n"
+    "            // Leave 5xx retries and 403/authentication responses unchanged.\n"
+    "            if (response.code == 404 && attempt > 1) break"
+)
+COMIX_SOURCE_PATH = Path("src/eu/kanade/tachiyomi/extension/en/comix/Comix.kt")
+
+
+def patch_comix_404_retry(source: str) -> str:
+    if source.count(COMIX_RETRY_OLD) != 1:
+        raise SourceContractError("Pinned Comix retry contract changed; review upstream before building")
+    return source.replace(COMIX_RETRY_OLD, COMIX_RETRY_NEW, 1)
+
 # language, actual upstream module, isolated internal module, exact visible name
 SOURCES = (
     ("en", "comix", "seluracomixto", "Comix.to"),
@@ -109,6 +127,12 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
         if not (source / "build.gradle.kts").is_file() or dest.exists():
             raise SourceContractError("Missing source or destination already exists: " + str(source))
         original = (source / "build.gradle.kts").read_text(encoding="utf-8")
+        if upstream == "comix":
+            comix_source = source / COMIX_SOURCE_PATH
+            if not comix_source.is_file():
+                raise SourceContractError("Pinned Comix.kt source is missing")
+            # Fail before any copying if upstream retry logic has changed.
+            patch_comix_404_retry(comix_source.read_text(encoding="utf-8"))
         rewrites[(language, isolated)] = rewrite_gradle(
             original, language, upstream, isolated, display, version_code
         )
@@ -125,6 +149,8 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
                 body = file.read_text(encoding="utf-8").replace(original_pkg, new_pkg)
                 if file.name == "build.gradle.kts" and file.parent == dest:
                     body = rewrites[(language, isolated)]
+                elif upstream == "comix" and file.relative_to(dest) == COMIX_SOURCE_PATH:
+                    body = patch_comix_404_retry(body)
                 file.write_text(body, encoding="utf-8")
         shutil.copyfile(license_file, dest / "LICENSE")
         (dest / "SELURA_ORIGIN.md").write_text(
