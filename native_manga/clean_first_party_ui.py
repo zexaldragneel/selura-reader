@@ -143,7 +143,6 @@ def patch_about(source: str) -> str:
         "import kotlinx.coroutines.launch\n",
         "import kotlinx.coroutines.withContext\n",
         "import logcat.LogPriority\n",
-        "import mihon.app.di.appGraph\n",
         "import mihon.icons.materialsymbols.MaterialSymbols\n",
         "import mihon.icons.materialsymbols.rounded.Public\n",
         "import mihon.icons.simpleicons.Discord\n",
