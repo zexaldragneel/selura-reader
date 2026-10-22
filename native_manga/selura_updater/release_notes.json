@@ -1,15 +1,14 @@
 {
-  "prNumber": 52,
+  "prNumber": 55,
   "added": [
-    "Failed chapter labels in Download Manager and a Retry download option for each failed chapter.",
-    "A Retry failed downloads action that appears when one or more chapters fail."
+    "A View error action for failed chapters in Download Manager, showing why a download did not complete."
   ],
   "improved": [
-    "Download progress remains visible alongside failure status, even when a provider could not return its page list.",
-    "Completed chapter folder and CBZ files receive non-destructive readability checks before indexing."
+    "More useful error explanations for source access restrictions, missing chapter images, HTTP errors, connection failures and low storage.",
+    "Failure reasons reset when a chapter is retried and remain only in memory, not in backups or manga library records."
   ],
   "fixed": [
-    "Existing empty or unreadable chapter files are no longer silently treated as completed downloads.",
-    "Finalized chapters must remain readable through Android storage before being marked downloaded."
+    "Incomplete chapter downloads no longer leave you with only an unexplained error symbol.",
+    "Sensitive request URLs or credentials are not displayed in error dialogs, and locked source chapters are never bypassed."
   ]
 }
