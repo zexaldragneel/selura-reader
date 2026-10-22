@@ -90,7 +90,7 @@ class ChapterIntegrityTests(unittest.TestCase):
         saved_names = {f"{n:03d}.jpg" for n in range(1, 42)}
         def all_named_pages_exist(names, count):
             digits = max(3, len(str(count)))
-            return all(any(filename.startswith(f"{page:0{digits}d}.") or
+            return count > 0 and all(any(filename.startswith(f"{page:0{digits}d}.") or
                            filename.startswith(f"{page:0{digits}d}__")
                            for filename in names)
                        for page in range(1, count + 1))
