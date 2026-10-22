@@ -15,9 +15,9 @@
     ]
   },
   "notes": "What's new: Failed chapter labels in Download Manager and a Retry download option for each failed chapter.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-52-run-88",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-52-run-90",
   "schemaVersion": 1,
-  "sha256": "cb13af7fa3bd20ec821ce5ee12abc6c795ad972fa7d8746795392bbcba222438",
-  "versionCode": 1088,
-  "versionName": "Selura Manga Build 88"
+  "sha256": "9c6c837429cf9a1f6bfec96045061397525a7e6e7fa63057952a9ed46920f5ec",
+  "versionCode": 1090,
+  "versionName": "Selura Manga Build 90"
 }
