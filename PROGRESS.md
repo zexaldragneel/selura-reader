@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Chapter 99 trial: five unfinished folders remain — 2026-10-22
+
+- **Owner screenshot after recommended Chapter 99 test:** Settings → Downloads → Review unfinished transfers now reports **5** unfinished folders, compared with the six previously captured on Build #102. Missing from list: Hive Scans (EN) / *My Avatars' Path to Greatness* / **Chapter 99 - The Second Continental Summit_366df6**, previously 26 saved image-like files, zero pending `.tmp` writes. This is confirmed as a removal from the review inventory, **not yet an on-device offline download-completion result**. No installed build/version, completed chapter checkmark, full page count or offline-open evidence appears in the screenshot.
+- **Unfinished inventory now:** Red Shirt Ch 3: **9/4** (saved image-like files/pending writes), Lookism Ch 629: **51/4**, Lookism Ch 628: **0/5**, My Avatars' Path to Greatness Ch 101: **31/0**, Ch 100: **27/0**. Totals: **118 image-like files and 13 pending `.tmp` writes** across five folders. The UI says the persisted queue is empty, so there is no verified queued resumption.
+- **Next acceptance gate:** Ask the owner to check whether Chapter 99 has a downloaded checkmark, and test its pages offline in Airplane mode. If it does, record completed recovery; otherwise diagnose individually. Mihon's pinned downloader can delete stale matching temporary folders when the completed CBZ/folder already exists, so folder disappearance alone cannot distinguish finalization from old-temp cleanup. Leave all five remaining folders intact; do not automatically delete or bulk redownload. No APK changes needed for this observation.
+
 ## Owner confirmation: Build #102 unfinished transfer inventory — 2026-10-22
 
 - **Device test confirmed:** Two owner-provided Settings → Downloads screenshots show completed storage-health report still **78 checked / 0 suspicious / 0 unverified / 6 unfinished**, and a functional **Review unfinished transfers** Material dialog with exactly six rows from **Hive Scans (EN)**. This verifies Android UI startup/read-only inventory behavior in signed Build #102; the absence of **Resume all queued chapters** indicates zero visible persisted queued chapters under the feature's current guard, but the owner did not test queue restart.
