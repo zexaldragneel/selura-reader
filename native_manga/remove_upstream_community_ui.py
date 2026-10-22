@@ -162,7 +162,7 @@ def crash_screen(source):
     return replace_exact(
         source,
         "subtitleText = stringResource(MR.strings.crash_screen_description, stringResource(MR.strings.app_name)),",
-        """subtitleText = "\${stringResource(MR.strings.app_name)} encountered an error. You can export a crash log to help diagnose it.",""",
+        """subtitleText = stringResource(MR.strings.app_name) + " encountered an error. You can export a crash log to help diagnose it.",""",
         "remove Discord crash report instruction",
     )
 
