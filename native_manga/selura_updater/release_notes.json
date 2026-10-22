@@ -1,15 +1,15 @@
 {
-  "prNumber": 49,
+  "prNumber": 52,
   "added": [
-    "Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded."
+    "Failed chapter labels in Download Manager and a Retry download option for each failed chapter.",
+    "A Retry failed downloads action that appears when one or more chapters fail."
   ],
   "improved": [
-    "Bounded retries for temporary connection problems when retrieving chapter pages and images.",
-    "Interrupted chapter transfers retain their resumable temporary files and respect pause and Wi-Fi-only settings."
+    "Download progress remains visible alongside failure status, even when a provider could not return its page list.",
+    "Completed chapter folder and CBZ files receive non-destructive readability checks before indexing."
   ],
   "fixed": [
-    "Incomplete chapter folders no longer appear complete simply because the file count matches.",
-    "Failed CBZ or chapter-folder renames no longer mark a download complete or discard its temporary pages.",
-    "HTTP 403, 404 and 429 responses are not repeatedly retried by the chapter downloader."
+    "Existing empty or unreadable chapter files are no longer silently treated as completed downloads.",
+    "Finalized chapters must remain readable through Android storage before being marked downloaded."
   ]
 }
