@@ -1,6 +1,14 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Download Manager failed-chapter recovery controls — 2026-10-22
+
+- **User request:** Continue the owner-tested Build #85 reliability milestone with clearer failed download indicators, individual and batch retry controls, and storage-integrity checks. Preserve library, progress, bookmarks, source IDs, extension repo and signing identity.
+- **Implementation:** [Reader PR #52](https://github.com/zexaldragneel/selura-reader/pull/52) targets the actual native Mihon engine and is **stacked on PR #49** (not on the legacy Flutter main). `native_manga/download_manager_actions.py` modifies only the pinned `DownloadHolder.kt`, `DownloadQueueViewModel.kt`, `DownloadQueueScreen.kt`, `download_single.xml`, plus the already-verified Build #85 `Downloader.kt` and a new local string-resource XML. The transformer fails closed if upstream markers change and validates every source file before writing.
+- **App behavior:** Failed downloads show a red `Failed · downloaded/total` label, even when their chapter page list never loaded. Only failed rows show a **Retry download** menu action, and the toolbar shows **Retry failed downloads** when a reactive per-download status count is nonzero. Retry uses Mihon's existing queue/scheduler without migrating library records, bypassing provider errors or silently deleting incomplete downloads.
+- **Storage safeguards:** A queued download that encounters an existing finished CBZ/folder now checks nonzero/ZIP-entry readability or valid image presence before marking it downloaded. Newly finalized chapters are checked through Android's storage provider before cache indexing. If validation fails, the chapter remains in error and the original files are not automatically removed. This is a lightweight readability check, **not** a full historical ZIP CRC audit or an automatic repair operation.
+- **CI and device acceptance:** Added six focused regression tests and the patch to `.github/workflows/native-manga-apk.yml`. Native [CI Build #87](https://github.com/zexaldragneel/selura-reader/actions/runs/39730720585) passed source transform/unit tests and moved to actual Android Gradle compilation when last inspected. **Do not claim successful APK compilation, signing, release or Android device acceptance before fresh verification**. Existing Build #85 remains latest explicitly owner-tested.
+
 ## Native chapter download resilience milestone — 2026-10-22
 
 - **User request:** After confirming the Hive Scans extension fix worked on Android, improve chapter-download retry handling, incomplete chapter detection, and offline image integrity across all manga extensions. Existing native-app baseline remains user-installed **Build #82**; no data migration or reinstallation is required.
