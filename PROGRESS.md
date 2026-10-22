@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Remove upstream-facing links and branding — 2026-10-22
+
+- **UI objective:** Make the installed Selura Manga app independent in its visible navigation rather than displaying upstream Mihon Discord, Facebook, X, Reddit, donation/support, unrelated Help/privacy links and old-logo screens; preserve required upstream open-source attribution and source compatibility.
+- **Code work:** [Native PR #73](https://github.com/zexaldragneel/selura-reader/pull/73), branch `feature/selura-clean-first-party-ui` on top of Build #102 branch. `clean_first_party_ui.py` fail-closes over actual pinned Android source and adjusts MoreScreen (Support and Help removed), AboutScreen (social footer/privacy/upstream manual updater removed, What's New opens Selura releases, version and Open-source licenses remain), LogoHeader (Selura launcher vector), MainActivity (no unwanted upstream donation/update popup, existing Selura verified startup updater preserved), CrashScreen (Selura crash guidance), and RestoreBackupScreen (neutral manga backup text). Added 6 Python tests and native source regression assertions. No user-data operations or identity changes.
+- **Verification state:** [CI Build #111](https://github.com/zexaldragneel/selura-reader/actions/runs/39800878996) in progress at last read. Await real Mihon/Kotlin Android compilation, original APK certificate and `com.selura.manga` verification, immutable release asset, public update feed, then owner on-device confirmation of cleaned More/About and licenses. Last explicitly device-tested baseline is Build #102; do not misrepresent code generation as a working APK.
+
 ## Chapter 99 trial: five unfinished folders remain — 2026-10-22
 
 - **Owner screenshot after recommended Chapter 99 test:** Settings → Downloads → Review unfinished transfers now reports **5** unfinished folders, compared with the six previously captured on Build #102. Missing from list: Hive Scans (EN) / *My Avatars' Path to Greatness* / **Chapter 99 - The Second Continental Summit_366df6**, previously 26 saved image-like files, zero pending `.tmp` writes. This is confirmed as a removal from the review inventory, **not yet an on-device offline download-completion result**. No installed build/version, completed chapter checkmark, full page count or offline-open evidence appears in the screenshot.
