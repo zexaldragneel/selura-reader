@@ -12,6 +12,7 @@ spec.loader.exec_module(fix)
 # Anchored verbatim snippets from the pinned upstream Kotlin implementation.
 SOURCE = '''package eu.kanade.tachiyomi.data.download
 import java.io.File
+import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import kotlinx.coroutines.CancellationException
 import tachiyomi.core.common.util.system.ImageUtil
 class Downloader {
