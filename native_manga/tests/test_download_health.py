@@ -57,13 +57,42 @@ class DownloadStorageHealthContracts(unittest.TestCase):
         source = health.HEALTH_SOURCE
         self.assertIn("private const val MAX_CHAPTERS = 2500", source)
         self.assertIn("private const val MAX_ZIP_ENTRIES = 4096", source)
-        self.assertIn("ImageUtil.isImage(file.name) { file.openInputStream() }", source)
-        self.assertIn("ZipInputStream(chapter.openInputStream())", source)
-        self.assertIn('zip.read() != -1', source)
+        self.assertIn("ImageUtil.findImageType { file.openInputStream() } != null", source)
+        self.assertIn("chapter.archiveReader(context).use { reader ->", source)
+        self.assertIn("reader.useEntries { entries ->", source)
+        self.assertIn("reader.getInputStream(entry.name)", source)
+        self.assertIn("entries.take(MAX_ZIP_ENTRIES).firstOrNull", source)
+        self.assertNotIn("ZipInputStream(", source)
+        self.assertNotIn("chapter.length() <= 0L", source)
+        self.assertIn("CheckState.UNVERIFIED", source)
+        self.assertIn("unverified++", source)
+        self.assertIn("getOrDefault(CheckState.UNVERIFIED)", source)
+        self.assertIn("could not be verified (not considered damaged)", health.STRINGS_SOURCE)
         self.assertIn("if (checked >= MAX_CHAPTERS)", source)
         self.assertIn("val storageMissing: Boolean", source)
         self.assertIn("read-only", source.lower())
         self.assertIn("not every image", health.STRINGS_SOURCE.lower())
+
+    def test_explicit_three_way_archive_outcome_never_conflates_errors_with_corruption(self):
+        scanner = health.HEALTH_SOURCE
+        self.assertIn("private enum class CheckState { READABLE, SUSPECT, UNVERIFIED }", scanner)
+        self.assertIn("CheckState.UNVERIFIED -> {", scanner)
+        self.assertIn('issues += "Could not verify: "', scanner)
+        self.assertIn('issues += "Potentially unreadable: "', scanner)
+        self.assertIn("if (images.isEmpty() || images.any { it.length() == 0L })", scanner)
+        self.assertIn("return if (samples.all", scanner)
+        self.assertIn("ImageUtil.findImageType", scanner)
+        self.assertNotIn("getOrDefault(false)", scanner)
+
+    def test_archive_reader_matches_existing_mihon_offline_reader(self):
+        scanner = health.HEALTH_SOURCE
+        self.assertIn("import mihon.core.archive.archiveReader", scanner)
+        self.assertIn("reader.useEntries", scanner)
+        self.assertIn("entry.name", scanner)
+        self.assertIn("reader.getInputStream(entry.name)", scanner)
+        self.assertNotIn("java.util.zip.ZipInputStream", scanner)
+        self.assertNotIn("ZipInputStream(chapter.openInputStream())", scanner)
+        self.assertIn("return@use CheckState.SUSPECT", scanner)
 
     def test_no_manga_source_or_user_file_mutations(self):
         content = health.HEALTH_SOURCE + health.STRINGS_SOURCE + health.patch_settings(SETTINGS)
