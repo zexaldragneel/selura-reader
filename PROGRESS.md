@@ -1,6 +1,14 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Hive Scans Chapter 26 failure report and diagnostics — 2026-10-22
+
+- **User report:** Android screenshot of *The Lord Who Levels Up by Devouring*, source Hive Scans, Chapter 26 — Plan, showing an error icon after initiating chapter download. Root cause was not visible; screenshot does not show whether a specific page failed, current Selura build, source error code, or whether Chapter 25 also fails.
+- **Source-access clue:** HiveToons' public listing labels Chapter 25 **"Free now"** but not Chapter 26. A locked/restricted latest chapter is plausible, not confirmed; don't attempt to bypass source restrictions, paywalls, login or anti-bot protections.
+- **Implementation:** [native PR #55](https://github.com/zexaldragneel/selura-reader/pull/55) stacked over PR #52: ephemeral `Download.failureReason`, privacy-safe HTTP 401/403/404/429, timeouts, source missing-public-images and storage failure categories in `Downloader.kt`, reset on retry; a real Material **View error** dialog on failed Download Manager items alongside Retry download. No source identity, library, backup, history, stored files or signing changes.
+- **Validation:** Added five Python diagnostic contract tests. [CI #91](https://github.com/zexaldragneel/selura-reader/actions/runs/39736153115) failed the contract stage due only to one stale expected message in the new test; corrected commit `aecccd093acf6e2353baf3ad7ad9f3108c25d22a`. [CI #92](https://github.com/zexaldragneel/selura-reader/actions/runs/39736270402) passed its Python suite and entered real Mihon Gradle build at last inspection. APK signing/release/device checks **still pending**.
+- **Device acceptance needed:** Check Chapter 25 download and latest Chapter 26 in Hive Scans WebView; on the new signed build, Downloads → failed chapter → menu → View error, share only the displayed category. Do not assume access restriction or app regression without this differentiation.
+
 ## Build #88 Android emulator smoke verification — 2026-10-22
 
 - **New dedicated GitHub Actions test:** [emulator run #1](https://github.com/zexaldragneel/selura-reader/actions/runs/39733921246) **SUCCESS** from native [PR #52](https://github.com/zexaldragneel/selura-reader/pull/52). Downloaded immutable signed Build #88 APK and verified SHA-256 `cb13af7fa3bd20ec821ce5ee12abc6c795ad972fa7d8746795392bbcba222438` without changing it.
