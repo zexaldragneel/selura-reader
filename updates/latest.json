@@ -2,21 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "A View error action for failed chapters in Download Manager, showing why a download did not complete."
+      "Regression protection for chapters whose pages are numbered 001 through the final page."
     ],
     "fixed": [
-      "Incomplete chapter downloads no longer leave you with only an unexplained error symbol.",
-      "Sensitive request URLs or credentials are not displayed in error dialogs, and locked source chapters are never bypassed."
+      "Fixed chapters incorrectly showing Failed despite every page downloading (for example, Hive Scans Chapter 25 showing Failed \u00b7 41/41).",
+      "The final chapter integrity check no longer searches for nonexistent page 000 or overlooks the last numbered page."
     ],
     "improved": [
-      "More useful error explanations for source access restrictions, missing chapter images, HTTP errors, connection failures and low storage.",
-      "Failure reasons reset when a chapter is retried and remain only in memory, not in backups or manga library records."
+      "Downloaded chapters are verified using Mihon's actual page filenames, including split-tall page images.",
+      "Previously saved complete temporary chapter pages can be reused when retrying an affected download."
     ]
   },
-  "notes": "What's new: A View error action for failed chapters in Download Manager, showing why a download did not complete.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-55-run-92",
+  "notes": "What's new: Regression protection for chapters whose pages are numbered 001 through the final page.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-57-run-94",
   "schemaVersion": 1,
-  "sha256": "f4216949b7e4c779371f454b9652bcdcabef22c8bd1a579d6b64734f0afd08be",
-  "versionCode": 1092,
-  "versionName": "Selura Manga Build 92"
+  "sha256": "a9cb9abaf515b608c77fea081230fdf927796f5337b42e476f9e2b04f9637b73",
+  "versionCode": 1094,
+  "versionName": "Selura Manga Build 94"
 }
