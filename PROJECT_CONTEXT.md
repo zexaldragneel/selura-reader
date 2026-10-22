@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Download Manager retry controls and storage checks — 2026-10-22
+
+- [Reader PR #52](https://github.com/zexaldragneel/selura-reader/pull/52) adds real native Mihon Download Manager UI behavior: red error status and progress counts on failed chapters, **Retry download** on failed row menus, reactive toolbar **Retry failed downloads**, and read-only guards for existing CBZ/folder files and final storage readback. Uses original queue and extension engines, no source-ID changes, no deletion or migration of library, history, bookmarks or progress.
+- `native_manga/download_manager_actions.py` is chained **after** the owner-tested Build #85 download integrity patch on the pinned Mihon source; Kotlin UI, XML menu and labels are compiled as actual app files. Existing signing and `com.selura.manga` stay unchanged; legacy `main` remains Flutter and the native PR stack should not be merged into it inadvertently.
+- Native [Build #87 Actions](https://github.com/zexaldragneel/selura-reader/actions/runs/39730720585) had passed patch/unit tests and begun Gradle Android build when last inspected; signed APK, verified release and owner testing **not yet confirmed**. Owner-tested baseline remains Build #85.
+
 ## Native chapter integrity follow-up — 2026-10-22
 
 - New [native PR #49](https://github.com/zexaldragneel/selura-reader/pull/49), stacked on PR #42, addresses all-extension downloads in Mihon's real `Downloader.kt`: limited network retries, validate expected individual page images, reject corrupt/zero-byte incomplete files, and guard CBZ/directory final renames without losing temporary pages. Source checksum and Kotlin markers fail closed; original package `com.selura.manga`, signer, chapter/source identities, backup/library/progress, prior completed downloads and Xianxia theme are unchanged.
