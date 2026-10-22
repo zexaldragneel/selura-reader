@@ -1,0 +1,56 @@
+name: Selura Signed APK Emulator Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/selura-download-manager-retry-ui
+    paths:
+      - .github/workflows/selura-apk-emulator-smoke.yml
+      - native_manga/emulator_launch_smoke.sh
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-smoke:
+    name: Install and cold-launch released APK on Android 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout verification script (never modify native APK)
+        uses: actions/checkout@v4
+
+      - name: Fetch immutable original-signed Build 88 release
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 3 \
+            --output selura-manga.apk \
+            "https://github.com/zexaldragneel/selura-reader/releases/download/test-native-pr-52-run-88/selura-manga.apk"
+          printf '%s  %s\n' \
+            cb13af7fa3bd20ec821ce5ee12abc6c795ad972fa7d8746795392bbcba222438 \
+            selura-manga.apk | sha256sum --check
+
+      - name: Enable Android hardware acceleration when available
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+
+      - name: Install signed APK and verify launch with/without radios
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_5
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -wipe-data
+          disable-animations: true
+          script: bash native_manga/emulator_launch_smoke.sh
+
+      - name: Preserve emulator logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selura-build88-emulator-evidence
+          path: emulator-evidence/
+          if-no-files-found: warn
+          retention-days: 7
