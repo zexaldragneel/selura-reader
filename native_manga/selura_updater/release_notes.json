@@ -9,6 +9,7 @@
   ],
   "fixed": [
     "Removed upstream Discord, Facebook, X, Reddit, website, support and Help shortcuts from the app interface.",
-    "Removed the irrelevant upstream privacy-policy shortcut, original manual upstream update checker, and unsolicited donation prompt. The verified Selura startup updater remains intact."
+    "Removed the irrelevant upstream privacy-policy shortcut, original manual upstream update checker, and unsolicited donation prompt. The verified Selura startup updater remains intact.",
+    "Replaced upstream crash-report and backup-restore instructions with Selura guidance, without altering the crash exporter or backup restoration engine."
   ]
 }
