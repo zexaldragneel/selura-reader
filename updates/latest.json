@@ -2,20 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Check download storage in Settings \u2192 Downloads, with a read-only report of saved chapters, suspicious files and unfinished transfers."
+      "Storage health results distinguish potentially unreadable chapters from files the scanner could not verify."
     ],
     "fixed": [
-      "Storage health can now be checked without uninstalling Selura, resetting the library, or deleting downloaded chapters."
+      "Corrected the CBZ health-check compatibility issue that flagged 78 out of 78 saved chapters as potentially unreadable on Android.",
+      "Unknown Android storage file sizes are no longer treated as proof of corrupted CBZ downloads."
     ],
     "improved": [
-      "Storage checking runs off the main thread and identifies sample problem chapters without changing saved manga files.",
-      "Incomplete transfers are counted separately from unreadable completed files, and large scans clearly say when results are partial."
+      "CBZ checks now use Mihon's own archive engine, the same reader used for offline manga.",
+      "Storage scan failures are reported as inconclusive instead of automatically labeling downloads damaged."
     ]
   },
-  "notes": "What's new: Check download storage in Settings \u2192 Downloads, with a read-only report of saved chapters, suspicious files and unfinished transfers.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-62-run-96",
+  "notes": "What's new: Storage health results distinguish potentially unreadable chapters from files the scanner could not verify.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-64-run-100",
   "schemaVersion": 1,
-  "sha256": "ba7d8d853571034e6ee72ea64604b5061b5c234e6cb682a2f9728adb4d17603d",
-  "versionCode": 1096,
-  "versionName": "Selura Manga Build 96"
+  "sha256": "7bacff8f33bdec092624634a75aa5d9c26c3ab9c54986f18431dc48e5c8494a1",
+  "versionCode": 1100,
+  "versionName": "Selura Manga Build 100"
 }
