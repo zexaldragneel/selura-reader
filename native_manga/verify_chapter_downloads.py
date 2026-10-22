@@ -27,6 +27,8 @@ def verify_blob(source: str):
 
 
 def transform(source: str) -> str:
+    source = once(source, "import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE\n",
+                  "", "obsolete NOMEDIA_FILE import")
     source = once(source, "import java.io.File\n",
                   "import java.io.EOFException\nimport java.io.File\nimport java.io.IOException\n"
                   "import java.net.ConnectException\nimport java.net.SocketTimeoutException\n",
