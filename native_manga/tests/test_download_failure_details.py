@@ -77,7 +77,7 @@ class FailureDetailsTests(unittest.TestCase):
                          "is IOException", "Hive Scans did not provide public chapter images"):
             self.assertIn(category, changed)
         self.assertIn("This chapter or image requires source access or unlocking", changed)
-        self.assertIn("This chapter has no publicly accessible images", changed)
+        self.assertIn("Hive Scans has no publicly accessible images", changed)
         self.assertIn("error.message?.startsWith(", changed)
         self.assertNotIn("setCookie", changed)
         self.assertNotIn("readText(", changed)
