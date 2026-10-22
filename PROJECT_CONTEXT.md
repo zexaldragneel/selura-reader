@@ -1,6 +1,13 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Offline download storage health milestone — 2026-10-22
+
+- After owner-tested Build #94, native PR #62 (https://github.com/zexaldragneel/selura-reader/pull/62) adds Settings → Downloads → Check download storage. This runs only on demand and reads existing source/manga/chapter SAF files, reports suspect completed chapter folder/CBZ readability and separately counts unfinished temporary transfers. It shows at most six suspect examples in the Android UI. It never deletes, renames, redownloads or migrates source IDs, libraries, history, progress, bookmarks or downloads; it makes no network requests.
+- The check runs on a background IO dispatcher with cancellation checks, caps at 2,500 completed chapters and identifies partial results. Image directories check nonzero image files and sample first/last image headers; CBZs check a readable image ZIP entry. This is not an exhaustive per-page CRC/completeness audit, and temporary files may simply be ongoing/resumable transfers.
+- Implementation: fail-closed Python patch native_manga/check_download_health.py creates real Kotlin scanner and local resource strings and adds the action to pinned Mihon SettingsDownloadScreen.kt; uses existing storage preferences to look up, not create, the downloads directory. App ID com.selura.manga, original signer and extension identities remain unchanged. PR #62 is stacked on owner-tested native PR #57, not Flutter-era main.
+- Six Python regression tests added. Native CI Build #96 (https://github.com/zexaldragneel/selura-reader/actions/runs/39746081984) was pending at the last read; Kotlin compilation, signing and Android owner acceptance remain unverified until the CI completes. Last known owner-tested app is Build #94.
+
 ## Build #94 — owner-confirmed offline chapter reading — 2026-10-22
 
 - **Device acceptance:** Following the request to turn on **Airplane mode**, open Hive Scans' *The Lord Who Levels Up by Devouring* Chapters **25 — King of the Beasts** and **26 — Plan**, and verify their pages display, the owner explicitly replied **“I confirm it display.”** Interpret this as owner confirmation that these two downloaded chapters can be read offline on Android, in addition to the earlier screenshot confirming both chapters show the completed-download checkmark and no red failure icon. The exact phone app-version screen was not separately photographed, but acceptance follows the signed Build #94 installation/retry instructions.
