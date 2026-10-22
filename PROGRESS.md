@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Owner-accepted offline reading after Build #94 — 2026-10-22
+
+- **Final phone test:** After the earlier owner screenshot showing Hive Scans *The Lord Who Levels Up by Devouring* Chapters **25 — King of the Beasts** and **26 — Plan** both marked downloaded (no red error icons), the owner was explicitly asked to enable **Airplane mode** and open both chapters, confirming all pages displayed. The owner replied **“I confirm it display.”** Record this as **successful user-reported offline chapter reading for both chapters**. It completes the requested targeted functional retest of the previously false-failed 41/41 download.
+- **Repaired root cause:** [Native PR #57](https://github.com/zexaldragneel/selura-reader/pull/57) switched the integrity scan from missing page 000 to expected 001..N filenames. Immutable [signed Build #94](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-57-run-94) passed 76 Python regression tests, real Kotlin Android Gradle build, original APK signer, stable package `com.selura.manga` versionCode 1094, and release/feed digest verification. No new app/extension code was changed during acceptance recording.
+- **Verification boundary:** This is a device-tested fix for **the two named Hive Scans chapters** and offline page display, not a blanket claim that every manga source or all download operations are error-free. No precise network-request count during retry, longer-term cache durability or formal full library/progress audit was separately supplied. Native feature PR remains stacked on PR #55; do not merge native patches directly into Flutter-era `main`.
+
 ## Owner Android download-completion confirmation — 2026-10-22
 
 - **Evidence:** New user-provided screenshot of the Hive Scans manga *The Lord Who Levels Up by Devouring* shows filled downloaded checkmarks for **Chapter 25 — King of the Beasts** and **Chapter 26 — Plan**; previously Chapter 25 was **Failed · 41/41** with an incomplete-pages error, and Chapter 26 earlier showed a red error icon. Following the Build #94 fix, no red error is shown for either chapter. This is positive **on-device visual confirmation of completed chapter download states** and supports correcting the one-based image-file validation in [PR #57](https://github.com/zexaldragneel/selura-reader/pull/57).
