@@ -1,6 +1,14 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Safely review six unfinished chapter transfers — 2026-10-22
+
+- The owner-confirmed Build #100 storage-health screenshot shows 78 completed chapters spot-checked with zero suspicious/unverified entries and **six unfinished `_tmp` folders**. An unfinished folder is not automatically damaged, queued, orphaned or linked to a specific library entry. The owner requested safe investigation/recovery without deleting manga data.
+- Native [PR #67](https://github.com/zexaldragneel/selura-reader/pull/67), branch `feature/selura-review-unfinished-transfers` stacked over PR #64, adds **Settings → Downloads → Review unfinished transfers**. It lists up to 20 temporary chapter directories with source, manga, sanitized folder name, counts of nonempty image-like files and pending `.tmp` writes. Shows total temporary folders and whether entries remain in the **existing** Mihon persisted queue; it does not assume that all six correspond to queued chapters.
+- The confirmation dialog offers **Resume all queued chapters** only when unfinished folders and queued items both exist; this calls Mihon's existing `DownloadManager.startDownloads()` only after a user tap and may restart other queued chapters, subject to normal Wi-Fi/download preferences. If the queue is empty, the UI explains the user must trigger Download on the original manga chapter manually to attempt recovery, rather than guessing chapter IDs or reconstructing a missing queue entry. Review never deletes, renames, migrates, rewrites or automatically restarts any temporary file, library entry, source identity or history. User content remains local.
+- Added dedicated Python tests and pinned Mihon Kotlin workflow checks. [CI Build #102](https://github.com/zexaldragneel/selura-reader/actions/runs/39788071316) is queued/running at last inspection and remains **unverified** for signed APK and device acceptance; last Android owner-accepted Build is #100. Do not claim recovery of the six saved folders, their real per-folder names, or their association with a queue until on-device review results are shared.
+
+
 ## Build #100 — Android owner-confirmed corrected CBZ storage scan — 2026-10-22
 
 - **Device evidence:** Following the Build #100 in-place update instructions, the owner supplied a new Settings → Downloads → **Check download storage** screenshot. It reads **78 completed chapter files checked, 0 potentially unreadable, 0 could not be verified, and 6 unfinished transfers (not deleted)**. The previous Build #96 screenshot had the same **78 chapters**, **78 potentially unreadable**, and **6 unfinished**. Thus the known blanket **78/78 false-positive warning is resolved in the owner's Android retest**. The scanner executed, returned a native results dialog, and made no user-data changes as disclosed by the UI.
