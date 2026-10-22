@@ -11,7 +11,6 @@ from textwrap import dedent
 
 PREFIX = "app/src/main/"
 SETTINGS = PREFIX + "java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt"
-GRAPH = PREFIX + "java/mihon/app/di/AppGraph.kt"
 HEALTH = PREFIX + "java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt"
 STRINGS = PREFIX + "res/values/selura_download_health_strings.xml"
 
@@ -25,24 +24,6 @@ def replace_one(s: str, old: str, new: str, label: str) -> str:
     if found != 1:
         raise DownloadHealthPatchError(f"{label}: expected exactly 1 marker, found {found}")
     return s.replace(old, new, 1)
-
-
-def patch_graph(s: str) -> str:
-    s = replace_one(
-        s,
-        "import tachiyomi.domain.storage.service.StoragePreferences\n",
-        "import tachiyomi.domain.storage.service.StorageManager\n"
-        "import tachiyomi.domain.storage.service.StoragePreferences\n",
-        "AppGraph StorageManager import",
-    )
-    s = replace_one(
-        s,
-        "    val storagePreferences: StoragePreferences\n",
-        "    val storagePreferences: StoragePreferences\n"
-        "    val storageManager: StorageManager\n",
-        "AppGraph injection accessor",
-    )
-    return s
 
 
 def patch_settings(s: str) -> str:
@@ -72,7 +53,7 @@ def patch_settings(s: str) -> str:
         """        val downloadPreferences = remember { context.appGraph.downloadPreferences }
         return listOf(""",
         """        val downloadPreferences = remember { context.appGraph.downloadPreferences }
-        val storageManager = remember { context.appGraph.storageManager }
+        val storagePreferences = remember { context.appGraph.storagePreferences }
         val scope = rememberCoroutineScope()
         var checkingStorage by remember { mutableStateOf(false) }
         return listOf(""",
@@ -93,7 +74,7 @@ def patch_settings(s: str) -> str:
                         checkingStorage = true
                         scope.launch {
                             try {
-                                val result = SeluraDownloadHealth.scan(storageManager)
+                                val result = SeluraDownloadHealth.scan(context, storagePreferences)
                                 MaterialAlertDialogBuilder(context)
                                     .setTitle(R.string.selura_health_title)
                                     .setMessage(result.describe(context))
@@ -131,7 +112,8 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import tachiyomi.core.common.util.system.ImageUtil
-import tachiyomi.domain.storage.service.StorageManager
+import tachiyomi.domain.storage.service.StoragePreferences
+import android.net.Uri
 import eu.kanade.tachiyomi.R
 import java.io.IOException
 import java.util.zip.ZipInputStream
@@ -178,8 +160,15 @@ object SeluraDownloadHealth {
         }
     }
 
-    suspend fun scan(storageManager: StorageManager): Result = withContext(Dispatchers.IO) {
-        val root = storageManager.getDownloadsDirectory()
+    suspend fun scan(context: Context, storagePreferences: StoragePreferences): Result =
+        withContext(Dispatchers.IO) {
+        // Find the existing download directory rather than calling
+        // StorageManager.getDownloadsDirectory(), which may CREATE it.
+        val base = UniFile.fromUri(
+            context,
+            Uri.parse(storagePreferences.baseStorageDirectory.get()),
+        )
+        val root = base?.findFile("downloads")
         if (root == null || !root.isDirectory) {
             return@withContext Result(0, 0, 0, false, true, emptyList())
         }
@@ -288,7 +277,7 @@ def patch(root: Path):
     for path in (HEALTH, STRINGS):
         if (root / path).exists():
             raise DownloadHealthPatchError(f"Already present: {path}")
-    targets = ((GRAPH, patch_graph), (SETTINGS, patch_settings))
+    targets = ((SETTINGS, patch_settings),)
     pending = {}
     for path, transform in targets:
         target = root / path
