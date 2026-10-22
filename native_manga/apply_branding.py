@@ -183,7 +183,7 @@ def patch(root: pathlib.Path, version_code: int):
                                 if (state.mangaCount == 0) {
                                     Text(
                                         text = "No manga entries were found in this backup. " +
-                                            "Create a new backup in Mihon with Manga selected.",
+                                            "Create a new backup in your previous manga reader with Manga selected.",
                                     )
                                 } else if (state.favoriteCount == 0) {
                                     Text(
