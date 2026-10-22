@@ -9,11 +9,6 @@ spec = importlib.util.spec_from_file_location("selura_health", SCRIPT)
 health = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(health)
 
-GRAPH = '''package mihon.app.di
-import tachiyomi.domain.storage.service.StoragePreferences
-interface AppGraph {
-    val storagePreferences: StoragePreferences
-}'''
 SETTINGS = '''package eu.kanade.presentation.more.settings.screen
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
@@ -32,7 +27,7 @@ class DownloadStorageHealthContracts(unittest.TestCase):
     def test_settings_action_is_visible_and_non_destructive(self):
         changed = health.patch_settings(SETTINGS)
         self.assertIn('title = context.getString(R.string.selura_health_title)', changed)
-        self.assertIn("SeluraDownloadHealth.scan(storageManager)", changed)
+        self.assertIn("SeluraDownloadHealth.scan(context, storagePreferences)", changed)
         self.assertIn("if (!checkingStorage)", changed)
         self.assertIn("rememberCoroutineScope()", changed)
         self.assertIn("MaterialAlertDialogBuilder(context)", changed)
@@ -40,10 +35,13 @@ class DownloadStorageHealthContracts(unittest.TestCase):
         self.assertNotIn("deleteChapters(", changed)
         self.assertNotIn("clearQueue(", changed)
 
-    def test_app_graph_exposes_existing_injected_storage_manager(self):
-        changed = health.patch_graph(GRAPH)
-        self.assertIn("val storageManager: StorageManager", changed)
-        self.assertIn("import tachiyomi.domain.storage.service.StorageManager", changed)
+    def test_finds_existing_downloads_without_creating_folders(self):
+        source = health.HEALTH_SOURCE
+        self.assertIn('val root = base?.findFile("downloads")', source)
+        self.assertIn("UniFile.fromUri(", source)
+        self.assertIn("storagePreferences.baseStorageDirectory.get()", source)
+        self.assertNotIn("createDirectory(", source)
+        self.assertNotIn("getDownloadsDirectory()", source.split("suspend fun scan", 1)[1])
 
     def test_scan_runs_on_io_and_checks_real_saved_directory_structure(self):
         source = health.HEALTH_SOURCE
@@ -78,7 +76,7 @@ class DownloadStorageHealthContracts(unittest.TestCase):
     def test_all_markers_verified_before_any_source_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for name, content in ((health.GRAPH, GRAPH), (health.SETTINGS, SETTINGS)):
+            for name, content in ((health.SETTINGS, SETTINGS),):
                 dest = root / name
                 dest.parent.mkdir(parents=True)
                 dest.write_text(content)
@@ -86,7 +84,7 @@ class DownloadStorageHealthContracts(unittest.TestCase):
             target.write_text("unknown settings source")
             with self.assertRaises(health.DownloadHealthPatchError):
                 health.patch(root)
-            self.assertEqual((root / health.GRAPH).read_text(), GRAPH)
+            self.assertEqual((root / health.SETTINGS).read_text(), "unknown settings source")
             self.assertFalse((root / health.HEALTH).exists())
             target.write_text(SETTINGS)
             health.patch(root)
