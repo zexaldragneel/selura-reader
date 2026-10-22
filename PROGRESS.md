@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Offline storage health spot check — 2026-10-22
+
+- Goal: After owner-confirmed Build #94 fixed the false 41/41 completion bug and Hive Scans chapters 25/26 opened in Airplane mode, add download-storage observability without destructive cleanup.
+- Implemented on native PR #62 (https://github.com/zexaldragneel/selura-reader/pull/62), branch feature/selura-readonly-download-health stacked over PR #57. Download Settings now gets user-initiated Check download storage, a read-only SAF folder/CBZ spot check off the UI thread, checked/suspect/temporary counts, up to six suspect names, loading state, and Material result dialog. Bounded scan checks at most 2,500 completed chapter files. Existing downloads, source IDs, Android app ID, signature, library, bookmarks and progress are unchanged.
+- Accuracy: Check image-file nonzero size and sample first/last image headers, and confirm a readable image entry in CBZ. This is not full image decode, exhaustive ZIP CRC, or proof every page is complete. Unfinished transfers are not treated as damaged; zero reported suspects does not guarantee integrity. No directory creation or file mutations.
+- Six regression contracts and workflow Kotlin integration guards passed. Native [CI Build #96](https://github.com/zexaldragneel/selura-reader/actions/runs/39746081984) completed **SUCCESS**: **82 Python tests**, Mihon Kotlin/Android `:app:assembleRelease`, original signing certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`, package `com.selura.manga` versionCode **1096**, immutable signed [Build #96 APK](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-62-run-96) (68,156,577 bytes; SHA-256 `ba7d8d853571034e6ee72ea64604b5061b5c234e6cb682a2f9728adb4d17603d`) and public metadata-only update-feed checksum/version readback. Earlier #95 canceled as superseded by notes update. **Android owner test of Settings → Downloads → Check download storage remains pending**; Build #94 is the latest explicitly user-tested APK.
+
 ## Owner-accepted offline reading after Build #94 — 2026-10-22
 
 - **Final phone test:** After the earlier owner screenshot showing Hive Scans *The Lord Who Levels Up by Devouring* Chapters **25 — King of the Beasts** and **26 — Plan** both marked downloaded (no red error icons), the owner was explicitly asked to enable **Airplane mode** and open both chapters, confirming all pages displayed. The owner replied **“I confirm it display.”** Record this as **successful user-reported offline chapter reading for both chapters**. It completes the requested targeted functional retest of the previously false-failed 41/41 download.
