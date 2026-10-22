@@ -48,14 +48,22 @@ object LogoHeader {
 }
 """
 MAIN = """class MainActivity {
-    if (!isBenchmarkBuildType) {
-        if (isLaunch) {
-            SeluraStartupUpdateCheck()
-            CheckForUpdates()
-        }
-        ShowOnboarding()
+                if (!isBenchmarkBuildType) {
+                    if (isLaunch) {
+                        CheckForUpdates()
+                        SeluraStartupUpdateCheck()
+                    }
+                    ShowOnboarding()
                     ShowDonationCampaign()
-    }
+                }
+}
+"""
+CRASH = """class CrashScreen {
+    subtitleText = stringResource(MR.strings.crash_screen_description, stringResource(MR.strings.app_name)),
+}
+"""
+RESTORE = """class RestoreBackupScreen {
+    Text("Create a new backup in Mihon with Manga selected.")
 }
 """
 
@@ -199,14 +207,23 @@ class SeluraFirstPartyUiTests(unittest.TestCase):
     def test_main_disables_unsolicited_donation_modal_not_selura_update(self):
         result = ui.patch_main(MAIN)
         self.assertNotIn("                    ShowDonationCampaign()", result)
+        self.assertNotIn("                        CheckForUpdates()", result)
         self.assertIn("SeluraStartupUpdateCheck()", result)
         self.assertIn("ShowOnboarding()", result)
+
+    def test_crash_and_restore_keep_functionality_without_upstream_contact(self):
+        crash = ui.patch_crash(CRASH)
+        restored = ui.patch_restore(RESTORE)
+        self.assertIn("Export the crash log", crash)
+        self.assertNotIn("MR.strings.crash_screen_description", crash)
+        self.assertIn("Create a manga backup with Library entries selected.", restored)
+        self.assertNotIn("Create a new backup in Mihon", restored)
 
     def test_preflight_rejects_unexpected_upstream_without_partial_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             fixtures = {ui.MORE: MORE, ui.ABOUT: about_fixture(), ui.LOGO: LOGO,
-                        ui.MAIN: MAIN}
+                        ui.MAIN: MAIN, ui.CRASH: CRASH, ui.RESTORE: RESTORE}
             for name, content in fixtures.items():
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
