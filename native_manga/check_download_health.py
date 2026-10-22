@@ -295,7 +295,7 @@ STRINGS_SOURCE = '''<?xml version="1.0" encoding="utf-8"?>
     <string name="selura_health_report">Checked %1$d completed chapter files.\\n%2$d potentially unreadable.\\n%3$d could not be verified (not considered damaged).\\n%4$d unfinished transfers found (not deleted).</string>
     <string name="selura_health_issues">Sample results requiring attention:</string>
     <string name="selura_health_limited">The scan stopped after 2,500 chapter files. Results are partial.</string>
-    <string name="selura_health_disclaimer">This is a read-only spot check using Mihon's archive reader. A file that could not be verified is NOT confirmed damaged. Only sampled image headers were checked, not every page or CRC. Unfinished transfers may still be resumable. No files were changed.</string>
+    <string name="selura_health_disclaimer">This is a read-only spot check using the native Mihon archive reader. A file that could not be verified is NOT confirmed damaged. Only sampled image headers were checked, not every page or CRC. Unfinished transfers may still be resumable. No files were changed.</string>
     <string name="selura_health_storage_missing">The configured download storage could not be accessed. Check storage permissions and location.</string>
     <string name="selura_health_scan_error">The storage check could not finish. Please verify storage permissions and try again. No files were changed.</string>
 </resources>
