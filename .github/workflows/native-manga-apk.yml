@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -150,6 +150,14 @@ jobs:
           python3 native_manga/download_failure_details.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
+          python3 native_manga/remove_upstream_community_ui.py native-upstream
+          grep -Fq 'painterResource(R.drawable.selura_manga_icon)' native-upstream/app/src/main/java/eu/kanade/presentation/more/LogoHeader.kt
+          grep -Fq 'Developed by Zexal Dragneel' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          grep -Fq 'OpenSourceLicensesScreen()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          ! grep -Fq 'https://mihon.app/privacy/' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          ! grep -Fq 'facebook.com/mihonapp' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          ! grep -Fq 'url = Constants.URL_DISCORD' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          test -s native-upstream/LICENSE
           grep -Fq 'fun describeUnfinished(context: Context, queuedCount: Int)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
           grep -Fq 'downloadManager.startDownloads()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
           grep -Fq 'selura_recovery_warning' native-upstream/app/src/main/res/values/selura_download_health_strings.xml
