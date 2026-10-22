@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Offline storage health spot check — 2026-10-22
+
+- Goal: After owner-confirmed Build #94 fixed the false 41/41 completion bug and Hive Scans chapters 25/26 opened in Airplane mode, add download-storage observability without destructive cleanup.
+- Implemented on native PR #62 (https://github.com/zexaldragneel/selura-reader/pull/62), branch feature/selura-readonly-download-health stacked over PR #57. Download Settings now gets user-initiated Check download storage, a read-only SAF folder/CBZ spot check off the UI thread, checked/suspect/temporary counts, up to six suspect names, loading state, and Material result dialog. Bounded scan checks at most 2,500 completed chapter files. Existing downloads, source IDs, Android app ID, signature, library, bookmarks and progress are unchanged.
+- Accuracy: Check image-file nonzero size and sample first/last image headers, and confirm a readable image entry in CBZ. This is not full image decode, exhaustive ZIP CRC, or proof every page is complete. Unfinished transfers are not treated as damaged; zero reported suspects does not guarantee integrity. No directory creation or file mutations.
+- Six regression contracts and workflow Kotlin integration guards added; release notes refer specifically to PR #62. Native CI #96 (https://github.com/zexaldragneel/selura-reader/actions/runs/39746081984) was pending at last read. Actual signed APK compilation and device acceptance must be confirmed; Build #94 is still the latest user-tested APK.
+
 ## Owner-accepted offline reading after Build #94 — 2026-10-22
 
 - **Final phone test:** After the earlier owner screenshot showing Hive Scans *The Lord Who Levels Up by Devouring* Chapters **25 — King of the Beasts** and **26 — Plan** both marked downloaded (no red error icons), the owner was explicitly asked to enable **Airplane mode** and open both chapters, confirming all pages displayed. The owner replied **“I confirm it display.”** Record this as **successful user-reported offline chapter reading for both chapters**. It completes the requested targeted functional retest of the previously false-failed 41/41 download.
