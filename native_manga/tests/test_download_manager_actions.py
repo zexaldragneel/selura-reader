@@ -26,7 +26,7 @@ class DownloadHolder {
     }
     fun notifyDownloadedPages() {
         val pages = download.pages ?: return
-        binding.downloadProgressText.text = "\${d}/\${ps}"
+        binding.downloadProgressText.text = "\${download.downloadedImages}/\${pages.size}"
     }
     fun showPopupMenu(view: View) {
         view.popupMenu(
