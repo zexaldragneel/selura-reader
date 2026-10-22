@@ -67,7 +67,7 @@ def patch_holder(s: str) -> str:
         val count = pages?.let { "${download.downloadedImages}/${it.size}" }.orEmpty()
         if (download.status == Download.State.ERROR) {
             binding.downloadProgressText.setTextColor(
-                MaterialColors.getColor(view, com.google.android.material.R.attr.colorError),
+                MaterialColors.getColor(view, android.R.attr.colorError, android.graphics.Color.RED),
             )
             val failed = view.context.getString(R.string.selura_download_failed)
             binding.downloadProgressText.text = if (count.isEmpty()) failed else "$failed · $count"
