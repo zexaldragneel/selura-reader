@@ -1,14 +1,15 @@
 {
-  "prNumber": 67,
+  "prNumber": 72,
   "added": [
-    "Review unfinished transfers in Download settings, with original source, manga and temporary chapter folder details and counts of saved image-like files.",
-    "Optional Resume all queued chapters action only after explicit confirmation when both unfinished folders and an existing queue are present."
+    "A cleaner Selura-branded More and About experience with first-party app artwork and Selura release notes."
   ],
   "improved": [
-    "The app distinguishes unfinished temporary folders from active queued chapters and warns when folders cannot automatically be reattached.",
-    "Unfinished transfers are reviewed without renaming, deleting, replacing or migrating downloaded chapters."
+    "About now links to official Selura releases rather than upstream app release pages.",
+    "Open-source license information remains accessible while unrelated community links are removed."
   ],
   "fixed": [
-    "Unfinished transfer reports now help identify resumable work without assuming that the six detected temporary folders are corrupt."
+    "Removed upstream Discord, Facebook, X, Reddit, website, support and Help shortcuts from the app interface.",
+    "Removed the irrelevant upstream privacy-policy shortcut, original manual upstream update checker, and unsolicited donation prompt. The verified Selura startup updater remains intact.",
+    "Replaced upstream crash-report and backup-restore instructions with Selura guidance, without altering the crash exporter or backup restoration engine."
   ]
 }
