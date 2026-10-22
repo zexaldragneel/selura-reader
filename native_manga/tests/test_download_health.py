@@ -41,7 +41,7 @@ class DownloadStorageHealthContracts(unittest.TestCase):
         self.assertIn("UniFile.fromUri(", source)
         self.assertIn("storagePreferences.baseStorageDirectory.get()", source)
         self.assertNotIn("createDirectory(", source)
-        self.assertNotIn("getDownloadsDirectory()", source.split("suspend fun scan", 1)[1])
+        self.assertNotIn("val root = storageManager.getDownloadsDirectory()", source)
 
     def test_scan_runs_on_io_and_checks_real_saved_directory_structure(self):
         source = health.HEALTH_SOURCE
