@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Signed Build #88 Android emulator smoke test — 2026-10-22
+
+- To reduce reliance on source-only tests, the [native feature PR #52](https://github.com/zexaldragneel/selura-reader/pull/52) now includes `native_manga/emulator_launch_smoke.sh` and a CI workflow `.github/workflows/selura-apk-emulator-smoke.yml` that **only downloads the already-published signed APK** and checks it on a disposable Android 15 (API 35) emulator.
+- [Android emulator Actions run #1](https://github.com/zexaldragneel/selura-reader/actions/runs/39733921246) **SUCCESS**: immutable Build #88 APK SHA-256 verified, `adb install` succeeded, package `com.selura.manga` versionCode 1088 confirmed, application cold-launched and remained running with network enabled and again after disabling Wi-Fi and mobile-data radios. No Selura fatal crash detected. Screenshots, logs and package evidence were uploaded as `selura-build88-emulator-evidence`.
+- **Verification boundary:** This proves APK installation/startup on an Android emulator, **not** on-device failed chapter retry UI operation, valid offline chapter pages, chapter transfer completion, storage-provider edge cases, or the user's library/history/progress preservation. PR #52 remains draft awaiting those owner tests. The baseline user-accepted Build #85 and independent Hive Scans v110028 fix remain unchanged.
+
 ## Download Manager retry controls and storage checks — 2026-10-22
 
 - [Reader PR #52](https://github.com/zexaldragneel/selura-reader/pull/52) adds real native Mihon Download Manager UI behavior: red error status and progress counts on failed chapters, **Retry download** on failed row menus, reactive toolbar **Retry failed downloads**, and read-only guards for existing CBZ/folder files and final storage readback. Uses original queue and extension engines, no source-ID changes, no deletion or migration of library, history, bookmarks or progress.
