@@ -35,7 +35,10 @@ class DetailedUpdateDialogTests(unittest.TestCase):
 
     def test_public_notes_are_release_specific_without_secrets(self):
         payload = json.loads(RELEASE_NOTES.read_text(encoding="utf-8"))
-        self.assertEqual(payload["prNumber"], 42)
+        # Each stacked PR supplies its own reviewed notes; the feed publisher
+        # verifies an exact PR-number match against its immutable release tag.
+        self.assertIs(type(payload["prNumber"]), int)
+        self.assertGreaterEqual(payload["prNumber"], 42)
         self.assertEqual(set(payload), {"prNumber", "added", "improved", "fixed"})
         self.assertTrue(all(payload[key] for key in ("added", "improved", "fixed")))
         content = json.dumps(payload).lower()

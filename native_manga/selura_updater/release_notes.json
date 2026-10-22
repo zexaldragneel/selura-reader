@@ -1,15 +1,15 @@
 {
-  "prNumber": 42,
+  "prNumber": 49,
   "added": [
-    "A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
-    "Release-specific details shown before you download or install an update."
+    "Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded."
   ],
   "improved": [
-    "Scrollable, readable changelogs that fit smaller Android screens.",
-    "Update notes generated from reviewed release metadata instead of a generic message."
+    "Bounded retries for temporary connection problems when retrieving chapter pages and images.",
+    "Interrupted chapter transfers retain their resumable temporary files and respect pause and Wi-Fi-only settings."
   ],
   "fixed": [
-    "Incorrect or stale notes from a different pull request are rejected during publishing.",
-    "Older update feeds without detailed notes still display their original summary."
+    "Incomplete chapter folders no longer appear complete simply because the file count matches.",
+    "Failed CBZ or chapter-folder renames no longer mark a download complete or discard its temporary pages.",
+    "HTTP 403, 404 and 429 responses are not repeatedly retried by the chapter downloader."
   ]
 }
