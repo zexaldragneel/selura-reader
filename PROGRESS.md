@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Build #88 Android emulator smoke verification — 2026-10-22
+
+- **New dedicated GitHub Actions test:** [emulator run #1](https://github.com/zexaldragneel/selura-reader/actions/runs/39733921246) **SUCCESS** from native [PR #52](https://github.com/zexaldragneel/selura-reader/pull/52). Downloaded immutable signed Build #88 APK and verified SHA-256 `cb13af7fa3bd20ec821ce5ee12abc6c795ad972fa7d8746795392bbcba222438` without changing it.
+- **Emulator acceptance:** Disposably booted Android 15 (API 35), successful APK install, `com.selura.manga` versionCode 1088 readback; cold launcher activation with normal networking and after disabling Wi-Fi/mobile data; the process stayed alive and logcat showed no Selura `FATAL EXCEPTION`. GitHub uploaded `selura-build88-emulator-evidence` with screenshots, package details, logcats and launch traces.
+- **Not tested:** No real manga library, failed source chapter or saved offline pages were present in the emulator; therefore the per-chapter/batch retry UI, chapter resumption, offline page completeness, and preservation of actual user data **remain pending phone acceptance**. The existing signed Build #88 APK and public extension store were not modified by the emulator test.
+
 ## Download Manager failed-chapter recovery controls — 2026-10-22
 
 - **User request:** Continue the owner-tested Build #85 reliability milestone with clearer failed download indicators, individual and batch retry controls, and storage-integrity checks. Preserve library, progress, bookmarks, source IDs, extension repo and signing identity.
