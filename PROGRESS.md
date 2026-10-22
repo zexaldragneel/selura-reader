@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Build #96 CBZ health scan false positives — 2026-10-22
+
+- **User screenshot:** Settings → Downloads → Check download storage checked **78 completed chapters** and reported **78 potentially unreadable**, plus **6 unfinished transfers**, all visible samples `.cbz` files. This verifies the feature launches and returns a report but exposes a systemic diagnostic false-positive risk; it does not prove any user's CBZ archive is actually corrupt. Explicitly instruct against deleting or redownloading chapters. Temporary transfers are not automatically corrupted.
+- **Source investigation:** Mihon writes CBZ via `mihon.core.archive.ZipWriter` (native libarchive, stored ZIP) and opens downloaded archives through `mihon.core.archive.ArchiveReader`, while new `SeluraDownloadHealth` in Build #96 used Java `ZipInputStream` with SAF length precheck. A parser/SAF mismatch is plausible but cannot be definitively proven without original chapter data.
+- **Fix:** [Native PR #64](https://github.com/zexaldragneel/selura-reader/pull/64), branch `fix/selura-health-cbz-reader`, stacked on PR #62. Use `chapter.archiveReader(context)` plus `useEntries`/`getInputStream`, sample image headers off-main-thread, remove questionable size precheck, add separate **unverified** (inconclusive) count so exceptions do not raise false corruption alarms. Preserve cancellation propagation, scan cap, read-only storage, all source IDs, app package and signing identity; no network, delete, rename, redownload or migration.
+- **Automated verification:** Updated two new regressions, existing contracts and CI Kotlin source checks. [CI #97](https://github.com/zexaldragneel/selura-reader/actions/runs/39782830962) and [CI #98](https://github.com/zexaldragneel/selura-reader/actions/runs/39782922168) failed in Python tests due to stale copy asserting the old disclaimer phrase. Corrected the assertion; [CI #99](https://github.com/zexaldragneel/selura-reader/actions/runs/39783128507) passed source/regression stage and entered Gradle build at last check. Signing, release, update feed and owner phone retest **pending**.
+
 ## Offline storage health spot check — 2026-10-22
 
 - Goal: After owner-confirmed Build #94 fixed the false 41/41 completion bug and Hive Scans chapters 25/26 opened in Airplane mode, add download-storage observability without destructive cleanup.
