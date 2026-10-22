@@ -108,12 +108,18 @@ CRASH = """fun CrashScreen() {
         subtitleText = stringResource(MR.strings.crash_screen_description, stringResource(MR.strings.app_name)),
 }"""
 
+RESTORE = """fun RestoreBackupScreen() {
+    Text(text = "No manga entries were found in this backup. " +
+        "Create a new backup in Mihon with Manga selected.")
+}"""
+
 FILES = {
     patcher.MORE: MORE,
     patcher.ABOUT: ABOUT,
     patcher.LOGO: LOGO,
     patcher.MAIN: MAIN,
     patcher.CRASH: CRASH,
+    patcher.RESTORE: RESTORE,
 }
 
 
@@ -148,6 +154,11 @@ class WhiteLabelTests(unittest.TestCase):
         self.assertNotIn("CheckForUpdates()", value)
         self.assertNotIn("ShowDonationCampaign()", value)
 
+    def test_backup_restore_guidance_uses_selura_neutral_copy(self):
+        value = patcher.restore_screen(RESTORE)
+        self.assertIn("Create a manga backup with Library entries selected.", value)
+        self.assertNotIn("backup in Mihon", value)
+
     def test_crash_instructions_no_upstream_discord(self):
         value = patcher.crash_screen(CRASH)
         self.assertIn("You can export a crash log", value)
@@ -176,7 +187,7 @@ class WhiteLabelTests(unittest.TestCase):
                 patcher.patch(root)
 
     def test_scope_excludes_storage_migrations_source_ids_and_signing(self):
-        self.assertEqual(len(patcher.TRANSFORMS), 5)
+        self.assertEqual(len(patcher.TRANSFORMS), 6)
         self.assertEqual(set(FILES), set(patcher.TRANSFORMS))
         self.assertNotIn("extension", "\n".join(patcher.TRANSFORMS))
         self.assertNotIn("backup", "\n".join(patcher.TRANSFORMS))
