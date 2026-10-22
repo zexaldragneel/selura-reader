@@ -34,6 +34,11 @@ MORE = """fun MoreScreen() {
 }"""
 
 ABOUT = """object AboutScreen {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(MR.strings.version),
+                    )
+                }
                 if (updaterEnabled) {
                     item {
                         TextPreferenceWidget(
