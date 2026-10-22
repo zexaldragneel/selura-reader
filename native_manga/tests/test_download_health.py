@@ -74,7 +74,7 @@ class DownloadStorageHealthContracts(unittest.TestCase):
         self.assertIn("if (checked >= MAX_CHAPTERS)", source)
         self.assertIn("val storageMissing: Boolean", source)
         self.assertIn("read-only", source.lower())
-        self.assertIn("not every image", health.STRINGS_SOURCE.lower())
+        self.assertIn("not every page or crc", health.STRINGS_SOURCE.lower())
 
     def test_explicit_three_way_archive_outcome_never_conflates_errors_with_corruption(self):
         scanner = health.HEALTH_SOURCE
