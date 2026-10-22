@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Native Selura About/More cleanup — Build #108 verified — 2026-10-22
+
+- **Independent release evidence:** [Native PR #72](https://github.com/zexaldragneel/selura-reader/pull/72) passed all **98 source/regression tests**, actual Mihon Kotlin Android `:app:assembleRelease`, verified original signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`, package `com.selura.manga` versionCode **1108**, and published immutable [signed Build #108](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108) APK (68,102,796 bytes; SHA-256 `decabe11e53dabb40434b375f013635bccfcde971605dd4dd1fabd7905b0f1c5`). Metadata-only update-feed readback was v1108 with matching SHA-256. **Owner device testing remains pending.**
+- **Code scope:** Six user-facing Kotlin files patched by `remove_upstream_community_ui.py` with transactional source preflight. More removes original Help/Support; About social row, upstream privacy URL and manual upstream checker hidden; About displays Selura, developer Zexal Dragneel, its own GitHub releases and accessible OSS licenses; More/About header uses Selura drawable; Main startup suppresses old donation/upstream update popups while preserving first-party updater; crash and restore wording neutralized. Initial #103 failed the new test fixture because it omitted the About version row; fixed ahead of #108 successful build. No extension, data, license, package or signing changes.
+- **Coordination:** Alternate [PR #73](https://github.com/zexaldragneel/selura-reader/pull/73) and CI #111 recorded elsewhere remain distinct. Avoid merging stacked native feature PRs directly into Flutter-era main. Docs-only PR #74 was closed as duplicate rather than conflict-overwriting merged documentation. Request phone screenshots of the More and About screens before marking this UI feature Android-accepted.
+
 ## Remove upstream-facing links and branding — 2026-10-22
 
 - **UI objective:** Make the installed Selura Manga app independent in its visible navigation rather than displaying upstream Mihon Discord, Facebook, X, Reddit, donation/support, unrelated Help/privacy links and old-logo screens; preserve required upstream open-source attribution and source compatibility.
