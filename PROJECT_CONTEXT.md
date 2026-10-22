@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Build #94 — owner-confirmed offline chapter reading — 2026-10-22
+
+- **Device acceptance:** Following the request to turn on **Airplane mode**, open Hive Scans' *The Lord Who Levels Up by Devouring* Chapters **25 — King of the Beasts** and **26 — Plan**, and verify their pages display, the owner explicitly replied **“I confirm it display.”** Interpret this as owner confirmation that these two downloaded chapters can be read offline on Android, in addition to the earlier screenshot confirming both chapters show the completed-download checkmark and no red failure icon. The exact phone app-version screen was not separately photographed, but acceptance follows the signed Build #94 installation/retry instructions.
+- **Regression resolved for the tested chapters:** The confirmed earlier **Failed · 41/41** error was caused by Selura's 000-based integrity validation versus Mihon's 001-based saved filenames. [Native PR #57](https://github.com/zexaldragneel/selura-reader/pull/57) corrects this to 001..N; [Build #94 CI](https://github.com/zexaldragneel/selura-reader/actions/runs/39739519922) passed 76 tests, Android/Kotlin release compilation, original signer/package checks, and release/feed publication. This is now both CI-verified and **owner-accepted for on-device offline chapter display**.
+- **Remaining limitations:** This test covers these two Hive Scans chapters, not every extension, downloaded chapter, image CDN, storage provider or long-term file persistence. The user did not independently verify zero network requests during initial retry, nor a full reading-progress/history data audit. Do not claim those. Keep the native PR stack separate from the legacy Flutter `main`.
+
 ## Owner screenshot: Hive Scans Chapters 25 and 26 now marked downloaded — 2026-10-22
 
 - **Android screenshot after the Build #94 fix and retest request:** In *The Lord Who Levels Up by Devouring* from **Hive Scans**, both **Chapter 25 — King of the Beasts** and **Chapter 26 — Plan** show the filled completed-download checkmark, with no red failure icon. This directly establishes that the app UI now considers both chapters downloaded; it strongly supports the PR #57 one-based filename fix for the previously reproduced **Failed · 41/41** regression. It also weakens the earlier unverified hypothesis that Chapter 26 was inaccessible solely because it was locked. **Do not portray that speculative restriction as the confirmed cause.**
