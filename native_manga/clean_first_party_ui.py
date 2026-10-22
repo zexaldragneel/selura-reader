@@ -13,6 +13,8 @@ MORE = PREFIX + "eu/kanade/presentation/more/MoreScreen.kt"
 ABOUT = PREFIX + "eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt"
 LOGO = PREFIX + "eu/kanade/presentation/more/LogoHeader.kt"
 MAIN = PREFIX + "eu/kanade/tachiyomi/ui/main/MainActivity.kt"
+CRASH = PREFIX + "eu/kanade/presentation/crash/CrashScreen.kt"
+RESTORE = PREFIX + "eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt"
 SELURA_RELEASES = "https://github.com/zexaldragneel/selura-reader/releases"
 
 
@@ -184,9 +186,35 @@ def patch_main(source: str) -> str:
     # updater. Remove only the unsolicited legacy donation campaign popup.
     return change_one(
         source,
-        "                    ShowDonationCampaign()\n",
-        "",
-        "disable legacy donation popup",
+        """                    if (isLaunch) {
+                        CheckForUpdates()
+                        SeluraStartupUpdateCheck()
+                    }
+                    ShowOnboarding()
+                    ShowDonationCampaign()""",
+        """                    if (isLaunch) {
+                        SeluraStartupUpdateCheck()
+                    }
+                    ShowOnboarding()""",
+        "remove upstream update and donation prompts; keep Selura updater and onboarding",
+    )
+
+
+def patch_crash(source: str) -> str:
+    return change_one(
+        source,
+        "subtitleText = stringResource(MR.strings.crash_screen_description, stringResource(MR.strings.app_name)),",
+        'subtitleText = "Selura Manga encountered an error. Export the crash log to help diagnose it.",',
+        "neutral crash screen guidance",
+    )
+
+
+def patch_restore(source: str) -> str:
+    return change_one(
+        source,
+        "Create a new backup in Mihon with Manga selected.",
+        "Create a manga backup with Library entries selected.",
+        "first-party backup restore guidance",
     )
 
 
@@ -194,6 +222,7 @@ def patch(root: Path) -> None:
     root = root.resolve()
     original = {
         MORE: patch_more, ABOUT: patch_about, LOGO: patch_logo, MAIN: patch_main,
+        CRASH: patch_crash, RESTORE: patch_restore,
     }
     pending = {}
     for name, transformer in original.items():
