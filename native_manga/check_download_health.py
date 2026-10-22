@@ -116,7 +116,7 @@ import tachiyomi.domain.storage.service.StoragePreferences
 import android.net.Uri
 import eu.kanade.tachiyomi.R
 import java.io.IOException
-import java.util.zip.ZipInputStream
+import mihon.core.archive.archiveReader
 
 /**
  * Read-only, bounded spot check of saved chapter files.
@@ -133,6 +133,7 @@ object SeluraDownloadHealth {
     data class Result(
         val checked: Int,
         val suspect: Int,
+        val unverified: Int,
         val unfinished: Int,
         val capped: Boolean,
         val storageMissing: Boolean,
@@ -144,6 +145,7 @@ object SeluraDownloadHealth {
                 R.string.selura_health_report,
                 checked,
                 suspect,
+                unverified,
                 unfinished,
             )
             val examples = if (issueExamples.isEmpty()) "" else {
@@ -170,10 +172,11 @@ object SeluraDownloadHealth {
         )
         val root = base?.findFile("downloads")
         if (root == null || !root.isDirectory) {
-            return@withContext Result(0, 0, 0, false, true, emptyList())
+            return@withContext Result(0, 0, 0, 0, false, true, emptyList())
         }
         var checked = 0
         var suspect = 0
+        var unverified = 0
         var unfinished = 0
         var capped = false
         val issues = mutableListOf<String>()
@@ -199,60 +202,82 @@ object SeluraDownloadHealth {
                         break@chapterScan
                     }
                     checked++
-                    val readable = runCatching {
-                        if (chapter.isDirectory) hasReadableImages(chapter)
-                        else hasReadableArchive(chapter)
-                    }.getOrDefault(false)
-                    if (!readable) {
-                        suspect++
-                        if (issues.size < MAX_SAMPLE_ISSUES) {
-                            issues += manga.name.orEmpty().take(50) + " / " + name.take(70)
+                    // Exceptions mean this SAF/provider or archive could
+                    // not be inspected; they DO NOT prove corruption.
+                    val state = runCatching {
+                        if (chapter.isDirectory) inspectImages(chapter)
+                        else inspectArchive(context, chapter)
+                    }.getOrDefault(CheckState.UNVERIFIED)
+                    when (state) {
+                        CheckState.READABLE -> Unit
+                        CheckState.SUSPECT -> {
+                            suspect++
+                            if (issues.size < MAX_SAMPLE_ISSUES) {
+                                issues += "Potentially unreadable: " +
+                                    manga.name.orEmpty().take(50) + " / " + name.take(70)
+                            }
+                        }
+                        CheckState.UNVERIFIED -> {
+                            unverified++
+                            if (issues.size < MAX_SAMPLE_ISSUES) {
+                                issues += "Could not verify: " +
+                                    manga.name.orEmpty().take(50) + " / " + name.take(70)
+                            }
                         }
                     }
                 }
             }
         }
-        Result(checked, suspect, unfinished, capped, false, issues)
+        Result(checked, suspect, unverified, unfinished, capped, false, issues)
     }
 
     private fun imageName(name: String?): Boolean {
         val n = name.orEmpty().lowercase(java.util.Locale.ROOT)
         return n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") ||
             n.endsWith(".webp") || n.endsWith(".gif") || n.endsWith(".avif") ||
-            n.endsWith(".heic")
+            n.endsWith(".heic") || n.endsWith(".jxl")
     }
 
-    // The directory check rejects zero-byte image pages but only decodes
-    // the first/last image header to keep SAF scans reasonably inexpensive.
-    private fun hasReadableImages(chapter: UniFile): Boolean {
+    private enum class CheckState { READABLE, SUSPECT, UNVERIFIED }
+
+    // Confirm nonempty image files. SAF may return unknown file sizes,
+    // so never treat -1 as corruption. Failed image header sampling is
+    // inconclusive, not evidence that previously readable images are bad.
+    private fun inspectImages(chapter: UniFile): CheckState {
         val images = chapter.listFiles().orEmpty().filter { it.isFile && imageName(it.name) }
-        if (images.isEmpty() || images.any { it.length() <= 0L }) return false
+        if (images.isEmpty() || images.any { it.length() == 0L }) return CheckState.SUSPECT
         val samples = listOf(images.first(), images.last()).distinctBy { it.uri }
-        return samples.all { file ->
-            ImageUtil.isImage(file.name) { file.openInputStream() }
+        return if (samples.all { file ->
+                ImageUtil.findImageType { file.openInputStream() } != null
+            }) {
+            CheckState.READABLE
+        } else {
+            CheckState.UNVERIFIED
         }
     }
 
-    // CBZ validation reads the first image entry, not all compressed pages.
-    // No ZIP extraction or modifications are performed.
-    private fun hasReadableArchive(chapter: UniFile): Boolean {
-        if (chapter.length() <= 0L) return false
-        return try {
-            ZipInputStream(chapter.openInputStream()).use { zip ->
-                var visited = 0
-                var entry = zip.nextEntry
-                while (entry != null && visited++ < MAX_ZIP_ENTRIES) {
-                    if (!entry.isDirectory && imageName(entry.name)) {
-                        return@use zip.read() != -1
-                    }
-                    entry = zip.nextEntry
+    // Read archives with the SAME libarchive-backed parser that Mihon's
+    // ArchivePageLoader uses for offline reading. Java ZipInputStream can
+    // misclassify valid libarchive-created CBZs across SAF providers.
+    // Inspect just one image entry and its header: no extraction, writes,
+    // file renaming, deleting, or exhaustive CRC scan.
+    private fun inspectArchive(context: Context, chapter: UniFile): CheckState =
+        chapter.archiveReader(context).use { reader ->
+            val entry = reader.useEntries { entries ->
+                entries.take(MAX_ZIP_ENTRIES).firstOrNull {
+                    it.isFile && imageName(it.name)
                 }
-                false
+            } ?: return@use CheckState.SUSPECT
+            if (ImageUtil.findImageType {
+                    reader.getInputStream(entry.name)
+                        ?: throw IOException("Could not access archive entry")
+                } != null
+            ) {
+                CheckState.READABLE
+            } else {
+                CheckState.UNVERIFIED
             }
-        } catch (_: IOException) {
-            false
         }
-    }
 }
 ''').replace("\\\n", "\n").lstrip()
 
@@ -262,10 +287,10 @@ STRINGS_SOURCE = '''<?xml version="1.0" encoding="utf-8"?>
     <string name="selura_health_title">Check download storage</string>
     <string name="selura_health_subtitle">Read-only spot check of saved chapters and unfinished transfers</string>
     <string name="selura_health_scanning">Checking downloaded files…</string>
-    <string name="selura_health_report">Checked %1$d completed chapter files.\\n%2$d may be unreadable.\\n%3$d unfinished transfers found (not deleted).</string>
-    <string name="selura_health_issues">Sample chapters needing attention:</string>
+    <string name="selura_health_report">Checked %1$d completed chapter files.\\n%2$d potentially unreadable.\\n%3$d could not be verified (not considered damaged).\\n%4$d unfinished transfers found (not deleted).</string>
+    <string name="selura_health_issues">Sample results requiring attention:</string>
     <string name="selura_health_limited">The scan stopped after 2,500 chapter files. Results are partial.</string>
-    <string name="selura_health_disclaimer">Only sampled page headers and archive entries were checked, not every image. Unfinished transfers may still be downloading or resumable. No files were changed.</string>
+    <string name="selura_health_disclaimer">This is a read-only spot check using Mihon's archive reader. A file that could not be verified is NOT confirmed damaged. Only sampled image headers were checked, not every page or CRC. Unfinished transfers may still be resumable. No files were changed.</string>
     <string name="selura_health_storage_missing">The configured download storage could not be accessed. Check storage permissions and location.</string>
     <string name="selura_health_scan_error">The storage check could not finish. Please verify storage permissions and try again. No files were changed.</string>
 </resources>
