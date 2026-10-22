@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Corrected 41/41 chapter completion regression — 2026-10-22
+
+- **New owner screenshot (after Build #92):** Hive Scans > *The Lord Who Levels Up by Devouring* > **Chapter 25 — King of the Beasts** reports **Failed · 41/41**, and **View error** displays **“Chapter pages are missing, incomplete or unreadable.”** All 41 page requests were marked ready, yet the final chapter validation rejected it. This is direct Android evidence of a Selura finalization regression, NOT evidence that Chapter 25 is locked; earlier speculation about Chapter 26 restriction remains unproven and is separate.
+- **Confirmed source-code defect:** Pinned native Mihon `Page.number` equals `index + 1`, and downloader saves 001.jpg through 041.jpg. The earlier Selura `verify_chapter_downloads.py` incorrectly searched 000..040. Even all 41 valid page images therefore could not be accepted. **Fix in native [PR #57](https://github.com/zexaldragneel/selura-reader/pull/57)** (stacked over PR #55): use `(1..downloadPageCount)` and the actual page-number format while continuing to reject genuinely missing or invalid images and supporting split-tall page files. New specific 41-page regression tests and a CI source-contract guard; no source/extension IDs, temporary files, library, progress, history or signing altered.
+- **Build state:** [CI run #94](https://github.com/zexaldragneel/selura-reader/actions/runs/39739519922) queued/running after release notes were updated for PR #57, and its outcome **must be verified** before recommending an APK. Prior run #93 was superseded/canceled by the final commit. Owner must retry existing Chapter 25 (without deleting completed temporary pages) on the new verified APK and check for completed offline chapter. Do not mark physical-device acceptance until the owner reports it.
+
 ## Screenshot report: Hive Scans Chapter 26 download failure — 2026-10-22
 
 - Owner supplied an Android screenshot showing **The Lord Who Levels Up by Devouring**, source **Hive Scans**, **Chapter 26 — Plan**, marked with a red download error indicator. The screenshot alone does **not** identify the HTTP response, page index, file error, reason for failure, or APK version. Build #88 was recently released and the native failure reason was not exposed in the chapter's icon.
