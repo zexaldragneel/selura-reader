@@ -1,6 +1,11 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Native chapter integrity follow-up — 2026-10-22
+
+- New [native PR #49](https://github.com/zexaldragneel/selura-reader/pull/49), stacked on PR #42, addresses all-extension downloads in Mihon's real `Downloader.kt`: limited network retries, validate expected individual page images, reject corrupt/zero-byte incomplete files, and guard CBZ/directory final renames without losing temporary pages. Source checksum and Kotlin markers fail closed; original package `com.selura.manga`, signer, chapter/source identities, backup/library/progress, prior completed downloads and Xianxia theme are unchanged.
+- After correcting a stale release-notes test hardcoded to PR #42, six new regression tests and the native Python suite passed. [CI #85](https://github.com/zexaldragneel/selura-reader/actions/runs/39728043967) had progressed to Android Gradle build at last check; native APK compilation, signing and actual device behavior **must be verified** before claiming success or recommending installation. Owner currently has confirmed-working baseline Build #82 and Hive Scans extension v110028.
+
 ## Hive Scans download reliability release — 2026-10-22
 
 - User reported **Hive Scans chapter downloads failing**. A targeted HTML page-list parser for the current public HiveToons v2 chapter reader was implemented as isolated Kotlin extension code in [reader PR #46](https://github.com/zexaldragneel/selura-reader/pull/46), stacked on original orphaned-source PR #29. The old inherited Iken `/api/chapter` page-fetch path is suspected incompatible with current website responses; exact user error remains unknown.
