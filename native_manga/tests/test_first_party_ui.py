@@ -81,6 +81,7 @@ def about_fixture():
         prelude + "\n" +
         """
 import mihon.app.di.appGraph
+import androidx.compose.ui.unit.dp
 object AboutScreen {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
@@ -194,6 +195,7 @@ class SeluraFirstPartyUiTests(unittest.TestCase):
         self.assertIn("fun getVersionName(withBuildDate: Boolean)", output)
         self.assertIn("context.appGraph.crashLogUtil", output)
         self.assertIn("import mihon.app.di.appGraph", output)
+        self.assertIn("import androidx.compose.ui.unit.dp", output)
         self.assertIn(ui.SELURA_RELEASES, output)
         self.assertNotIn("uriHandler.openUri(RELEASE_URL)", output)
         self.assertNotIn("context.appGraph.updateChecker", output)
