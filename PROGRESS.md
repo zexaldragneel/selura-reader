@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Owner Android download-completion confirmation — 2026-10-22
+
+- **Evidence:** New user-provided screenshot of the Hive Scans manga *The Lord Who Levels Up by Devouring* shows filled downloaded checkmarks for **Chapter 25 — King of the Beasts** and **Chapter 26 — Plan**; previously Chapter 25 was **Failed · 41/41** with an incomplete-pages error, and Chapter 26 earlier showed a red error icon. Following the Build #94 fix, no red error is shown for either chapter. This is positive **on-device visual confirmation of completed chapter download states** and supports correcting the one-based image-file validation in [PR #57](https://github.com/zexaldragneel/selura-reader/pull/57).
+- **Limitations:** The screenshot does not include installed APK version text or opened offline chapter images. Offline page completeness, actual reuse of all prior temporary pages without network, and independent audit of library/history/progress have **not** been specifically confirmed; no new app/extension modification is required for this recording. The previous assumption that Chapter 26 was inaccessible because it might be locked was speculative and is not established by the evidence.
+- **Verification:** Immutable [signed Build #94](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-57-run-94) passed 76 regression tests, actual Mihon Kotlin/Android compilation, matching original signing certificate `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`, package `com.selura.manga` versionCode 1094, and public release feed. PR #57 remains stacked; offline reading on the phone is the remaining acceptance check.
+
 ## Fix: 41/41 false-failed chapter downloads — 2026-10-22
 
 - **Owner Android bug report:** After installing diagnostic Build #92, the user demonstrated Hive Scans **Chapter 25 — King of the Beasts** failing in Download Queue despite **41/41** downloaded pages. The View error dialog reports “Chapter pages are missing, incomplete or unreadable.” This narrows failure to Selura's final integrity validator; Chapter 25 is marked freely available on HiveToons, and this is not evidence of an access restriction.
