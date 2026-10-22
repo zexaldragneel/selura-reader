@@ -1,14 +1,14 @@
 {
-  "prNumber": 67,
+  "prNumber": 72,
   "added": [
-    "Review unfinished transfers in Download settings, with original source, manga and temporary chapter folder details and counts of saved image-like files.",
-    "Optional Resume all queued chapters action only after explicit confirmation when both unfinished folders and an existing queue are present."
+    "Selura Manga developer identification in About: Zexal Dragneel."
   ],
   "improved": [
-    "The app distinguishes unfinished temporary folders from active queued chapters and warns when folders cannot automatically be reattached.",
-    "Unfinished transfers are reviewed without renaming, deleting, replacing or migrating downloaded chapters."
+    "Selura's own icon replaces the remaining Mihon logo in More and About.",
+    "What's new opens Selura's official GitHub releases while open-source licenses remain available."
   ],
   "fixed": [
-    "Unfinished transfer reports now help identify resumable work without assuming that the six detected temporary folders are corrupt."
+    "Removed outdated Mihon Discord, Facebook, X, Reddit, website, GitHub, Help, Support, donation prompts and misleading upstream privacy-policy link from the visible interface.",
+    "Disabled the original Mihon update prompt to keep only Selura's independent verified update flow and revised crash help to avoid upstream Discord."
   ]
 }
