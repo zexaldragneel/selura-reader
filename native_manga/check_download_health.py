@@ -107,6 +107,7 @@ package eu.kanade.tachiyomi.data.download
 
 import android.content.Context
 import com.hippo.unifile.UniFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -204,10 +205,14 @@ object SeluraDownloadHealth {
                     checked++
                     // Exceptions mean this SAF/provider or archive could
                     // not be inspected; they DO NOT prove corruption.
-                    val state = runCatching {
+                    val state = try {
                         if (chapter.isDirectory) inspectImages(chapter)
                         else inspectArchive(context, chapter)
-                    }.getOrDefault(CheckState.UNVERIFIED)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        CheckState.UNVERIFIED
+                    }
                     when (state) {
                         CheckState.READABLE -> Unit
                         CheckState.SUSPECT -> {
