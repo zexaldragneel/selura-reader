@@ -2,21 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Review unfinished transfers in Download settings, with original source, manga and temporary chapter folder details and counts of saved image-like files.",
-      "Optional Resume all queued chapters action only after explicit confirmation when both unfinished folders and an existing queue are present."
+      "Selura Manga developer identification in About: Zexal Dragneel."
     ],
     "fixed": [
-      "Unfinished transfer reports now help identify resumable work without assuming that the six detected temporary folders are corrupt."
+      "Removed outdated Mihon Discord, Facebook, X, Reddit, website, GitHub, Help, Support, donation prompts and misleading upstream privacy-policy link from the visible interface.",
+      "Disabled the original Mihon update prompt to keep only Selura's independent verified update flow and revised crash help to avoid upstream Discord."
     ],
     "improved": [
-      "The app distinguishes unfinished temporary folders from active queued chapters and warns when folders cannot automatically be reattached.",
-      "Unfinished transfers are reviewed without renaming, deleting, replacing or migrating downloaded chapters."
+      "Selura's own icon replaces the remaining Mihon logo in More and About.",
+      "What's new opens Selura's official GitHub releases while open-source licenses remain available."
     ]
   },
-  "notes": "What's new: Review unfinished transfers in Download settings, with original source, manga and temporary chapter folder details and counts of saved image-like files.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-67-run-102",
+  "notes": "What's new: Selura Manga developer identification in About: Zexal Dragneel.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108",
   "schemaVersion": 1,
-  "sha256": "badde8f621dc6dc1db856a0e689c57da6f52087d6ff7906d8e65f5b751f2add5",
-  "versionCode": 1102,
-  "versionName": "Selura Manga Build 102"
+  "sha256": "decabe11e53dabb40434b375f013635bccfcde971605dd4dd1fabd7905b0f1c5",
+  "versionCode": 1108,
+  "versionName": "Selura Manga Build 108"
 }
