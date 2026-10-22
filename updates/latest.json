@@ -2,22 +2,22 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
-      "Release-specific details shown before you download or install an update."
+      "Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded."
     ],
     "fixed": [
-      "Incorrect or stale notes from a different pull request are rejected during publishing.",
-      "Older update feeds without detailed notes still display their original summary."
+      "Incomplete chapter folders no longer appear complete simply because the file count matches.",
+      "Failed CBZ or chapter-folder renames no longer mark a download complete or discard its temporary pages.",
+      "HTTP 403, 404 and 429 responses are not repeatedly retried by the chapter downloader."
     ],
     "improved": [
-      "Scrollable, readable changelogs that fit smaller Android screens.",
-      "Update notes generated from reviewed release metadata instead of a generic message."
+      "Bounded retries for temporary connection problems when retrieving chapter pages and images.",
+      "Interrupted chapter transfers retain their resumable temporary files and respect pause and Wi-Fi-only settings."
     ]
   },
-  "notes": "What's new: A What's New panel in the update popup with separate Added, Improved and Fixed sections.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-42-run-82",
+  "notes": "What's new: Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-49-run-85",
   "schemaVersion": 1,
-  "sha256": "054987202689f009d4d24b5ce5ac28ef2ec664094e56cb9f3bb71496c135a14b",
-  "versionCode": 1082,
-  "versionName": "Selura Manga Build 82"
+  "sha256": "8515124d21841f711b620ac548bde9b2ba74734065ec759e1490da55e4801765",
+  "versionCode": 1085,
+  "versionName": "Selura Manga Build 85"
 }
