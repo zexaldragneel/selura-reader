@@ -1,6 +1,13 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Build #96 download-health false positives reported — 2026-10-22
+
+- Owner supplied an Android screenshot of Settings → Downloads → Check download storage (Build #96 feature) showing **78 completed chapter files checked, 78 marked potentially unreadable, and 6 unfinished transfers**. The examples all had `.cbz` archive filenames. A blanket 78/78 suspicion is a **strong false-positive signal**, not evidence that 78 chapters are damaged. Do not delete, redownload, clear, or migrate user content based on this result; six temporary folders can be normal/resumable.
+- Inspection of pinned Mihon source confirms its CBZ creator uses native libarchive `ZipWriter` and its offline manga viewer uses `ArchiveReader`. Build #96's new health checker used Java `ZipInputStream` and a `length() <= 0` condition that can misclassify archives with unknown SAF lengths. Actual cause of every flagged CBZ cannot be proven without inspecting those files.
+- Corrective native [PR #64](https://github.com/zexaldragneel/selura-reader/pull/64), stacked on PR #62, uses the same `archiveReader(context)` and `reader.useEntries/getInputStream` APIs as Mihon's reader. It differentiates READABLE, SUSPECT and UNVERIFIED (SAF or archive inspection failures must not be interpreted as damage), handles unknown file sizes conservatively, preserves cancelled scans, keeps bounded/image-header spot checks and never touches user data. Added regression tests and signed Android build workflow source checks.
+- [Native CI Build #99](https://github.com/zexaldragneel/selura-reader/actions/runs/39783128507) passed Python tests and reached the real Gradle Android build at last inspection; builds #97/#98 stopped safely at a stale disclaimer assertion later corrected. **Do not claim Build #99 signed/released or confirm the false positive fixed on Android until CI success and an owner retest**. The last user-tested new storage-health scan is Build #96, which displayed the inaccurate 78/78 result.
+
 ## Offline download storage health milestone — 2026-10-22
 
 - After owner-tested Build #94, native PR #62 (https://github.com/zexaldragneel/selura-reader/pull/62) adds Settings → Downloads → Check download storage. This runs only on demand and reads existing source/manga/chapter SAF files, reports suspect completed chapter folder/CBZ readability and separately counts unfinished temporary transfers. It shows at most six suspect examples in the Android UI. It never deletes, renames, redownloads or migrates source IDs, libraries, history, progress, bookmarks or downloads; it makes no network requests.
