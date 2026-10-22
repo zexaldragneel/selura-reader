@@ -1,6 +1,14 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Unfinished temporary chapter review and safe queue recovery — 2026-10-22
+
+- **Request:** Investigate the **six unfinished transfers** shown by the owner in the healthy Build #100 download-storage scan, with safe manual recovery options that preserve all partial files, manga library entries and progress.
+- **Implementation:** [Native PR #67](https://github.com/zexaldragneel/selura-reader/pull/67) stacked over owner-tested PR #64. New fail-closed `native_manga/review_unfinished_transfers.py` transforms the real Kotlin health report and Download Settings, adding **Review unfinished transfers**, read-only per-folder source/manga/chapter labels, counts of saved image-like files and incomplete `.tmp` writes, first 20 detail rows with total/overflow, and an explicit confirmation-only option to **Resume all queued chapters** via Mihon's existing worker if any queued chapters exist. No automatic folder-to-queue match, no deletion, rename, cache write, source migration, unsafe direct network requests or library mutation.
+- **Safeguards:** Coroutine scan off UI thread, existing scan bounds, original `com.selura.manga` package ID/certificate and extension/source IDs retained. Queue resume button accurately says it starts the **entire queued set**, may use network and observes Wi-Fi restrictions; orphaned tmp folders require manual chapter-level Download to attempt reuse. Six unfinished folders remain non-destructively retained until explicitly acted on.
+- **Validation pending:** Six focused Python regression contracts and CI source guards added. [Build #102](https://github.com/zexaldragneel/selura-reader/actions/runs/39788071316) was queued/running at last check. Need passing native Kotlin release build, verified signer/versionCode/immutable APK/feed, then owner Android screenshot of the review dialog and safe manual recovery. Last confirmed stable app Build #100.
+
+
 ## Owner acceptance: Build #100 CBZ health false positives corrected — 2026-10-22
 
 - **Android screenshot retest:** In Selura Settings → Downloads → Check download storage, the owner now sees **78 completed files checked, 0 potentially unreadable, 0 could not be verified, 6 unfinished transfers (not deleted)** after Build #100 installation instructions. Earlier on Build #96 the same 78 files were all flagged possibly unreadable and 6 transfers were unfinished. The **78/78 systemic false-positive regression is now owner-verified corrected on Android**; the new native dialog and read-only scanner are functioning for this sample.
