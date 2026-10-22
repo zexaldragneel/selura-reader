@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -141,6 +141,11 @@ jobs:
           python3 native_manga/xianxia_v3.py native-upstream
           python3 native_manga/recover_downloads.py native-upstream
           python3 native_manga/verify_chapter_downloads.py native-upstream
+          # Regression for the user-reported 41/41 false failure:
+          # Mihon's Page.number is 1-based and written filenames start at 001.
+          grep -Fq 'get() = index + 1' native-upstream/source-api/src/main/kotlin/eu/kanade/tachiyomi/source/model/Page.kt
+          grep -Fq 'format(Locale.ENGLISH, page.number)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'return (1..downloadPageCount).all { pageNumber ->' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           python3 native_manga/download_manager_actions.py native-upstream
           python3 native_manga/download_failure_details.py native-upstream
           grep -q 'NetworkType.CONNECTED' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
