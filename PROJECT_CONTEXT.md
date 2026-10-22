@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Owner screenshot: Hive Scans Chapters 25 and 26 now marked downloaded — 2026-10-22
+
+- **Android screenshot after the Build #94 fix and retest request:** In *The Lord Who Levels Up by Devouring* from **Hive Scans**, both **Chapter 25 — King of the Beasts** and **Chapter 26 — Plan** show the filled completed-download checkmark, with no red failure icon. This directly establishes that the app UI now considers both chapters downloaded; it strongly supports the PR #57 one-based filename fix for the previously reproduced **Failed · 41/41** regression. It also weakens the earlier unverified hypothesis that Chapter 26 was inaccessible solely because it was locked. **Do not portray that speculative restriction as the confirmed cause.**
+- **Verification boundary:** The screenshot does not display a Settings/About build number, chapter page content, all pages viewed in airplane mode, nor any storage integrity audit. The result follows the Build #94 installation/testing instructions, but screenshot alone does not independently prove which binary is installed. Mark **Android visual download-completion acceptance** only; offline per-page reading, long-term storage and chapter-cache durability remain awaiting explicit owner verification. Do not claim all 41 previously saved temporary files were reused without network requests, since this was not observed directly.
+- **Project state:** Signed [Build #94](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-57-run-94) passed 76 Python tests, Mihon native Kotlin build, original APK signer/package identity and release metadata validation. [Native PR #57](https://github.com/zexaldragneel/selura-reader/pull/57) stays stacked over PR #55; preserve native branch isolation from Flutter-era `main`. Do not delete any existing library/download data.
+
 ## Corrected 41/41 chapter completion regression — 2026-10-22
 
 - **New owner screenshot (after Build #92):** Hive Scans > *The Lord Who Levels Up by Devouring* > **Chapter 25 — King of the Beasts** reports **Failed · 41/41**, and **View error** displays **“Chapter pages are missing, incomplete or unreadable.”** All 41 page requests were marked ready, yet the final chapter validation rejected it. This is direct Android evidence of a Selura finalization regression, NOT evidence that Chapter 25 is locked; earlier speculation about Chapter 26 restriction remains unproven and is separate.
