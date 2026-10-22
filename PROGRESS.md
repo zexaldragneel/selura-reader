@@ -1,6 +1,13 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Owner confirmation: Build #102 unfinished transfer inventory — 2026-10-22
+
+- **Device test confirmed:** Two owner-provided Settings → Downloads screenshots show completed storage-health report still **78 checked / 0 suspicious / 0 unverified / 6 unfinished**, and a functional **Review unfinished transfers** Material dialog with exactly six rows from **Hive Scans (EN)**. This verifies Android UI startup/read-only inventory behavior in signed Build #102; the absence of **Resume all queued chapters** indicates zero visible persisted queued chapters under the feature's current guard, but the owner did not test queue restart.
+- **Captured inventory:** Red Shirt Ch 3: 9 saved image-like files / 4 pending writes; Lookism Ch 629: 51 / 4; Lookism Ch 628: 0 / 5; My Avatars' Path to Greatness Ch 101: 31 / 0; Ch 100: 27 / 0; Ch 99: 26 / 0. All six are temporary folders, total **144 saved image-like files** and **13 pending `.tmp` files**. Image counts are not verified total chapter page counts; incomplete writes are not automatically corrupt.
+- **Next safe action:** Before any chapter-level retry, inspect whether the exact chapter already has the downloaded checkmark. Do not retry completed chapters solely to clear temporary folders; pinned Mihon's Downloader.kt can delete matching stale `_tmp` if a completed CBZ or folder already exists. For chapters not completed, user-triggered Download may reuse saved numbered images but can modify temp storage and use network; test individually and check subsequent health/inventory counts. No bulk download queue action, automatic deletion, migration or guess-matching from filenames.
+- **Release and integration:** [Build #102](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-67-run-102) completed all 90 automated tests, Kotlin build, signer/package/metadata feed checks. [PR #67](https://github.com/zexaldragneel/selura-reader/pull/67) is on the separate native branch; mark review-screen inventory as Android-confirmed, but leave the queue-resume control and actual file recovery unverified. Keep source IDs, library entries, bookmarks, history and original signer intact.
+
 ## Unfinished temporary chapter review and safe queue recovery — 2026-10-22
 
 - **Request:** Investigate the **six unfinished transfers** shown by the owner in the healthy Build #100 download-storage scan, with safe manual recovery options that preserve all partial files, manga library entries and progress.
