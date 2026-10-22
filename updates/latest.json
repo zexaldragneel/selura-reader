@@ -2,22 +2,22 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded."
+      "Failed chapter labels in Download Manager and a Retry download option for each failed chapter.",
+      "A Retry failed downloads action that appears when one or more chapters fail."
     ],
     "fixed": [
-      "Incomplete chapter folders no longer appear complete simply because the file count matches.",
-      "Failed CBZ or chapter-folder renames no longer mark a download complete or discard its temporary pages.",
-      "HTTP 403, 404 and 429 responses are not repeatedly retried by the chapter downloader."
+      "Existing empty or unreadable chapter files are no longer silently treated as completed downloads.",
+      "Finalized chapters must remain readable through Android storage before being marked downloaded."
     ],
     "improved": [
-      "Bounded retries for temporary connection problems when retrieving chapter pages and images.",
-      "Interrupted chapter transfers retain their resumable temporary files and respect pause and Wi-Fi-only settings."
+      "Download progress remains visible alongside failure status, even when a provider could not return its page list.",
+      "Completed chapter folder and CBZ files receive non-destructive readability checks before indexing."
     ]
   },
-  "notes": "What's new: Safer chapter download completion: verify that every expected manga image was saved before a chapter is marked downloaded.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-49-run-85",
+  "notes": "What's new: Failed chapter labels in Download Manager and a Retry download option for each failed chapter.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-52-run-88",
   "schemaVersion": 1,
-  "sha256": "8515124d21841f711b620ac548bde9b2ba74734065ec759e1490da55e4801765",
-  "versionCode": 1085,
-  "versionName": "Selura Manga Build 85"
+  "sha256": "cb13af7fa3bd20ec821ce5ee12abc6c795ad972fa7d8746795392bbcba222438",
+  "versionCode": 1088,
+  "versionName": "Selura Manga Build 88"
 }
