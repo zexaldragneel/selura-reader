@@ -14,6 +14,7 @@ ABOUT = BASE + "eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
 LOGO = BASE + "eu/kanade/presentation/more/LogoHeader.kt"
 MAIN = BASE + "eu/kanade/tachiyomi/ui/main/MainActivity.kt"
 CRASH = BASE + "eu/kanade/presentation/crash/CrashScreen.kt"
+RESTORE = BASE + "eu/kanade/presentation/more/settings/screen/data/RestoreBackupScreen.kt"
 RELEASES = "https://github.com/zexaldragneel/selura-reader/releases"
 
 
@@ -167,12 +168,22 @@ def crash_screen(source):
     )
 
 
+def restore_screen(source):
+    return replace_exact(
+        source,
+        "Create a new backup in Mihon with Manga selected.",
+        "Create a manga backup with Library entries selected.",
+        "remove old app name from restore guidance",
+    )
+
+
 TRANSFORMS = {
     MORE: more_screen,
     ABOUT: about_screen,
     LOGO: logo_header,
     MAIN: main_activity,
     CRASH: crash_screen,
+    RESTORE: restore_screen,
 }
 
 
