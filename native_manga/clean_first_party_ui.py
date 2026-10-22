@@ -136,7 +136,6 @@ def patch_about(source: str) -> str:
         "import androidx.compose.runtime.rememberCoroutineScope\n",
         "import androidx.compose.runtime.setValue\n",
         "import androidx.compose.ui.Modifier\n",
-        "import androidx.compose.ui.unit.dp\n",
         "import eu.kanade.tachiyomi.data.updater.RELEASE_URL\n",
         "import eu.kanade.tachiyomi.ui.more.NewUpdateScreen\n",
         "import eu.kanade.tachiyomi.util.system.toast\n",
