@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -140,8 +140,11 @@ jobs:
           python3 native_manga/xianxia_v2.py native-upstream
           python3 native_manga/xianxia_v3.py native-upstream
           python3 native_manga/recover_downloads.py native-upstream
+          python3 native_manga/verify_chapter_downloads.py native-upstream
           grep -q 'NetworkType.CONNECTED' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -q 'DownloadWorker.cancel(context)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
+          grep -q 'isTransientDownloadFailure' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -q 'Could not finalize downloaded chapter archive' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           test -s native-upstream/app/src/main/res/drawable-nodpi/xianxia_header.webp
           grep -q 'xianxiaCardArtFrame' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
           ! grep -q PremiumLibraryProgress native-upstream/app/src/main/java/eu/kanade/presentation/library/components/CommonMangaItem.kt
