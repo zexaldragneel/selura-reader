@@ -1,6 +1,13 @@
 # Selura — Project Context
 Last updated: 2026-10-22
 
+## Screenshot report: Hive Scans Chapter 26 download failure — 2026-10-22
+
+- Owner supplied an Android screenshot showing **The Lord Who Levels Up by Devouring**, source **Hive Scans**, **Chapter 26 — Plan**, marked with a red download error indicator. The screenshot alone does **not** identify the HTTP response, page index, file error, reason for failure, or APK version. Build #88 was recently released and the native failure reason was not exposed in the chapter's icon.
+- Current public HiveToons listing labels Chapter 25 **"Free now"**, but not Chapter 26, suggesting latest Chapter 26 may be temporarily **restricted or locked**. This is a source-access hypothesis, not proof; do not bypass login, paywalls, captcha, rate limits or reconstruct protected image URLs.
+- **New native PR #55** (<https://github.com/zexaldragneel/selura-reader/pull/55>), stacked onto Download Manager PR #52, adds bounded error classification and a failed-item **View error** dialog in the actual native Download Manager, alongside existing Retry download. The diagnostic retains no URLs/cookies, resets on retry, remains transient in memory, and does not change library/downloads, source IDs, signing or app ID. It does not magically make access-restricted chapters available.
+- [CI #92](https://github.com/zexaldragneel/selura-reader/actions/runs/39736270402) **SUCCEEDED** after correcting a test expectation (CI #91 failed safely). **74 Python tests passed**, real Mihon Kotlin Gradle `:app:assembleRelease` compiled, original signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` and app ID `com.selura.manga` versionCode **1092** verified, and immutable [signed Build #92 APK](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-55-run-92) released (SHA-256 `f4216949b7e4c779371f454b9652bcdcabef22c8bd1a579d6b64734f0afd08be`). Public release metadata feed was verified at versionCode 1092. **Android owner acceptance of View error and Chapter 26 root cause remain pending**. Owner should verify whether freely accessible Chapter 25 downloads successfully and whether Chapter 26 loads normally in the source's WebView; distinguishing these helps isolate the source restriction from a download bug.
+
 ## Signed Build #88 Android emulator smoke test — 2026-10-22
 
 - To reduce reliance on source-only tests, the [native feature PR #52](https://github.com/zexaldragneel/selura-reader/pull/52) now includes `native_manga/emulator_launch_smoke.sh` and a CI workflow `.github/workflows/selura-apk-emulator-smoke.yml` that **only downloads the already-published signed APK** and checks it on a disposable Android 15 (API 35) emulator.
