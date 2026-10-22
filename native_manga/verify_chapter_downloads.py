@@ -94,13 +94,15 @@ def transform(source: str) -> str:
             }
         }
         return downloadedImagesCount == downloadPageCount""",
-                  """        // Count alone could accept pages 000 + 002 with page 001 missing.
-        // Check real images for EVERY expected index, including split-page 001.
+                  """        // Mihon Page.number = Page.index + 1: saved pages are 001, 002,
+        // ... N, never 000. Validate EACH one-based filename to avoid
+        // falsely failing a complete chapter or skipping its final page.
+        // Split-tall pages use the same numeric prefix followed by "__".
         if (downloadPageCount == 0) return false
         val images = tmpDir.listFiles().orEmpty().filter { it.isFile }
         val digits = downloadPageCount.toString().length.coerceAtLeast(3)
-        return (0 until downloadPageCount).all { index ->
-            val prefix = "%0${digits}d".format(Locale.ENGLISH, index)
+        return (1..downloadPageCount).all { pageNumber ->
+            val prefix = "%0${digits}d".format(Locale.ENGLISH, pageNumber)
             images.any { file ->
                 isDownloadedPageImage(file.name.orEmpty(), prefix) &&
                     file.length() > 0L &&
