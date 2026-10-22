@@ -56,7 +56,7 @@ def patch_holder(s: str) -> str:
         "holder bind status even without pages")
     s = replace_once(s,
         """        val pages = download.pages ?: return
-        binding.downloadProgressText.text = "\${download.downloadedImages}/\${pages.size}"
+        binding.downloadProgressText.text = "${download.downloadedImages}/${pages.size}"
     }""",
         """        notifyDownloadStatus()
     }
@@ -64,7 +64,7 @@ def patch_holder(s: str) -> str:
     // Show an error even if a source failed before any pages arrived.
     fun notifyDownloadStatus() {
         val pages = download.pages
-        val count = pages?.let { "\${download.downloadedImages}/\${it.size}" }.orEmpty()
+        val count = pages?.let { "${download.downloadedImages}/${it.size}" }.orEmpty()
         if (download.status == Download.State.ERROR) {
             binding.downloadProgressText.setTextColor(
                 MaterialColors.getColor(view, com.google.android.material.R.attr.colorError),
