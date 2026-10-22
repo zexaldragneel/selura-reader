@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -152,6 +152,9 @@ jobs:
           test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
           grep -q 'SeluraDownloadHealth.scan(context, storagePreferences)' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
           grep -q 'val root = base?.findFile("downloads")' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
+          grep -Fq 'chapter.archiveReader(context).use { reader ->' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
+          grep -Fq 'CheckState.UNVERIFIED -> {' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
+          ! grep -Fq 'ZipInputStream(' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
           grep -q 'NetworkType.CONNECTED' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -q 'DownloadWorker.cancel(context)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -q 'isTransientDownloadFailure' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
