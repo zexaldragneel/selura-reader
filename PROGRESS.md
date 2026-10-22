@@ -1,6 +1,11 @@
 # Selura — Development Progress
 Last updated: 2026-10-22
 
+## Signed first-party Selura UI clean-up, Build #108 — 2026-10-22
+
+- **Verification:** [CI Build #108](https://github.com/zexaldragneel/selura-reader/actions/runs/39800581603) for owner-requested UI white-label [PR #72](https://github.com/zexaldragneel/selura-reader/pull/72) passed **98 Python regression tests**, actual Kotlin `:app:assembleRelease`, original signing cert SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`, package `com.selura.manga` versionCode **1108**, and immutable [signed APK](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108) SHA-256 `decabe11e53dabb40434b375f013635bccfcde971605dd4dd1fabd7905b0f1c5`. Public update feed version/digest matched. Not yet Android owner-tested.
+- **Scope:** Replace old visible Mihon social/help/support/donation and outdated privacy/update links with Selura app branding and Selura GitHub Releases; retain first-party startup updater, working manga/backups/downloads, open-source license attribution, source IDs, application ID and signing. This build's PR #72 overlaps with independent [PR #73](https://github.com/zexaldragneel/selura-reader/pull/73); avoid combining both UI patches blindly. Alternative PR #73 Build #111 failed on missing `dp` import; fix on branch and Build #113 pending at last inspection. Next acceptance: install a **verified** signed white-label build in place over #102 and confirm More/About UI, licenses, update notification and existing offline chapter reading.
+
 ## Native Selura About/More cleanup — Build #108 verified — 2026-10-22
 
 - **Independent release evidence:** [Native PR #72](https://github.com/zexaldragneel/selura-reader/pull/72) passed all **98 source/regression tests**, actual Mihon Kotlin Android `:app:assembleRelease`, verified original signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`, package `com.selura.manga` versionCode **1108**, and published immutable [signed Build #108](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108) APK (68,102,796 bytes; SHA-256 `decabe11e53dabb40434b375f013635bccfcde971605dd4dd1fabd7905b0f1c5`). Metadata-only update-feed readback was v1108 with matching SHA-256. **Owner device testing remains pending.**
