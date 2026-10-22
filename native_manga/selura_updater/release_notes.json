@@ -1,14 +1,14 @@
 {
-  "prNumber": 64,
+  "prNumber": 67,
   "added": [
-    "Storage health results distinguish potentially unreadable chapters from files the scanner could not verify."
+    "Review unfinished transfers in Download settings, with original source, manga and temporary chapter folder details and counts of saved image-like files.",
+    "Optional Resume all queued chapters action only after explicit confirmation when both unfinished folders and an existing queue are present."
   ],
   "improved": [
-    "CBZ checks now use Mihon's own archive engine, the same reader used for offline manga.",
-    "Storage scan failures are reported as inconclusive instead of automatically labeling downloads damaged."
+    "The app distinguishes unfinished temporary folders from active queued chapters and warns when folders cannot automatically be reattached.",
+    "Unfinished transfers are reviewed without renaming, deleting, replacing or migrating downloaded chapters."
   ],
   "fixed": [
-    "Corrected the CBZ health-check compatibility issue that flagged 78 out of 78 saved chapters as potentially unreadable on Android.",
-    "Unknown Android storage file sizes are no longer treated as proof of corrupted CBZ downloads."
+    "Unfinished transfer reports now help identify resumable work without assuming that the six detected temporary folders are corrupt."
   ]
 }

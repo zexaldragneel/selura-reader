@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -149,6 +149,10 @@ jobs:
           python3 native_manga/download_manager_actions.py native-upstream
           python3 native_manga/download_failure_details.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
+          python3 native_manga/review_unfinished_transfers.py native-upstream
+          grep -Fq 'fun describeUnfinished(context: Context, queuedCount: Int)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
+          grep -Fq 'downloadManager.startDownloads()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
+          grep -Fq 'selura_recovery_warning' native-upstream/app/src/main/res/values/selura_download_health_strings.xml
           test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
           grep -q 'SeluraDownloadHealth.scan(context, storagePreferences)' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
           grep -q 'val root = base?.findFile("downloads")' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
