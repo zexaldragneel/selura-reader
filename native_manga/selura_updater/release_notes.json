@@ -1,14 +1,14 @@
 {
-  "prNumber": 55,
+  "prNumber": 57,
   "added": [
-    "A View error action for failed chapters in Download Manager, showing why a download did not complete."
+    "Regression protection for chapters whose pages are numbered 001 through the final page."
   ],
   "improved": [
-    "More useful error explanations for source access restrictions, missing chapter images, HTTP errors, connection failures and low storage.",
-    "Failure reasons reset when a chapter is retried and remain only in memory, not in backups or manga library records."
+    "Downloaded chapters are verified using Mihon's actual page filenames, including split-tall page images.",
+    "Previously saved complete temporary chapter pages can be reused when retrying an affected download."
   ],
   "fixed": [
-    "Incomplete chapter downloads no longer leave you with only an unexplained error symbol.",
-    "Sensitive request URLs or credentials are not displayed in error dialogs, and locked source chapters are never bypassed."
+    "Fixed chapters incorrectly showing Failed despite every page downloading (for example, Hive Scans Chapter 25 showing Failed · 41/41).",
+    "The final chapter integrity check no longer searches for nonexistent page 000 or overlooks the last numbered page."
   ]
 }

@@ -74,12 +74,38 @@ class ChapterIntegrityTests(unittest.TestCase):
     def test_incomplete_and_zero_byte_pages_cannot_complete(self):
         fixed = fix.transform(SOURCE)
         self.assertIn("if (downloadPageCount == 0) return false", fixed)
-        self.assertIn("return (0 until downloadPageCount).all { index ->", fixed)
-        self.assertIn('val prefix = "%0${digits}d".format(Locale.ENGLISH, index)', fixed)
+        self.assertIn("return (1..downloadPageCount).all { pageNumber ->", fixed)
+        self.assertIn('val prefix = "%0${digits}d".format(Locale.ENGLISH, pageNumber)', fixed)
+        self.assertNotIn("return (0 until downloadPageCount).all", fixed)
+        self.assertIn("// Mihon Page.number = Page.index + 1", fixed)
         self.assertIn("isDownloadedPageImage(file.name.orEmpty(), prefix)", fixed)
         self.assertIn("ImageUtil.isImage(file.name) { file.openInputStream() }", fixed)
         self.assertIn("it.length() > 0L", fixed)
         self.assertNotIn("downloadedImagesCount == downloadPageCount", fixed)
+
+    def test_41_pages_from_hive_scans_match_actual_mihon_file_numbering(self):
+        """Regression: 41/41 page images 001..041 must not fail as 000..040."""
+        kotlin = fix.transform(SOURCE)
+        self.assertIn("return (1..downloadPageCount).all { pageNumber ->", kotlin)
+        saved_names = {f"{n:03d}.jpg" for n in range(1, 42)}
+        def all_named_pages_exist(names, count):
+            digits = max(3, len(str(count)))
+            return count > 0 and all(any(filename.startswith(f"{page:0{digits}d}.") or
+                           filename.startswith(f"{page:0{digits}d}__")
+                           for filename in names)
+                       for page in range(1, count + 1))
+        self.assertTrue(all_named_pages_exist(saved_names, 41))
+        self.assertFalse(all_named_pages_exist(saved_names - {"001.jpg"}, 41))
+        self.assertFalse(all_named_pages_exist(saved_names - {"021.jpg"}, 41))
+        self.assertFalse(all_named_pages_exist(saved_names - {"041.jpg"}, 41))
+        self.assertTrue(all_named_pages_exist({"001__001.jpg", "002.webp"}, 2))
+        self.assertFalse(all_named_pages_exist(set(), 0))
+
+    def test_mihon_page_number_is_one_based_and_downloader_uses_page_number(self):
+        """Build validates pinned Mihon Page.number and its saved page filename."""
+        source = fix.transform(SOURCE)
+        self.assertIn("return (1..downloadPageCount).all { pageNumber ->", source)
+        self.assertEqual(fix.PINNED_BLOB, "105c153ef1a7672d465e52eb2cfe5387d60e9e74")
 
     def test_failed_directory_or_cbz_rename_keeps_temp_pages(self):
         fixed = fix.transform(SOURCE)
