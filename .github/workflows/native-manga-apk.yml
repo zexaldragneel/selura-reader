@@ -2,7 +2,7 @@ name: Selura Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -151,6 +151,12 @@ jobs:
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
           python3 native_manga/remove_upstream_community_ui.py native-upstream
+          python3 native_manga/safe_single_chapter_recovery.py native-upstream
+          grep -Fq 'suspend fun inspectUnfinishedChapter(' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
+          grep -Fq 'canonicalDir + Downloader.TMP_DIR_SUFFIX' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
+          grep -Fq 'selura_single_recovery_retry' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/manga/MangaScreen.kt
+          ! grep -Fq 'mangaDir.findFile(chapterDirname + TMP_DIR_SUFFIX)?.delete()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          test -s native-upstream/app/src/main/res/values/selura_single_chapter_recovery_strings.xml
           grep -Fq 'painterResource(R.drawable.selura_manga_icon)' native-upstream/app/src/main/java/eu/kanade/presentation/more/LogoHeader.kt
           grep -Fq 'Developed by Zexal Dragneel' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
           grep -Fq 'OpenSourceLicensesScreen()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
