@@ -1,5 +1,11 @@
 # Selura — Development Progress
-Last updated: 2026-10-22
+Last updated: 2026-10-23
+
+## Build #108 installation confirmation — 2026-10-23
+
+- **Owner report:** In response to "Have you installed Build #108 already?", owner answered "yes i confirm." The canonical signed [Build #108](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108) was therefore **installed**, without a separate explicit confirmation of the detailed About/More UI checklist, accessibility of Open-source licenses, functioning offline chapters, update prompts or preserved progress in this exchange. Do not label those device checks complete until observed.
+- Existing [PR #72](https://github.com/zexaldragneel/selura-reader/pull/72) remains the canonical white-label implementation; the GitHub Actions build, signer and first-party metadata feed were already verified. Do not merge overlapping closed duplicate PRs #73/#79 or stack native changes directly onto Flutter-era main.
+- **Next milestone under investigation:** Five previously inventoried unfinished Hive Scans folders remain safety-sensitive; earlier queue was empty. Only nondestructive identification/diagnostics are automatically allowed; require explicit user control and precise identity verification for any recovery attempt. No bulk retry, deletion, archive rewrite, folder rename or successful recovery is claimed here. No new APK was built for this documentation update.
 
 ## Signed first-party Selura UI clean-up, Build #108 — 2026-10-22
 
