@@ -54,6 +54,19 @@ class HiveDownloadsTests(unittest.TestCase):
         self.assertIn("package eu.kanade.tachiyomi.extension.en.hivescans", result)
         self.assertNotIn("solveCaptcha", result)
 
+    def test_regression_rollback_retains_previous_image_request(self):
+        # A reproducible, compile-checked regression rollback, NOT a
+        # Cloudflare bypass. The original public HTML reader stays the same.
+        result = hive.patch_hive_source(HIVE_ORIGINAL)
+        self.assertEqual(result.count(hive.EXPECTED_REQUEST), 1)
+        self.assertIn("CacheControl.Builder().noCache().build()", result)
+        self.assertIn("import okhttp3.CacheControl", result)
+        self.assertIn("override suspend fun getPageList(chapter: SChapter)", result)
+        self.assertIn("allowedImageHost(url.host)", result)
+        self.assertIn("url.isHttps", result)
+        self.assertNotIn("bypassCloudflare", result)
+        self.assertNotIn("cf_clearance", result)
+
     def test_refuse_duplicate_or_changed_upstream(self):
         with self.assertRaises(sources.SourceContractError):
             hive.patch_hive_source("class HiveScans {}")
