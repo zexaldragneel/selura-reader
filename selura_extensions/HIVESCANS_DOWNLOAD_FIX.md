@@ -23,3 +23,13 @@ Reported 2026-10-22: Selura Manga user says Hive Scans chapter downloads do not 
 5. If the site blocks the public chapter request, do not bypass it; capture the HTTP status/error and report that the website may restrict access.
 
 Do not claim device functionality before step 4.
+
+## Emergency rollback following Cloudflare error report — 2026-10-23
+
+- After the owner installed the cache-optimized Hive Scans v1.6.4229, the owner reported **"failed to bypass cloudflare"**. The exact failing URL and request type have **not** been captured. There is no proof the `noCache()` removal caused the challenge; site-side access policy and device connectivity remain alternative causes.
+- Live public `https://hivetoons.org/` and a public chapter URL were readable through a separate web client in the investigation, but accessibility from this environment does **not** establish Android/IP-specific accessibility, nor does it authorize bypassing access controls.
+- This rollback builds the **same pinned Hive Scans implementation used before optimization** (original public HTML `getPageList`, canonical folder/source IDs and `CacheControl.Builder().noCache()` for images). The code from `feature/selura-hivescans-html-downloads` is reused without changing the manga reader or third-party source authentication. It does not attempt to defeat Cloudflare, rotate user agents, scrape protected routes, solve CAPTCHAs or alter HTTP client identities.
+- The new independently signed Hive Scans APK must have **higher Android versionCode than 110229**, preserve package `eu.kanade.tachiyomi.extension.en.selurahivescans`, source versionId 7301, signer, and immutable source ID. This avoids uninstalling and resetting stored entries.
+- Only after passing source tests, full Kotlin build/lint, APK signature/identity checks, and existing store's invariants may the single Hive Scans APK be published. The other **42 extension APKs, 43 icons and all 341 source identities** must remain unchanged.
+- The user must refresh Hive Scans only and retry one publicly accessible chapter. If Cloudflare still blocks loading, classify the problem as an unresolved challenge; open the source website in the normal browser/WebView to see whether the site allows legitimate access and do **not** automatically retry, delete downloads or claim success.
+
