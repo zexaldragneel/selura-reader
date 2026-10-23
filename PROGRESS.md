@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-23
 
+## Device acceptance: Hive Scans rollback restored functionality — 2026-10-23
+
+- After the owner reported **"failed to bypass cloudflare"** on v1.6.4229, Selura restored the preceding image-request behavior in signed Hive Scans **v1.6.4430**, versionCode **110430**, keeping the same Android package, source ID and signer. [Reader CI #3](https://github.com/zexaldragneel/selura-reader/actions/runs/39891847037) passed 10 source/test contracts, actual Kotlin assemble/lint, APK signature and version checks. [Store publisher #35](https://github.com/zexaldragneel/selura-extensions/actions/runs/39892393885) passed preservation checks: 43 packages, 341 source IDs, 42 byte-identical other APKs, all icons unchanged.
+- **User confirmation:** Following the update/test instructions, owner stated **"it works now"**. Mark Hive Scans post-rollback functionality **confirmed on Android** and the reported failure **resolved for the owner's tested scenario**. Do not claim which exact chapter was tested, across-the-board site availability, offline completeness, performance improvement, or the definitive cause of the earlier Cloudflare challenge; those have not been independently established.
+- Keep problematic cache optimization [PR #85](https://github.com/zexaldragneel/selura-reader/pull/85) closed/unmerged; keep [rollback PR #87](https://github.com/zexaldragneel/selura-reader/pull/87) in its pinned native extension stack rather than merging into the legacy Flutter `main`. No new reader APK needed; user-tested native Build #119 stays stable. No user-library data should be removed or source IDs migrated. Future performance work should focus on diagnostics, conservative caching per server policy, and one-extension device acceptance before catalog publication.
+
 ## Hive Scans Cloudflare regression report and safe rollback — 2026-10-23
 
 - **Owner report:** After publishing optimized Hive Scans **v1.6.4229** through Selura Extensions store [#33](https://github.com/zexaldragneel/selura-extensions/actions/runs/39891046516), owner reported **"now it shows failed to bypass cloudflare."** This is a confirmed on-device error report, NOT a confirmed cause. We have not captured failing endpoint or browser challenge type, so do not claim the new cache policy caused Cloudflare or that public site access is assured. Do not bypass authentication or site restrictions.
