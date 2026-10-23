@@ -222,6 +222,9 @@ def patch_screen(s: str) -> str:
                 } else {
                     viewModel.runChapterDownloadActions(items, action)
                 }
+                // The branches above return Job (scope.launch) or Unit.
+                // Force a Unit-returning callback as the MangaScreen API requires.
+                Unit
             }).takeIf { !successState.source.isLocalOrStub() },""",
         "single chapter manual retry gate",
     )
