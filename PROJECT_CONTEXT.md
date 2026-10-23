@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-23
 
+## Build #119 — user-confirmed Android functionality (2026-10-23)
+
+- Owner tested the installed signed [Build #119](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-82-run-119) following the single-chapter recovery instructions and explicitly reported **"it works i confirm"**. Record **on-device functionality confirmed** for the guarded chapter recovery feature in [native PR #82](https://github.com/zexaldragneel/selura-reader/pull/82). The release had already passed 105 Python tests, native Kotlin `:app:assembleRelease`, unchanged app ID `com.selura.manga`, original signing certificate, and metadata digest checks.
+- This brief confirmation does not establish which chapter was retried, whether Cancel was separately exercised, whether all downloaded pages opened offline, or whether the earlier five temp folders have been recovered. No automatic cleanup, source migration, or user-data deletion should be inferred or performed. Future development must preserve storage, saved pages, manga library, history, source IDs, backups, signing identity and existing premium themes.
+- PR #82 is stacked above canonical PR #72, not the legacy Flutter `main`; native branch integration should retain this ordering. Next candidate milestone: reassess leftover temporary-folder counts through the read-only review, then prioritize background NHentai **Move** safety and performance without duplicates.
+
 ## Guard single-chapter recovery — native PR #82 (2026-10-23)
 
 - **Feature branch:** [PR #82](https://github.com/zexaldragneel/selura-reader/pull/82) `feature/selura-safe-single-chapter-recovery`, stacked directly on canonical white-label native PR #72 (Build #108). **Never merge this native feature directly into legacy Flutter `main`.** [Tracking issue #81](https://github.com/zexaldragneel/selura-reader/issues/81).
