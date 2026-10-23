@@ -82,9 +82,9 @@ def patch_hive_source(source: str) -> str:
     # The upstream code explicitly demands a network revalidation even for
     # already-fresh public images. Remove that forced policy, but leave the
     # normal HTTP cache directives, per-source headers and host checks intact.
-    if source.count("import okhttp3.CacheControl\\n") != 1:
+    if source.count("import okhttp3.CacheControl\n") != 1:
         raise orphaned_sources.SourceContractError("Hive Scans cache import changed")
-    source = source.replace("import okhttp3.CacheControl\\n", "", 1)
+    source = source.replace("import okhttp3.CacheControl\n", "", 1)
     return source.replace(EXPECTED_REQUEST, CACHED_REQUEST + "\n" + PAGE_CODE, 1)
 
 
