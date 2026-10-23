@@ -50,9 +50,29 @@ class HiveDownloadsTests(unittest.TestCase):
         self.assertIn('host.endsWith(".hivetoon.com")', result)
         self.assertIn("url.isHttps", result)
         self.assertIn("Try opening this chapter in WebView", result)
-        self.assertIn(hive.EXPECTED_REQUEST, result)
+        self.assertIn(hive.CACHED_REQUEST, result)
+        self.assertNotIn(hive.EXPECTED_REQUEST, result)
+        self.assertNotIn("CacheControl.Builder().noCache()", result)
+        self.assertNotIn("import okhttp3.CacheControl", result)
         self.assertIn("package eu.kanade.tachiyomi.extension.en.hivescans", result)
         self.assertNotIn("solveCaptcha", result)
+
+    def test_http_cache_policy_respects_source_headers_and_server_rules(self):
+        # A normal GET lets the existing HTTP cache reuse a *fresh* response,
+        # without forcing stale assets or bypassing server cache/no-store policy.
+        result = hive.patch_hive_source(HIVE_ORIGINAL)
+        self.assertIn("override fun imageRequest(page: Page): Request = GET(", result)
+        self.assertIn("page.imageUrl!!,\n        headers,\n    )", result)
+        self.assertNotIn("CacheControl", result)
+        self.assertIn("override suspend fun getPageList(chapter: SChapter)", result)
+        self.assertIn("allowedImageHost(url.host)", result)
+        self.assertIn("url.isHttps", result)
+        self.assertIn("Hive Scans did not provide public chapter images", result)
+
+    def test_cache_preflight_rejects_changed_import(self):
+        changed = HIVE_ORIGINAL.replace("import okhttp3.CacheControl\n", "")
+        with self.assertRaises(sources.SourceContractError):
+            hive.patch_hive_source(changed)
 
     def test_refuse_duplicate_or_changed_upstream(self):
         with self.assertRaises(sources.SourceContractError):
