@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-23
 
+## Hive Scans rollback — owner confirms Android working (2026-10-23)
+
+- Following the owner's report **"failed to bypass cloudflare"** on the cache-optimized Hive Scans v1.6.4229, we rebuilt and republished the previous working public image-request behavior as signed **Hive Scans v1.6.4430** (versionCode **110430**) in the existing store. [Reader PR #87](https://github.com/zexaldragneel/selura-reader/pull/87), [Kotlin/signing CI #3](https://github.com/zexaldragneel/selura-reader/actions/runs/39891847037), [extension store PR #12](https://github.com/zexaldragneel/selura-extensions/pull/12), and [publisher #35](https://github.com/zexaldragneel/selura-extensions/actions/runs/39892393885) document the release. All 43 catalog extensions, 341 source IDs, 42 other APK bytes and all icons were preserved.
+- **Owner's explicit Android acceptance:** In response to the published rollback instructions, owner replied **"it works now"**. Treat this as confirmation that Hive Scans functionality recovered after the rollback, not as a comprehensive verification of every chapter, a measured loading-speed gain, or a complete offline download/library audit. The exact reason for the earlier Cloudflare challenge remains uncertain. Do not reintroduce the removed `noCache()` optimization without isolated investigation and real-device regression checks. The earlier optimization [PR #85](https://github.com/zexaldragneel/selura-reader/pull/85) is closed/unmerged.
+- **Stable baseline:** Main Selura Manga reader Build #119 is unchanged; Hive Scans v1.6.4430 is the latest owner-confirmed functional source update. Retain the existing Hive Scans Android package, source ID, signer, chapter paths, downloaded data, bookmarks, history and backups. Owner explicitly requested skipping further NHentai migration work.
+
 ## Hive Scans Cloudflare regression report and safe rollback — 2026-10-23
 
 - **Owner report:** After publishing optimized Hive Scans **v1.6.4229** through Selura Extensions store [#33](https://github.com/zexaldragneel/selura-extensions/actions/runs/39891046516), owner reported **"now it shows failed to bypass cloudflare."** This is a confirmed on-device error report, NOT a confirmed cause. We have not captured failing endpoint or browser challenge type, so do not claim the new cache policy caused Cloudflare or that public site access is assured. Do not bypass authentication or site restrictions.
