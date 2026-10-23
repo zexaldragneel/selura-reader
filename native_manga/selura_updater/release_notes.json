@@ -1,14 +1,14 @@
 {
-  "prNumber": 72,
+  "prNumber": 82,
   "added": [
-    "Selura Manga developer identification in About: Zexal Dragneel."
+    "Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes."
   ],
   "improved": [
-    "Selura's own icon replaces the remaining Mihon logo in More and About.",
-    "What's new opens Selura's official GitHub releases while open-source licenses remain available."
+    "Check exact manga/source/chapter download paths instead of guessing from temporary folder names; inspect storage before and immediately after retry confirmation.",
+    "Preserve unfinished pages when an already completed chapter is encountered, while retaining the existing offline reader, downloads and queue."
   ],
   "fixed": [
-    "Removed outdated Mihon Discord, Facebook, X, Reddit, website, GitHub, Help, Support, donation prompts and misleading upstream privacy-policy link from the visible interface.",
-    "Disabled the original Mihon update prompt to keep only Selura's independent verified update flow and revised crash help to avoid upstream Discord."
+    "Prevent silent deletion of older temporary files when a completed chapter archive exists.",
+    "Block new chapter retry if a matching completed chapter exists, or storage inspection is inconclusive."
   ]
 }
