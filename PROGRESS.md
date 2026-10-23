@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-23
 
+## Build #119 — user-confirmed Android functionality (2026-10-23)
+
+- **Owner Android confirmation:** After signed [Build #119](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-82-run-119) was delivered with safe per-chapter retry guidance, owner replied **"it works i confirm."** Treat the requested single-chapter recovery feature as **confirmed working on device**. [Native draft PR #82](https://github.com/zexaldragneel/selura-reader/pull/82) contains the implementation; [CI #119](https://github.com/zexaldragneel/selura-reader/actions/runs/39881698226) passed 105 Python regressions, native build, signer and release feed verification, versionCode 1119.
+- **Acceptance limits:** The reply does not identify chapter, retry result details, Cancel coverage, complete offline page readability, or the remaining five-temp-folder inventory. Do not claim every previously unfinished chapter is restored. No cleanup/deletion, migration, alternate signer or replacement app ID was performed for this documentation milestone.
+- **Next:** Keep PR #82 native stack distinct from Flutter `main`. Optionally check remaining temp-folder inventory through existing read-only settings, then continue the protected background NHentai **Move** track with explicit confirmation and preservation of all progress/categories/bookmarks/downloads before mass migration.
+
 ## Single-chapter retry confirmation and orphan preservation — 2026-10-23
 
 - [Native draft PR #82](https://github.com/zexaldragneel/selura-reader/pull/82) implements [Issue #81](https://github.com/zexaldragneel/selura-reader/issues/81) on top of PR #72/Build #108. Script `native_manga/safe_single_chapter_recovery.py` updates real native Kotlin chapter Download controls and the existing `DownloadManager` to inspect only a selected chapter's **exact canonical** source/manga/download folder. For a matching unfinished folder it shows existing image/pending-write counts, explicit user confirmation, and a second safety check immediately before triggering the existing chapter action. No automatic folder-to-chapter guess, queue reattachment or bulk retry.
