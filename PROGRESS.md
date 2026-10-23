@@ -1,6 +1,12 @@
 # Selura — Development Progress
 Last updated: 2026-10-23
 
+## Weeb Central v1.6.4601 — owner-confirmed Android functionality (2026-10-23)
+
+- After the verified single-extension Weeb Central `v1.6.4601` update was published through [extension store PR #13](https://github.com/zexaldragneel/selura-extensions/pull/13), the owner replied **"i confirm"** to the instruction to open a public manga chapter and verify page loading. Record **Android function confirmed for the owner's tested scenario**. Exact chapter title, offline page completeness, broader source health and quantified performance gains were not specified; do not assert them.
+- [Reader native extension PR #90](https://github.com/zexaldragneel/selura-reader/pull/90) implements HTTPS `data-src` to `src` image fallback and a clear no-pages error without touching client request headers, caching or source identities. Build/signing/lint and 12 tests passed in [CI run #1](https://github.com/zexaldragneel/selura-reader/actions/runs/39921189369). Public store [publish run #37](https://github.com/zexaldragneel/selura-extensions/actions/runs/39921902900) verified 43 extensions, 341 source identities, and 42 unchanged other APKs, including working Hive Scans v1.6.4430.
+- **Confirmed rollout discipline:** We are intentionally investigating and publishing targeted Selura extensions **one at a time** with a pinned upstream source, isolated compile/signature check, package/source ID retention, a non-destructive rollback strategy and owner device validation. Small batches may be considered later only with independent per-source gates. Do **not** automatically rewrite all 43 sources. Owner explicitly said NHentai migration is already satisfactory, and Hive Scans rollback is stable; leave both untouched. Selura Manga native Build #119 remains user-tested and unchanged.
+
 ## One-extension Weeb Central reliability release — 2026-10-23
 
 - After owner-confirmed Hive Scans v1.6.4430 restored access, owner requested improvements to **other** Selura manga extensions. Keep the stable Hive Scans release and skip the already-working NHentai migration improvements.
