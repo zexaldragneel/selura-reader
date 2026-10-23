@@ -23,3 +23,12 @@ Reported 2026-10-22: Selura Manga user says Hive Scans chapter downloads do not 
 5. If the site blocks the public chapter request, do not bypass it; capture the HTTP status/error and report that the website may restrict access.
 
 Do not claim device functionality before step 4.
+
+## Follow-up: public image HTTP cache efficiency — 2026-10-23
+
+- **Current signed store baseline:** Hive Scans has Android package `eu.kanade.tachiyomi.extension.en.selurahivescans`, versionName `1.6.4028`, versionCode `110028` and immutable source versionId `7301`. Other 42 packages and the user's library remain unchanged.
+- **Measured code bottleneck, not a measured device speedup:** The pinned Hive Scans adapter explicitly called `CacheControl.Builder().noCache().build()` on every image request. This forces revalidation rather than allowing OkHttp to reuse a still-fresh public image cache entry. We now generate `GET(page.imageUrl!!, headers)` and rely on the normal HTTP cache. **The server's no-store/no-cache, private, auth and expiration directives still apply.** We do not force cache storage, bypass auth, retry 403/429, change domains or increase image request concurrency.
+- The existing chapter HTML `getPageList` parser, HTTPS and HiveToons-host checks and failure messages are unchanged. No manga/source ID, package name, signer, backup, download database or reading progress changes. The only functional extension change is to remove the forced image cache revalidation.
+- The signed extension workflow uses a **monotonically higher** `versionCode` seed (4200 + workflow run number), checks current published versionCode `110028`, compiles and lints the real Kotlin extension, validates the original signed APK and publishes an immutable release. The catalog is not updated by the reader workflow.
+- Next, publish only this verified new Hive Scans APK into `zexaldragneel/selura-extensions` while checking all 42 other APK digests and all 43 icons. User should then refresh the existing Selura Extensions store, update Hive Scans in place, and compare repeated public chapter loads; offline downloaded CBZ reading and library data must remain functional.
+- **Performance and real-site behavior remain Android-unverified** until measured on the user's device. Network speed gains require a cacheable server response and an existing matching cache entry; some responses must still fetch over the network.

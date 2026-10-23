@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/selura-orphaned-18-sources
+      - feature/selura-hivescans-html-downloads
     paths:
       - 'selura_extensions/hivescans_download_fix.py'
       - 'selura_extensions/tests/test_hivescans_download_fix.py'
@@ -48,7 +49,7 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/hivescans_download_fix.py keiyoushi-deps \
-            --version-code "$((4000 + ${{ github.run_number }}))" \
+            --version-code "$((4200 + ${{ github.run_number }}))" \
             --task-file "$RUNNER_TEMP/hive-tasks.txt"
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/hive-tasks.txt")" -eq 1
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/hive-tasks.txt")" -eq 1
@@ -103,7 +104,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.selurahivescans'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          test "$version" -gt 109031
+          # Published Hive Scans in the store is 1.6.4028 / 110028.
+          # This must upgrade in place rather than silently downgrade.
+          test "$version" -gt 110028
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/selurahivescans.apk
@@ -144,5 +147,5 @@ jobs:
           fi
           gh release create "$tag" release/selurahivescans.apk \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" \
-            --title "Hive Scans chapter page download fix #${{ github.run_number }}" \
-            --notes "Real Kotlin Hive Scans public HTML chapter-image fix; same Android package, permanent Selura signer and source version 7301. No existing library or source migration. Device download acceptance pending." --prerelease
+            --title "Hive Scans HTTP cache performance #${{ github.run_number }}" \
+            --notes "Hive Scans: remove forced image cache revalidation while honoring server HTTP cache directives; original public HTML chapter-image parser, Android package, permanent signer and immutable source identity 7301 preserved. No library migration. Android speed comparison pending." --prerelease
