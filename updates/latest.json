@@ -2,21 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Selura Manga developer identification in About: Zexal Dragneel."
+      "Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes."
     ],
     "fixed": [
-      "Removed outdated Mihon Discord, Facebook, X, Reddit, website, GitHub, Help, Support, donation prompts and misleading upstream privacy-policy link from the visible interface.",
-      "Disabled the original Mihon update prompt to keep only Selura's independent verified update flow and revised crash help to avoid upstream Discord."
+      "Prevent silent deletion of older temporary files when a completed chapter archive exists.",
+      "Block new chapter retry if a matching completed chapter exists, or storage inspection is inconclusive."
     ],
     "improved": [
-      "Selura's own icon replaces the remaining Mihon logo in More and About.",
-      "What's new opens Selura's official GitHub releases while open-source licenses remain available."
+      "Check exact manga/source/chapter download paths instead of guessing from temporary folder names; inspect storage before and immediately after retry confirmation.",
+      "Preserve unfinished pages when an already completed chapter is encountered, while retaining the existing offline reader, downloads and queue."
     ]
   },
-  "notes": "What's new: Selura Manga developer identification in About: Zexal Dragneel.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108",
+  "notes": "What's new: Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-82-run-119",
   "schemaVersion": 1,
-  "sha256": "decabe11e53dabb40434b375f013635bccfcde971605dd4dd1fabd7905b0f1c5",
-  "versionCode": 1108,
-  "versionName": "Selura Manga Build 108"
+  "sha256": "ccbc53ea0bf6b779724a616452156a741b07b3fd0a40216d05f1caf41f1817e1",
+  "versionCode": 1119,
+  "versionName": "Selura Manga Build 119"
 }
