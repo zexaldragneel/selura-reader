@@ -144,7 +144,7 @@ def patch_screen(s: str) -> str:
     return once(
         s,
         """            onDownloadChapter = viewModel::runChapterDownloadActions.takeIf { !successState.source.isLocalOrStub() },""",
-        """            onDownloadChapter = ({ items, action ->
+        """            onDownloadChapter = ({ items: List<ChapterList.Item>, action: ChapterDownloadAction ->
                 // All bulk/other actions retain the existing Mihon semantics.
                 // Only manual single-chapter START and START_NOW inspect _tmp.
                 if (
