@@ -1,5 +1,11 @@
 # Selura — Project Context
-Last updated: 2026-10-22
+Last updated: 2026-10-23
+
+## Owner-installed Build #108 — 2026-10-23
+
+- **Owner confirmation:** After being asked directly whether Build #108 was installed, the owner replied, "yes i confirm." Record this as **Android installation confirmed** for the signed [Build #108 release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-72-run-108) from canonical native [PR #72](https://github.com/zexaldragneel/selura-reader/pull/72). The owner did **not** separately confirm the More/About screenshots, open-source license screen, offline chapter reading, library/history/categories, or in-app update flow in this reply; these remain explicit acceptance checks. Do not conflate installation with detailed runtime verification.
+- **Next priority:** Safe, non-destructive review and recovery of five remaining Hive Scans temporary chapter folders (previously inventoried 118 image-like files and 13 pending .tmp writes, with the persisted queue empty). The five folders must not be automatically deleted, renamed, or matched to guessed chapter IDs. Any retry must be user-authorized and should confirm the chapter has no valid completed CBZ first. Preserve source IDs, backups, manga data, offline reading, custom themes, signing identity and `com.selura.manga`.
+- This milestone is documentation-only; no new Kotlin changes, APK or device recovery are claimed.
 
 ## First verified first-party UI APK — Build #108 (2026-10-22)
 
