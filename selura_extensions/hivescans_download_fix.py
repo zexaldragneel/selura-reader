@@ -17,6 +17,13 @@ EXPECTED_REQUEST = """    override fun imageRequest(page: Page): Request = GET(
         headers,
         CacheControl.Builder().noCache().build(),
     )"""
+# Allow the existing OkHttp cache to reuse fresh public image responses when
+# the provider permits it. We neither force caching nor cache locked responses:
+# HTTP response cache directives and the server's access rules still apply.
+CACHED_REQUEST = """    override fun imageRequest(page: Page): Request = GET(
+        page.imageUrl!!,
+        headers,
+    )"""
 PAGE_CODE = r'''
     // HiveToons 2.0 exposes every public chapter image in the HTML reader.
     // The older Iken /api/chapter response is not consistently available.
@@ -72,7 +79,13 @@ def patch_hive_source(source: str) -> str:
         "import eu.kanade.tachiyomi.source.model.Page\n" + EXTRA_IMPORTS,
         1,
     )
-    return source.replace(EXPECTED_REQUEST, EXPECTED_REQUEST + "\n" + PAGE_CODE, 1)
+    # The upstream code explicitly demands a network revalidation even for
+    # already-fresh public images. Remove that forced policy, but leave the
+    # normal HTTP cache directives, per-source headers and host checks intact.
+    if source.count("import okhttp3.CacheControl\\n") != 1:
+        raise orphaned_sources.SourceContractError("Hive Scans cache import changed")
+    source = source.replace("import okhttp3.CacheControl\\n", "", 1)
+    return source.replace(EXPECTED_REQUEST, CACHED_REQUEST + "\n" + PAGE_CODE, 1)
 
 
 def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[str]:
