@@ -73,8 +73,8 @@ class SafeRecoveryTests(unittest.TestCase):
         self.assertIn(".setPositiveButton(R.string.selura_single_recovery_retry)", result)
         self.assertIn("val current = manager.inspectUnfinishedChapter(", result)
         self.assertIn("if (current == null || current.completedAlready)", result)
-        self.assertIn("if (e is CancellationException)", result) if False else None
         self.assertIn("} catch (e: CancellationException)", result)
+        self.assertIn("                Unit\n            }).takeIf", result)
         self.assertEqual(result.count("viewModel.runChapterDownloadActions(items, action)"), 3)
 
     def test_orphan_tmp_is_preserved_when_already_completed(self):
