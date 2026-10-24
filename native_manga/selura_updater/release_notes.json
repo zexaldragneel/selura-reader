@@ -1,13 +1,13 @@
 {
-  "prNumber": 94,
+  "prNumber": 97,
   "added": [
-    "Seiryn name and owner-selected celestial moon-and-book branding throughout the native Android interface."
+    "Reader Performance 2.0: nearby-only online chapter image prefetch, including for very long chapters."
   ],
   "improved": [
-    "Updated launcher icon, in-app branding panel and update prompts while preserving installed app identity and trusted GitHub update flow.",
-    "Kept the same manga library, extensions, offline downloads, reading progress, and original signing certificate."
+    "Prioritize the current page and bound optional look-ahead to 8 upcoming pages with 2 previous pages.",
+    "Reduce background page-fetch chunk concurrency from 5 to 3 while retaining existing cancellation and retries."
   ],
   "fixed": [
-    "Replaced obsolete Selura-facing branding in the selected app identity screens without changing the extension catalog URL."
+    "Avoid scheduling an entire online chapter when opening its first page with read-ahead enabled."
   ]
 }
