@@ -13,8 +13,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 RES = "app/src/main/res/drawable-nodpi"
 ASSETS = {
-    "seiryn_brand_art.webp": "fd143ce8c4a1765449473b641bc7065fd3bb8021c6e1caf34c69f34aff980b7b",
-    "seiryn_launcher_icon.webp": "9b59d35c7edb67f5015db47928f39c857b12e7ddce3032e7b214dc47767f6014",
+    "seiryn_brand_art.webp": "15d272373a0cf079a836f7a8157b3aca076d2110a275e70bf66342661b4771ab",
+    "seiryn_launcher_icon.webp": "e2ce6ade75c4db49bf0860d11a797b1506d6f7553c15646ed6e6be4d2807f246",
 }
 I18N = "i18n/src/commonMain/moko-resources/base/strings.xml"
 MANIFEST = "app/src/main/AndroidManifest.xml"
