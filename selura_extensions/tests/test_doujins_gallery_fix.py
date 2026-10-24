@@ -79,7 +79,7 @@ class DoujinsGalleryTests(unittest.TestCase):
     def test_copies_only_one_module_task_and_does_not_edit_original(self):
         with tempfile.TemporaryDirectory() as d:
             base = Path(d)
-            (base / "LICENSE").write_text("Apache-2.0")
+            (base / "LICENSE").write_text("Apache License Version 2.0")
             (base / "settings.gradle.kts").write_text("\nloadAllIndividualExtensions()\n")
             for lang, original, _, display in sources.SOURCES:
                 p = base / "src" / lang / original
