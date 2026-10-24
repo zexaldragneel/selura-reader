@@ -1,6 +1,7 @@
 """Contract tests: Seiryn is a visual rebrand, never an app-data migration."""
 from pathlib import Path
 import importlib.util
+import base64
 import tempfile
 import unittest
 
@@ -65,10 +66,10 @@ class SeirynBrandingTests(unittest.TestCase):
 
     def test_assets_match_exact_uploaded_art_derivatives(self):
         for file, expected_digest in b.ASSETS.items():
-            path = ROOT / "seiryn_branding" / file
+            path = ROOT / "seiryn_branding" / (file + ".b64")
             self.assertTrue(path.is_file(), file)
             import hashlib
-            payload = path.read_bytes()
+            payload = base64.b64decode(path.read_text().strip(), validate=True)
             self.assertEqual(hashlib.sha256(payload).hexdigest(), expected_digest)
             self.assertEqual(payload[:4], b"RIFF")
             self.assertEqual(payload[8:12], b"WEBP")
