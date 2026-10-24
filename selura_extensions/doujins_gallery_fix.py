@@ -58,8 +58,13 @@ def one(body: str, before: str, after: str, label: str) -> str:
 
 def patch_source(source: str) -> str:
     # Explicit unchanged contracts, including source/package and no new requests.
-    for anchor in (
+    valid_packages = (
         "package eu.kanade.tachiyomi.extension.en.doujins",
+        "package eu.kanade.tachiyomi.extension.en.seluradoujins",
+    )
+    if sum(source.count(package) for package in valid_packages) != 1:
+        raise orphaned_sources.SourceContractError("Doujins Kotlin source package changed")
+    for anchor in (
         "abstract class Doujins : KeiSource()",
         'client.get(getChapterUrl(chapter))',
         'val pageUrl = response.request.url.toString()',
