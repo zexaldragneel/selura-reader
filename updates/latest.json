@@ -2,20 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Reader Performance 2.0: nearby-only online chapter image prefetch, including for very long chapters."
+      "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
     ],
     "fixed": [
-      "Avoid scheduling an entire online chapter when opening its first page with read-ahead enabled."
+      "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
     ],
     "improved": [
-      "Prioritize the current page and bound optional look-ahead to 8 upcoming pages with 2 previous pages.",
-      "Reduce background page-fetch chunk concurrency from 5 to 3 while retaining existing cancellation and retries."
+      "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
+      "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
     ]
   },
-  "notes": "What's new: Reader Performance 2.0: nearby-only online chapter image prefetch, including for very long chapters.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-97-run-123",
+  "notes": "What's new: Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-100-run-125",
   "schemaVersion": 1,
-  "sha256": "288e7ef222c21ebdb11ee7d121b612774663a9180a54f80c1cf529b1f3f7b209",
-  "versionCode": 1123,
-  "versionName": "Seiryn Build 123"
+  "sha256": "c6f078a96ac794292223158a821a636a0cf873580c3903789bcb5fb86d6c7d0b",
+  "versionCode": 1125,
+  "versionName": "Seiryn Build 125"
 }
