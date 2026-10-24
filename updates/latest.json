@@ -2,21 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes."
+      "Seiryn name and owner-selected celestial moon-and-book branding throughout the native Android interface."
     ],
     "fixed": [
-      "Prevent silent deletion of older temporary files when a completed chapter archive exists.",
-      "Block new chapter retry if a matching completed chapter exists, or storage inspection is inconclusive."
+      "Replaced obsolete Selura-facing branding in the selected app identity screens without changing the extension catalog URL."
     ],
     "improved": [
-      "Check exact manga/source/chapter download paths instead of guessing from temporary folder names; inspect storage before and immediately after retry confirmation.",
-      "Preserve unfinished pages when an already completed chapter is encountered, while retaining the existing offline reader, downloads and queue."
+      "Updated launcher icon, in-app branding panel and update prompts while preserving installed app identity and trusted GitHub update flow.",
+      "Kept the same manga library, extensions, offline downloads, reading progress, and original signing certificate."
     ]
   },
-  "notes": "What's new: Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-82-run-119",
+  "notes": "What's new: Seiryn name and owner-selected celestial moon-and-book branding throughout the native Android interface.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-94-run-121",
   "schemaVersion": 1,
-  "sha256": "ccbc53ea0bf6b779724a616452156a741b07b3fd0a40216d05f1caf41f1817e1",
-  "versionCode": 1119,
-  "versionName": "Selura Manga Build 119"
+  "sha256": "e511f1bebf88160c8cb4151fc6923f504017be47490d16bc826f92a30ab0abfa",
+  "versionCode": 1121,
+  "versionName": "Seiryn Build 121"
 }
