@@ -60,7 +60,7 @@ def create_manifest(*, version_code: int, tag: str, apk: Path, changes: dict | N
         "schemaVersion": 1,
         "applicationId": APPLICATION_ID,
         "versionCode": version_code,
-        "versionName": f"Selura Manga Build {version_code - 1000}",
+        "versionName": f"Seiryn Build {version_code - 1000}",
         "notes": (
             "What's new: " + next(
                 (entry for section in ("added", "improved", "fixed")
@@ -68,7 +68,7 @@ def create_manifest(*, version_code: int, tag: str, apk: Path, changes: dict | N
                 "See the GitHub release for details.",
             )
             if changes is not None else
-            "Selura Manga improvements and fixes. Review the GitHub release before installing."
+            "Seiryn improvements and fixes. Review the GitHub release before installing."
         ),
         "releaseUrl": f"https://github.com/{OWNER}/{REPO}/releases/tag/{tag}",
         "sha256": sha256,

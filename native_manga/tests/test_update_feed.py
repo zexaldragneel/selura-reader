@@ -21,7 +21,7 @@ class UpdateMetadataTests(unittest.TestCase):
         )
         self.assertEqual(result["versionCode"], 1017)
         self.assertEqual(result["applicationId"], "com.selura.manga")
-        self.assertEqual(result["versionName"], "Selura Manga Build 17")
+        self.assertEqual(result["versionName"], "Seiryn Build 17")
         self.assertEqual(
             result["releaseUrl"],
             "https://github.com/zexaldragneel/selura-reader/releases/tag/"
