@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -136,6 +136,7 @@ jobs:
             --version-code "$((1000 + SELURA_NATIVE_VERSION_CODE))"
           python3 native_manga/optimize_reader.py native-upstream
           python3 native_manga/reader_performance_v2.py native-upstream
+          python3 native_manga/webtoon_decode_memory_v2.py native-upstream
           python3 native_manga/apply_premium_themes.py native-upstream
           python3 native_manga/refine_premium_themes.py native-upstream
           python3 native_manga/xianxia_v2.py native-upstream
@@ -205,6 +206,8 @@ jobs:
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/cache/ChapterCache.kt
           grep -q 'withOneTransientRetry' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
+          grep -Fq 'boundedWebtoonDecodeSampleSize(' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/coil/ImageDecoder.kt
+          grep -Fq 'MAX_TEMP_WEBTOON_PAGE_BYTES = 96L * 1024 * 1024' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/coil/ImageDecoder.kt
           grep -Fq 'private const val MAX_PAGES_AHEAD = 8' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
           grep -Fq 'pages.loadByRollingChunked(page.index, 2, 3)' \
