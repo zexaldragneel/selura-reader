@@ -1,13 +1,13 @@
 {
-  "prNumber": 97,
+  "prNumber": 100,
   "added": [
-    "Reader Performance 2.0: nearby-only online chapter image prefetch, including for very long chapters."
+    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
   ],
   "improved": [
-    "Prioritize the current page and bound optional look-ahead to 8 upcoming pages with 2 previous pages.",
-    "Reduce background page-fetch chunk concurrency from 5 to 3 while retaining existing cancellation and retries."
+    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
+    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
   ],
   "fixed": [
-    "Avoid scheduling an entire online chapter when opening its first page with read-ahead enabled."
+    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
   ]
 }
