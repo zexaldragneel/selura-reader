@@ -1,14 +1,13 @@
 {
-  "prNumber": 82,
+  "prNumber": 94,
   "added": [
-    "Confirm retry of one unfinished chapter from its own chapter list, with a read-only count of saved images and incomplete writes."
+    "Seiryn name and owner-selected celestial moon-and-book branding throughout the native Android interface."
   ],
   "improved": [
-    "Check exact manga/source/chapter download paths instead of guessing from temporary folder names; inspect storage before and immediately after retry confirmation.",
-    "Preserve unfinished pages when an already completed chapter is encountered, while retaining the existing offline reader, downloads and queue."
+    "Updated launcher icon, in-app branding panel and update prompts while preserving installed app identity and trusted GitHub update flow.",
+    "Kept the same manga library, extensions, offline downloads, reading progress, and original signing certificate."
   ],
   "fixed": [
-    "Prevent silent deletion of older temporary files when a completed chapter archive exists.",
-    "Block new chapter retry if a matching completed chapter exists, or storage inspection is inconclusive."
+    "Replaced obsolete Selura-facing branding in the selected app identity screens without changing the extension catalog URL."
   ]
 }
