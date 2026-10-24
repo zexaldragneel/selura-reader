@@ -6,15 +6,15 @@ com.selura.manga, signing, GitHub metadata and all library/source identities.
 Artwork is derived from the exact visual selected by the owner (2026-10-24).
 """
 import argparse
+import base64
 import hashlib
 from pathlib import Path
-import shutil
 
 HERE = Path(__file__).resolve().parent
 RES = "app/src/main/res/drawable-nodpi"
 ASSETS = {
-    "seiryn_brand_art.webp": "df66baf66bff143af13df517834b3151f66d8df4973bdf027fa2a0b90c5f8b8a",
-    "seiryn_launcher_icon.webp": "02f2b9296ce651cde605279b489b270f2cb55d7354c2dba74ccbace02b39fbd9",
+    "seiryn_brand_art.webp": "fd143ce8c4a1765449473b641bc7065fd3bb8021c6e1caf34c69f34aff980b7b",
+    "seiryn_launcher_icon.webp": "9b59d35c7edb67f5015db47928f39c857b12e7ddce3032e7b214dc47767f6014",
 }
 I18N = "i18n/src/commonMain/moko-resources/base/strings.xml"
 MANIFEST = "app/src/main/AndroidManifest.xml"
@@ -118,16 +118,16 @@ def patch(root: Path) -> None:
     art_dir = HERE / "seiryn_branding"
     files = {}
     for name, digest in ASSETS.items():
-        asset = art_dir / name
+        asset = art_dir / (name + ".b64")
         target = root / RES / name
         if target.exists() or not asset.is_file():
             raise SeirynBrandError(f"Conflicting/missing owner-approved image: {name}")
-        raw = asset.read_bytes()
+        raw = base64.b64decode(asset.read_text(encoding="ascii").strip(), validate=True)
         if raw[:4] != b"RIFF" or raw[8:12] != b"WEBP":
             raise SeirynBrandError(f"Unsupported Seiryn artwork: {name}")
         if hashlib.sha256(raw).hexdigest() != digest:
             raise SeirynBrandError(f"Seiryn owner image digest mismatch: {name}")
-        files[target] = asset
+        files[target] = raw
 
     if 'applicationId = "com.selura.manga"' not in app_build:
         raise SeirynBrandError("App ID changed")
@@ -139,8 +139,8 @@ def patch(root: Path) -> None:
     for rel, content in after.items():
         (root / rel).write_text(content, encoding="utf-8")
     (root / RES).mkdir(parents=True, exist_ok=True)
-    for destination, source in files.items():
-        shutil.copyfile(source, destination)
+    for destination, payload in files.items():
+        destination.write_bytes(payload)
     print("Applied Seiryn name + user-approved art, retained com.selura.manga and signer.")
 
 
