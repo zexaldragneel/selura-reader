@@ -1,8 +1,8 @@
-name: Selura Native Manga APK
+name: Seiryn Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -152,12 +152,21 @@ jobs:
           python3 native_manga/review_unfinished_transfers.py native-upstream
           python3 native_manga/remove_upstream_community_ui.py native-upstream
           python3 native_manga/safe_single_chapter_recovery.py native-upstream
+          # Final user-facing Seiryn visual rebrand; package, source IDs, signer
+          # and native updater endpoint remain unchanged for in-place installs.
+          python3 native_manga/apply_seiryn_branding.py native-upstream
           grep -Fq 'suspend fun inspectUnfinishedChapter(' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'canonicalDir + Downloader.TMP_DIR_SUFFIX' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'selura_single_recovery_retry' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/manga/MangaScreen.kt
           ! grep -Fq 'mangaDir.findFile(chapterDirname + TMP_DIR_SUFFIX)?.delete()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           test -s native-upstream/app/src/main/res/values/selura_single_chapter_recovery_strings.xml
-          grep -Fq 'painterResource(R.drawable.selura_manga_icon)' native-upstream/app/src/main/java/eu/kanade/presentation/more/LogoHeader.kt
+          grep -Fq 'painterResource(R.drawable.seiryn_brand_art)' native-upstream/app/src/main/java/eu/kanade/presentation/more/LogoHeader.kt
+          grep -Fq 'android:icon="@drawable/seiryn_launcher_icon"' native-upstream/app/src/main/AndroidManifest.xml
+          test -s native-upstream/app/src/main/res/drawable-nodpi/seiryn_brand_art.webp
+          test -s native-upstream/app/src/main/res/drawable-nodpi/seiryn_launcher_icon.webp
+          grep -Fq 'title = "Seiryn"' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
+          grep -Fq 'Add Seiryn extensions' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt
+          grep -Fq 'Seiryn update available' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraStartupUpdateCheck.kt
           grep -Fq 'Developed by Zexal Dragneel' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
           grep -Fq 'OpenSourceLicensesScreen()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
           ! grep -Fq 'https://mihon.app/privacy/' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
@@ -195,7 +204,7 @@ jobs:
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/cache/ChapterCache.kt
           grep -q 'withOneTransientRetry' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
-          grep -q '<string name="app_name" translatable="false">Selura Manga</string>' \
+          grep -q '<string name="app_name" translatable="false">Seiryn</string>' \
             native-upstream/i18n/src/commonMain/moko-resources/base/strings.xml
 
       - name: Configure Java 21
@@ -279,7 +288,7 @@ jobs:
           rm -f native-upstream/keystore.properties
 
   release:
-    name: Publish Selura Manga direct download
+    name: Publish Seiryn direct download
     needs: build
     if: >-
       github.event_name == 'workflow_dispatch' ||
@@ -312,11 +321,11 @@ jobs:
             TAG="test-native-dispatch-run-${{ github.run_number }}"
           fi
           gh release create "$TAG" \
-            "release/selura-manga.apk#Selura Manga Signed Native APK" \
+            "release/selura-manga.apk#Seiryn Signed Native APK" \
             --repo "${{ github.repository }}" \
             --target "${{ github.sha }}" \
-            --title "Selura Manga Native Preview · Build #${{ github.run_number }}" \
-            --notes "Based on Mihon v0.21.2 (Apache-2.0), with Selura's distinct com.selura.manga application ID. Supports original Mihon backup restore and Mihon-compatible extension engines. This installs separately from legacy Selura and Mihon; user Android verification required. Preserve upstream attribution." \
+            --title "Seiryn Native Preview · Build #${{ github.run_number }}" \
+            --notes "Based on Mihon v0.21.2 (Apache-2.0), with Seiryn display branding and the original com.selura.manga application ID. Supports original Mihon backup restore and Mihon-compatible extension engines. This installs separately from legacy Selura and Mihon; user Android verification required. Preserve upstream attribution." \
             --prerelease
 
       - name: Generate safe version metadata from verified signed APK
@@ -434,7 +443,7 @@ jobs:
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Publish verified Selura Manga build $GITHUB_RUN_NUMBER metadata"
+          git commit -m "Publish verified Seiryn build $GITHUB_RUN_NUMBER metadata"
           git push origin HEAD:gh-pages
 
       - name: Confirm public metadata URL
