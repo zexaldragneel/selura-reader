@@ -26,7 +26,7 @@ ORIGINAL = (
     "\n  }\n"
     '  suspend fun getPopularManga() = client.get("$baseUrl/top/month").asJsoup()\n'
     '  suspend fun search() = return parseGalleryPage(client.get(url).asJsoup())\n'
-    "  private fun parseGalleryPage(document: Document): MangasPage {\n"
+    "    private fun parseGalleryPage(document: Document): MangasPage {\n"
     + doujins.OLD_ARTIST + "\n"
     + doujins.OLD_IMAGE + "\n"
     "  }\n"
