@@ -1,5 +1,11 @@
 # Selura — Development Progress
-Last updated: 2026-10-23
+Last updated: 2026-10-24
+
+## Weeb Central — owner confirms all discussed checks (2026-10-24)
+
+- Owner followed up on the user-tested Weeb Central v1.6.4601 release with **"yes i confirm all"**. Record the owner's **broader acceptance of the discussed Weeb Central tests**, including public chapter-image reading and offline chapter reading, as user-reported functional on Android. This expands their earlier "i confirm" response; do **not** infer exact chapter names, the number of tested pages, coverage across every source, or quantitative speed results.
+- Treat **Weeb Central v1.6.4601** and **Hive Scans v1.6.4430** as accepted working extension baselines. Maintain the one-extension-at-a-time approach for targeted issues, with pin/build/lint/signature/metadata invariants and owner tests. Do not modify the already-satisfactory NHentai migration or the Android reader Build #119 merely to retest an extension.
+- No new code, APK, signing changes, or library migration is associated with this acceptance documentation.
 
 ## Weeb Central v1.6.4601 — owner-confirmed Android functionality (2026-10-23)
 
