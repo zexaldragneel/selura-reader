@@ -2,20 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+      "Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
+      "View estimated completed and unfinished chapter sizes and the 10 largest manga folders."
     ],
     "fixed": [
-      "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+      "Clarify download storage usage without touching library entries, reading progress, backups, downloads, or existing storage health tools."
     ],
     "improved": [
-      "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-      "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+      "Count downloaded chapters and storage file metadata in a bounded background scan without changing files.",
+      "Explicitly flag SAF file sizes that are unavailable and report partial totals when scan limits apply."
     ]
   },
-  "notes": "What's new: Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-100-run-125",
+  "notes": "What's new: Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-105-run-130",
   "schemaVersion": 1,
-  "sha256": "c6f078a96ac794292223158a821a636a0cf873580c3903789bcb5fb86d6c7d0b",
-  "versionCode": 1125,
-  "versionName": "Seiryn Build 125"
+  "sha256": "1c5392178da0ebf686298a56b9da5679688b00b393bfb6eb6f0e82aa368880b3",
+  "versionCode": 1130,
+  "versionName": "Seiryn Build 130"
 }
