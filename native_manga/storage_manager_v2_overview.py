@@ -155,7 +155,7 @@ object SeirynStorageOverview {
                 context,
                 Uri.parse(storagePreferences.baseStorageDirectory.get()),
             )
-            // findFile only; never use getDownloadsDirectory(), which may create it.
+            // Only inspect the existing SAF downloads folder; do not create one.
             val root = base?.findFile("downloads")
             if (root == null || !root.isDirectory) {
                 return@withContext Report(0, 0, 0L, 0L, 0, 0, 0, false, true, emptyList())
