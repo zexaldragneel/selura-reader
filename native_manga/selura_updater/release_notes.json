@@ -1,14 +1,15 @@
 {
-  "prNumber": 113,
+  "prNumber": 116,
   "added": [
-    "Automatic safety pause when a chapter source returns HTTP 429 rate limiting."
+    "Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
+    "Automatic rate-limit cooldown with up to three increasingly spaced resume attempts."
   ],
   "improved": [
-    "Stop new queued chapter requests after a rate limit until you manually resume downloads.",
-    "Preserve already downloaded page files and the queued chapters while respecting source access restrictions.",
-    "Retain Build #132's improved private-data-safe download error diagnostics."
+    "Limit active manga sources and page requests to one at a time to reduce request bursts.",
+    "Respect HTTP 429 with 15, 30 and 60 minute cooldowns and stop automatic attempts if rate limits persist.",
+    "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions."
   ],
   "fixed": [
-    "Avoid continuing a large chapter queue after confirmed rate limiting without creating additional retries or bypassing source restrictions."
+    "Avoid overlapping chapter downloads and eliminate the need to manually resume after the first temporary HTTP 429 cooldown."
   ]
 }
