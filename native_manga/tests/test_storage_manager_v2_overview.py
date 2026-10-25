@@ -15,8 +15,8 @@ import eu.kanade.tachiyomi.data.download.SeluraDownloadHealth
 fun getPreferences() {
     val downloadManager = remember { context.appGraph.downloadManager }
     val storagePreferences = remember { context.appGraph.storagePreferences }
-    var checkingStorage by remember { mutableStateOf(false) }
-    var reviewingTransfers by remember { mutableStateOf(false) }
+        var checkingStorage by remember { mutableStateOf(false) }
+        var reviewingTransfers by remember { mutableStateOf(false) }
     val result = SeluraDownloadHealth.scan(context, storagePreferences)
     downloadManager.startDownloads()
     MaterialAlertDialogBuilder(context)
