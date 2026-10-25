@@ -2,21 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
-      "View estimated completed and unfinished chapter sizes and the 10 largest manga folders."
+      "More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors."
     ],
     "fixed": [
-      "Clarify download storage usage without touching library entries, reading progress, backups, downloads, or existing storage health tools."
+      "Prevent later page exceptions from overwriting the original failure category; keep existing queue, partial files, and retry limits unchanged."
     ],
     "improved": [
-      "Count downloaded chapters and storage file metadata in a bounded background scan without changing files.",
-      "Explicitly flag SAF file sizes that are unavailable and report partial totals when scan limits apply."
+      "Capture the first failed page's diagnostic even when multiple chapter pages fail concurrently.",
+      "Distinguish closed HTTP responses, connection aborts, source CDN exhaustion, storage permission errors, and known HTTP status codes without revealing private URLs or cookies."
     ]
   },
-  "notes": "What's new: Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-105-run-130",
+  "notes": "What's new: More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-111-run-132",
   "schemaVersion": 1,
-  "sha256": "1c5392178da0ebf686298a56b9da5679688b00b393bfb6eb6f0e82aa368880b3",
-  "versionCode": 1130,
-  "versionName": "Seiryn Build 130"
+  "sha256": "7729eb7455b9c55d329992d23187838b19f3bd277bcfe39d56a9699d4dcf7099",
+  "versionCode": 1132,
+  "versionName": "Seiryn Build 132"
 }
