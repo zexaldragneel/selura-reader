@@ -272,6 +272,9 @@ def one(s: str, old: str, new: str, reason: str) -> str:
 
 
 def patch_settings(s: str) -> str:
+    # Never attach a second copy of the overview to already-patched settings.
+    if "SeirynStorageOverview" in s or "checkingStorageUsage" in s:
+        raise StorageOverviewPatchError("Storage overview has already been inserted")
     for required in (
         "val downloadManager = remember { context.appGraph.downloadManager }",
         "val storagePreferences = remember { context.appGraph.storagePreferences }",
