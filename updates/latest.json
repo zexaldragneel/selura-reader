@@ -2,21 +2,23 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Automatic safety pause when a chapter source returns HTTP 429 rate limiting."
+      "Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
+      "Automatic rate-limit cooldown with up to three increasingly spaced resume attempts."
     ],
     "fixed": [
-      "Avoid continuing a large chapter queue after confirmed rate limiting without creating additional retries or bypassing source restrictions."
+      "Avoid overlapping chapter downloads and eliminate the need to manually resume after the first temporary HTTP 429 cooldown."
     ],
     "improved": [
-      "Stop new queued chapter requests after a rate limit until you manually resume downloads.",
-      "Preserve already downloaded page files and the queued chapters while respecting source access restrictions.",
-      "Retain Build #132's improved private-data-safe download error diagnostics."
+      "Limit active manga sources and page requests to one at a time to reduce request bursts.",
+      "Respect HTTP 429 with durable WorkManager cooldowns of 15, 30 and 60 minutes, and stop automatic attempts after persistent limits.",
+      "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions.",
+      "Preserve the scheduled cooldown across Android app process restarts; explicit Pause or Clear cancels automatic continuation."
     ]
   },
-  "notes": "What's new: Automatic safety pause when a chapter source returns HTTP 429 rate limiting.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-113-run-134",
+  "notes": "What's new: Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-116-run-140",
   "schemaVersion": 1,
-  "sha256": "19372af09b64df4a1cbca6dbe292b03cf314fbedd5a55db22f46d6365fa6efb1",
-  "versionCode": 1134,
-  "versionName": "Seiryn Build 134"
+  "sha256": "a4b20f4325c907dc07313a8877fe648dc6c1e2bd6d54ae8c295759d3aac11223",
+  "versionCode": 1140,
+  "versionName": "Seiryn Build 140"
 }
