@@ -67,6 +67,31 @@ class MangaKakalotCdnFixTests(unittest.TestCase):
         self.assertNotIn("for (cdnUrl in cdnSet)", fix.NEW_CDN)
         self.assertIn("for (cdnUrl in alternateCdns)", fix.NEW_CDN)
 
+    def test_mangakakalot_conservative_pacing_only_one_source(self):
+        upstream = """package eu.kanade.tachiyomi.extension.en.mangakakalot
+class Mangakakalot : MangaBox() {
+    override fun OkHttpClient.Builder.configureClient(): OkHttpClient.Builder = apply {
+        addInterceptor(::mergeImagesInterceptor)
+        addInterceptor(::useAltCdnInterceptor)
+        rateLimit(2, 1.seconds)
+    }
+}
+"""
+        updated = fix.patch_mangakakalot_request_pace(upstream)
+        self.assertIn("rateLimit(1, 2.seconds)", updated)
+        self.assertNotIn("rateLimit(2, 1.seconds)", updated)
+        self.assertEqual(updated.count("rateLimit("), 1)
+        self.assertEqual(updated.count("addInterceptor(::useAltCdnInterceptor)"), 1)
+        self.assertNotIn("retryWhen", updated)
+        self.assertNotIn("Cookie", updated)
+        self.assertNotIn("setUserAgent", updated)
+        self.assertNotIn("alternateUrl", updated)
+        self.assertIn("eu.kanade.tachiyomi.extension.en.mangakakalot", updated)
+        with self.assertRaises(fix.MangaKakalotContractError):
+            fix.patch_mangakakalot_request_pace(updated)
+        with self.assertRaises(fix.MangaKakalotContractError):
+            fix.patch_mangakakalot_request_pace(upstream.replace("rateLimit(2, 1.seconds)", "rateLimit(10, 1.seconds)"))
+
     def test_existing_package_source_identity_and_scope(self):
         self.assertIn(fix.KEY, orphaned.SOURCES)
         self.assertEqual(orphaned.SOURCE_VERSION_ID, 7301)

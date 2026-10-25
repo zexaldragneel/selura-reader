@@ -166,6 +166,23 @@ def patch_library(source: str) -> str:
     return exactly_once(source, OLD_ADD, NEW_ADD, "CDN host synchronization")
 
 
+def patch_mangakakalot_request_pace(source: str) -> str:
+    """Reduce request bursts in this Mangakakalot APK only.
+
+    Never retry a source HTTP 429, rotate source hosts/IPs, or modify
+    authentication. Optional Merge Images probes use the same paced client.
+    """
+    if "class Mangakakalot" not in source or "configureClient()" not in source:
+        raise MangaKakalotContractError("Unexpected pinned Mangakakalot source module")
+    return exactly_once(
+        source,
+        "        rateLimit(2, 1.seconds)",
+        "        // Conservative request pacing for long chapters.\n"
+        "        rateLimit(1, 2.seconds)",
+        "per-source request pacing",
+    )
+
+
 def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[str]:
     if KEY not in orphaned_sources.SOURCES or orphaned_sources.SOURCE_VERSION_ID != 7301:
         raise MangaKakalotContractError("Published Mangakakalot source identity changed")
@@ -176,11 +193,23 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
     original_lib = library.read_text(encoding="utf-8")
     original_module = original.read_text(encoding="utf-8")
     transformed = patch_library(original_lib)  # preflight before writing
+    # Long webtoons can exhaust image-host quotas even with serial page
+    # downloads. Apply a more conservative request rate to this source alone.
+    patched_module = patch_mangakakalot_request_pace(original_module)
     orphaned_sources.prepare(checkout, version_code, verify_git=verify_git)
     if not (checkout / TARGET).is_file():
         raise MangaKakalotContractError("Isolated Mangakakalot source was not generated")
     if original.read_text(encoding="utf-8") != original_module:
         raise MangaKakalotContractError("Original upstream source was changed")
+    target_module = checkout / TARGET
+    generated = target_module.read_text(encoding="utf-8")
+    # Isolated source copy must differ solely in the package namespace.
+    old_package = "eu.kanade.tachiyomi.extension.en.mangakakalot"
+    own_package = "eu.kanade.tachiyomi.extension.en.seluramangakakalot"
+    expected = original_module.replace(old_package, own_package)
+    if generated != expected:
+        raise MangaKakalotContractError("Unexpected generated Mangakakalot Kotlin module")
+    target_module.write_text(patched_module.replace(old_package, own_package), encoding="utf-8")
     library.write_text(transformed, encoding="utf-8")
     return [
         ":src:en:seluramangakakalot:assembleRelease",

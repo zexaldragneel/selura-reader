@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/selura-orphaned-18-sources
+      - fix/seiryn-mangakakalot-cdn-response-lifecycle
     paths:
       - 'selura_extensions/mangakakalot_cdn_fix.py'
       - 'selura_extensions/tests/test_mangakakalot_cdn_fix.py'
@@ -48,7 +49,7 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/mangakakalot_cdn_fix.py keiyoushi-deps \
-            --version-code "$((5400 + ${{ github.run_number }}))" \
+            --version-code "$((5500 + ${{ github.run_number }}))" \
             --task-file "$RUNNER_TEMP/mangakakalot-tasks.txt"
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
@@ -103,9 +104,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.seluramangakakalot'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          # Must install in place over the published Mangakakalot versionCode 109019.
+          # Must install in place over published fixed Mangakakalot v1.6.5417 (Android versionCode 111417).
           # Preserve the original Android package/signing key/source ID.
-          test "$version" -gt 109019
+          test "$version" -gt 111417
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/seluramangakakalot.apk
