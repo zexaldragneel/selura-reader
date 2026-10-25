@@ -23,6 +23,7 @@ fun getPreferences() {
     getDeleteChaptersGroup(
                 downloadPreferences = downloadPreferences,
 }
+"""
 
 
 class StorageOverviewTests(unittest.TestCase):
