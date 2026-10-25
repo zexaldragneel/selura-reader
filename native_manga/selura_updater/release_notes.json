@@ -1,13 +1,16 @@
 {
-  "prNumber": 100,
+  "prNumber": 116,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
+    "Automatic rate-limit cooldown with up to three increasingly spaced resume attempts."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Limit active manga sources and page requests to one at a time to reduce request bursts.",
+    "Respect HTTP 429 with durable WorkManager cooldowns of 15, 30 and 60 minutes, and stop automatic attempts after persistent limits.",
+    "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions.",
+    "Preserve the scheduled cooldown across Android app process restarts; explicit Pause or Clear cancels automatic continuation."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Avoid overlapping chapter downloads and eliminate the need to manually resume after the first temporary HTTP 429 cooldown."
   ]
 }

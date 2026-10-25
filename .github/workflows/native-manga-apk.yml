@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -150,8 +150,14 @@ jobs:
           grep -Fq 'return (1..downloadPageCount).all { pageNumber ->' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           python3 native_manga/download_manager_actions.py native-upstream
           python3 native_manga/download_failure_details.py native-upstream
+          python3 native_manga/rate_limit_pause.py native-upstream
+          python3 native_manga/sequential_cooldown.py native-upstream
+          python3 native_manga/persisted_cooldown.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
+          # Offline Storage Manager 2.0: bounded and read-only size reporting.
+          # Must follow the existing storage-health and unfinished-transfer patches.
+          python3 native_manga/storage_manager_v2_overview.py native-upstream
           python3 native_manga/remove_upstream_community_ui.py native-upstream
           python3 native_manga/safe_single_chapter_recovery.py native-upstream
           # Final user-facing Seiryn visual rebrand; package, source IDs, signer
@@ -176,6 +182,10 @@ jobs:
           ! grep -Fq 'url = Constants.URL_DISCORD' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/about/AboutScreen.kt
           test -s native-upstream/LICENSE
           grep -Fq 'fun describeUnfinished(context: Context, queuedCount: Int)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
+          grep -Fq 'object SeirynStorageOverview' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeirynStorageOverview.kt
+          grep -Fq 'MAX_FILE_ENTRIES = 20000' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeirynStorageOverview.kt
+          grep -Fq 'SeirynStorageOverview.scan(context, storagePreferences)' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
+          grep -Fq 'seiryn_storage_overview_title' native-upstream/app/src/main/res/values/seiryn_storage_overview_strings.xml
           grep -Fq 'downloadManager.startDownloads()' native-upstream/app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDownloadScreen.kt
           grep -Fq 'selura_recovery_warning' native-upstream/app/src/main/res/values/selura_download_health_strings.xml
           test -f native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/SeluraDownloadHealth.kt
@@ -192,6 +202,13 @@ jobs:
           grep -q 'retryFailedDownloads' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/download/DownloadQueueViewModel.kt
           grep -q 'isReadableChapterArchive' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -q 'describeDownloadFailure' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'private fun requestRateLimitPause(error: Throwable)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'val slots = Semaphore(1)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'job.join()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'DownloadWorker.scheduleRateLimitResume(context, minutes)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq '.setInitialDelay(minutes, TimeUnit.MINUTES)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
+          grep -Fq 'downloader.cancelRateLimitAutoResume()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
+          grep -Fq 'compareAndSet(false, true)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -q 'selura_view_download_error' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/download/DownloadHolder.kt
           grep -q 'var failureReason: String?' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/model/Download.kt
           test -s native-upstream/app/src/main/res/drawable-nodpi/xianxia_header.webp
