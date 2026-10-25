@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/selura-orphaned-18-sources
+      - fix/seiryn-mangakakalot-cdn-response-lifecycle
     paths:
       - 'selura_extensions/mangakakalot_cdn_fix.py'
       - 'selura_extensions/tests/test_mangakakalot_cdn_fix.py'
