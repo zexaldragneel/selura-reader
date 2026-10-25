@@ -1,13 +1,13 @@
 {
-  "prNumber": 100,
+  "prNumber": 111,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Capture the first failed page's diagnostic even when multiple chapter pages fail concurrently.",
+    "Distinguish closed HTTP responses, connection aborts, source CDN exhaustion, storage permission errors, and known HTTP status codes without revealing private URLs or cookies."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Prevent later page exceptions from overwriting the original failure category; keep existing queue, partial files, and retry limits unchanged."
   ]
 }
