@@ -1,14 +1,13 @@
 {
-  "prNumber": 105,
+  "prNumber": 111,
   "added": [
-    "Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
-    "View estimated completed and unfinished chapter sizes and the 10 largest manga folders."
+    "More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors."
   ],
   "improved": [
-    "Count downloaded chapters and storage file metadata in a bounded background scan without changing files.",
-    "Explicitly flag SAF file sizes that are unavailable and report partial totals when scan limits apply."
+    "Capture the first failed page's diagnostic even when multiple chapter pages fail concurrently.",
+    "Distinguish closed HTTP responses, connection aborts, source CDN exhaustion, storage permission errors, and known HTTP status codes without revealing private URLs or cookies."
   ],
   "fixed": [
-    "Clarify download storage usage without touching library entries, reading progress, backups, downloads, or existing storage health tools."
+    "Prevent later page exceptions from overwriting the original failure category; keep existing queue, partial files, and retry limits unchanged."
   ]
 }
