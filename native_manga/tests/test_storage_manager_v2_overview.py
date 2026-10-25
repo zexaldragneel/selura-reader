@@ -20,7 +20,7 @@ fun getPreferences() {
     val result = SeluraDownloadHealth.scan(context, storagePreferences)
     downloadManager.startDownloads()
     MaterialAlertDialogBuilder(context)
-    getDeleteChaptersGroup(
+            getDeleteChaptersGroup(
                 downloadPreferences = downloadPreferences,
 }
 """
