@@ -6,8 +6,9 @@
   ],
   "improved": [
     "Limit active manga sources and page requests to one at a time to reduce request bursts.",
-    "Respect HTTP 429 with 15, 30 and 60 minute cooldowns and stop automatic attempts if rate limits persist.",
-    "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions."
+    "Respect HTTP 429 with durable WorkManager cooldowns of 15, 30 and 60 minutes, and stop automatic attempts after persistent limits.",
+    "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions.",
+    "Preserve the scheduled cooldown across Android app process restarts; explicit Pause or Clear cancels automatic continuation."
   ],
   "fixed": [
     "Avoid overlapping chapter downloads and eliminate the need to manually resume after the first temporary HTTP 429 cooldown."
