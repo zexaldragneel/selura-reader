@@ -30,7 +30,7 @@ The screenshot does not establish which of these triggered Chapter 75 or whether
 
 ## Release safeguards and tests
 
-- Preserve original package `eu.kanade.tachiyomi.extension.en.seluramangakakalot`, source versionId **7301**, catalog source ID **5690172267177160000**, and original permanent extension signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
+- Preserve original package `eu.kanade.tachiyomi.extension.en.seluramangakakalot`, source versionId **7301**, catalog source ID **5690172267177159639**, and original permanent extension signer SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
 - Current public Mangakakalot extension baseline versionCode **109019**; require **strictly higher** Android versionCode for an in-place update, but never change source identity.
 - Source-contract tests verify the old failure path is removed, successful response is returned open, HTTP 401/403/429 are not bypassed, queries retained, and no concurrent set iteration. Real pinned Kotlin Gradle `assembleRelease` and `lintRelease` must pass.
 - Publish a signed **one-extension** immutable APK release, then via a separately audited store PR replace only Mangakakalot. Verify all other 42 APKs and existing 341 catalog source IDs and icons unchanged before publication.
