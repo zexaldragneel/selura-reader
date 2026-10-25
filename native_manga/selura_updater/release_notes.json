@@ -1,13 +1,14 @@
 {
-  "prNumber": 100,
+  "prNumber": 113,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "Automatic safety pause when a chapter source returns HTTP 429 rate limiting."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Stop new queued chapter requests after a rate limit until you manually resume downloads.",
+    "Preserve already downloaded page files and the queued chapters while respecting source access restrictions.",
+    "Retain Build #132's improved private-data-safe download error diagnostics."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Avoid continuing a large chapter queue after confirmed rate limiting without creating additional retries or bypassing source restrictions."
   ]
 }
