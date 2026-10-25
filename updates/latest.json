@@ -2,20 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors."
+      "Automatic safety pause when a chapter source returns HTTP 429 rate limiting."
     ],
     "fixed": [
-      "Prevent later page exceptions from overwriting the original failure category; keep existing queue, partial files, and retry limits unchanged."
+      "Avoid continuing a large chapter queue after confirmed rate limiting without creating additional retries or bypassing source restrictions."
     ],
     "improved": [
-      "Capture the first failed page's diagnostic even when multiple chapter pages fail concurrently.",
-      "Distinguish closed HTTP responses, connection aborts, source CDN exhaustion, storage permission errors, and known HTTP status codes without revealing private URLs or cookies."
+      "Stop new queued chapter requests after a rate limit until you manually resume downloads.",
+      "Preserve already downloaded page files and the queued chapters while respecting source access restrictions.",
+      "Retain Build #132's improved private-data-safe download error diagnostics."
     ]
   },
-  "notes": "What's new: More precise, privacy-safe failure messages for failed chapter downloads, including unexpected source/HTTP response errors.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-111-run-132",
+  "notes": "What's new: Automatic safety pause when a chapter source returns HTTP 429 rate limiting.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-113-run-134",
   "schemaVersion": 1,
-  "sha256": "7729eb7455b9c55d329992d23187838b19f3bd277bcfe39d56a9699d4dcf7099",
-  "versionCode": 1132,
-  "versionName": "Seiryn Build 132"
+  "sha256": "19372af09b64df4a1cbca6dbe292b03cf314fbedd5a55db22f46d6365fa6efb1",
+  "versionCode": 1134,
+  "versionName": "Seiryn Build 134"
 }
