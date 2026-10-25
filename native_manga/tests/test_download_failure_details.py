@@ -78,7 +78,7 @@ class FailureDetailsTests(unittest.TestCase):
             self.assertIn(category, changed)
         self.assertIn("This chapter or image requires source access or unlocking", changed)
         self.assertIn("Hive Scans has no publicly accessible images", changed)
-        self.assertIn("error.message?.startsWith(", changed)
+        self.assertIn("cause.message?.startsWith(", changed)
         self.assertNotIn("setCookie", changed)
         self.assertNotIn("readText(", changed)
 
@@ -87,10 +87,33 @@ class FailureDetailsTests(unittest.TestCase):
         self.assertIn("download.failureReason = null", changed)
         self.assertIn("download.failureReason = describeDownloadFailure(e)", changed)
         self.assertIn("download.failureReason = context.stringResource(MR.strings.download_insufficient_space)", changed)
-        self.assertIn('download.failureReason = "Page " + page.number + ": " + describeDownloadFailure(e)', changed)
+        self.assertEqual(changed.count("recordPageDownloadFailure(download, page.number, e)"), 2)
+        self.assertIn("synchronized(download)", changed)
+        self.assertIn("if (download.failureReason == null) download.failureReason = summary", changed)
         self.assertIn("download.failureReason = describeDownloadFailure(error)", changed)
         self.assertIn("Chapter pages are missing, incomplete or unreadable.", changed)
         self.assertIn("download.failureReason = download.failureReason", changed)
+
+    def test_diagnostics_classify_actual_exception_type_without_exposing_sensitive_urls(self):
+        changed = fix.downloader(DOWNLOADER)
+        for expected in (
+            "private fun diagnosticCause(error: Throwable): Throwable",
+            "repeat(4)",
+            "private fun recordPageDownloadFailure(download: Download, number: Int, error: Throwable)",
+            "cause is IllegalStateException",
+            "is IllegalStateException -> if (cause.message?.contains(\"closed\", ignoreCase = true)",
+            "Image HTTP response was closed before Seiryn could read it.",
+            "Mangakakalot chapter image unavailable across chapter-provided CDNs",
+            "is java.net.SocketException, is java.io.EOFException",
+            "is SecurityException ->",
+            "is NullPointerException ->",
+            "take(40).ifBlank",
+        ):
+            self.assertIn(expected, changed)
+        self.assertNotIn('throwable.message ?: ', changed)
+        self.assertNotIn('message = cause.message', changed)
+        self.assertNotIn("repeat(10)", changed)
+        self.assertNotIn("cloudflare", changed.lower())
 
     def test_android_menu_shows_reason_only_for_failed_chapters(self):
         item = fix.holder(HOLDER)
