@@ -1,13 +1,14 @@
 {
-  "prNumber": 100,
+  "prNumber": 105,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "Offline Storage Manager 2.0: read-only download storage overview in Download Settings.",
+    "View estimated completed and unfinished chapter sizes and the 10 largest manga folders."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Count downloaded chapters and storage file metadata in a bounded background scan without changing files.",
+    "Explicitly flag SAF file sizes that are unavailable and report partial totals when scan limits apply."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Clarify download storage usage without touching library entries, reading progress, backups, downloads, or existing storage health tools."
   ]
 }
