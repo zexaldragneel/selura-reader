@@ -107,11 +107,12 @@ class SequentialTests(unittest.TestCase):
         self.assertIn("delay(minutes * 60_000L)", actual)
         self.assertIn("seirynRateLimitAttempts.set(0)", actual)
         self.assertIn("queueState.value.isNotEmpty() && !isRunning", actual)
+        self.assertEqual(actual.count("while (true)"), DOWNLOADER.count("while (true)"))
         self.assertIn("Source still returns HTTP 429. Automatic downloads stopped.", actual)
         for forbidden in (
             "chain.proceed(", "rotateIp", "cloudflare", "setCookie(",
             "newUrl", "clearQueue()", "delete()", "sourceId =",
-            "manga.source =", "while (true)", "delay(0",
+            "manga.source =", "delay(0",
         ):
             self.assertNotIn(forbidden, actual.lower() if forbidden == "cloudflare" else actual)
 
