@@ -152,6 +152,7 @@ jobs:
           python3 native_manga/download_failure_details.py native-upstream
           python3 native_manga/rate_limit_pause.py native-upstream
           python3 native_manga/sequential_cooldown.py native-upstream
+          python3 native_manga/persisted_cooldown.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
           # Offline Storage Manager 2.0: bounded and read-only size reporting.
@@ -204,7 +205,8 @@ jobs:
           grep -Fq 'private fun requestRateLimitPause(error: Throwable)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'val slots = Semaphore(1)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'job.join()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
-          grep -Fq 'delay(minutes * 60_000L)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'DownloadWorker.scheduleRateLimitResume(context, minutes)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq '.setInitialDelay(minutes, TimeUnit.MINUTES)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -Fq 'downloader.cancelRateLimitAutoResume()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'compareAndSet(false, true)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -q 'selura_view_download_error' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/download/DownloadHolder.kt
