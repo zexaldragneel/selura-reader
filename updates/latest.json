@@ -2,20 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Manual extension discovery on refresh for APKs installed through the Android package installer."
+      "Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications."
     ],
     "fixed": [
-      "Resolved a refresh-path bug where manually installed or updated extensions were not rescanned when the Android package-change broadcast was missed."
+      "Download failure notifications previously lacked the identity of the responding image CDN, making repeated 503 errors hard to diagnose."
     ],
     "improved": [
-      "Refreshing Browse \u2192 Extensions now scans Android-installed and in-app extension APKs before updating the online store, including externally installed test APKs.",
-      "The Installed and Untrusted sections can update without force-stopping Seiryn after a manual extension install."
+      "Identify which actual image server returned HTTP 503 without exposing a manga image link, chapter path, query parameters or account credentials.",
+      "Preserve Retry-After handling, bounded automatic chapter recovery, original extension compatibility and existing offline downloads."
     ]
   },
-  "notes": "What's new: Manual extension discovery on refresh for APKs installed through the Android package installer.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-142-run-147",
+  "notes": "What's new: Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-145-run-149",
   "schemaVersion": 1,
-  "sha256": "42a685961b6d479570503bebec17240734b989a253b2c4aba751050c135c4f06",
-  "versionCode": 1147,
-  "versionName": "Seiryn Build 147"
+  "sha256": "e7060fa65567b5d95f74b4dcf88c3bedfaf849356c2f41e929130826c18e5661",
+  "versionCode": 1149,
+  "versionName": "Seiryn Build 149"
 }
