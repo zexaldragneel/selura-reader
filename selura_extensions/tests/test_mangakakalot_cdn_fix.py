@@ -129,6 +129,51 @@ class Mangakakalot : MangaBox() {
         with self.assertRaises(fix.MangaKakalotContractError):
             fix.patch_mangakakalot_request_pace(upstream.replace("rateLimit(2, 1.seconds)", "rateLimit(10, 1.seconds)"))
 
+    def test_image_only_connection_close_preserves_inherited_request_headers_and_tags(self):
+        source = """package eu.kanade.tachiyomi.extension.en.mangakakalot
+import eu.kanade.tachiyomi.source.model.SManga
+class Mangakakalot : MangaBox() {
+    override fun OkHttpClient.Builder.configureClient(): OkHttpClient.Builder = apply {
+        addInterceptor(::mergeImagesInterceptor)
+        addInterceptor(::useAltCdnInterceptor)
+        rateLimit(2, 1.seconds)
+    }
+    override fun computeMangaSlug(manga: SManga): String = super.computeMangaSlug(manga).let {
+        it
+    }
+}
+"""
+        paced = fix.patch_mangakakalot_request_pace(source)
+        updated = fix.patch_mangakakalot_image_connection(paced)
+        self.assertIn('rateLimit(1, 2.seconds)', updated)
+        self.assertIn('import eu.kanade.tachiyomi.source.model.Page', updated)
+        self.assertIn('import okhttp3.Request', updated)
+        self.assertIn('override fun imageRequest(page: Page): Request = super.imageRequest(page).newBuilder()', updated)
+        self.assertIn('.header("Connection", "close")', updated)
+        self.assertEqual(updated.count('header("Connection", "close")'), 1)
+        self.assertEqual(updated.count('imageRequest(page: Page)'), 1)
+        self.assertIn('addInterceptor(::useAltCdnInterceptor)', updated)
+        self.assertIn('super.imageRequest(page).newBuilder()', updated)
+        self.assertNotIn('chain.proceed(', updated)
+        self.assertNotIn('proxy(', updated)
+        self.assertNotIn('retryWhen', updated)
+        with self.assertRaises(fix.MangaKakalotContractError):
+            fix.patch_mangakakalot_image_connection(updated)
+        with self.assertRaises(fix.MangaKakalotContractError):
+            fix.patch_mangakakalot_image_connection(source.replace(
+                'override fun computeMangaSlug(manga: SManga): String',
+                'fun unknownSlug(manga: SManga): String',
+            ))
+
+    def test_image_connection_change_has_no_library_or_source_id_side_effects(self):
+        self.assertEqual(orphaned.SOURCE_VERSION_ID, 7301)
+        self.assertEqual(fix.KEY[2], 'seluramangakakalot')
+        self.assertEqual(fix.ORIGINAL.parts[0:3], ('src', 'en', 'mangakakalot'))
+        self.assertIn('Connection', fix.patch_mangakakalot_image_connection(
+            "import eu.kanade.tachiyomi.source.model.SManga\n"
+            "    override fun computeMangaSlug(manga: SManga): String = super.computeMangaSlug(manga).let {"
+        ))
+
     def test_existing_package_source_identity_and_scope(self):
         self.assertIn(fix.KEY, orphaned.SOURCES)
         self.assertEqual(orphaned.SOURCE_VERSION_ID, 7301)

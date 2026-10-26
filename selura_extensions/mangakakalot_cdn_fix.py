@@ -243,6 +243,43 @@ def patch_optional_merge_image_responses(source: str) -> str:
     return exactly_once(source, old_catch, new_catch, "stop size probes on source restrictions")
 
 
+def patch_mangakakalot_image_connection(source: str) -> str:
+    """Restore Mangakakalot's documented non-reuse behavior for image requests.
+
+    The pinned source already says image-heavy downloads require a per-image
+    Connection: close hint, but its implementation never sets that header.
+    Restrict to the inherited tagged imageRequest, not chapter/page-list APIs.
+    OkHttp handles HTTP/2 hop-by-hop headers according to its own rules.
+    Preserve inherited Referer, URL, existing fallback tag and all source IDs.
+    """
+    if "override fun imageRequest(page: Page): Request" in source:
+        raise MangaKakalotContractError(
+            "Mangakakalot already overrides imageRequest; refusing duplicate request override"
+        )
+    source = exactly_once(
+        source,
+        "import eu.kanade.tachiyomi.source.model.SManga\n",
+        "import eu.kanade.tachiyomi.source.model.Page\n"
+        "import eu.kanade.tachiyomi.source.model.SManga\n"
+        "import okhttp3.Request\n",
+        "targeted image request imports",
+    )
+    source = exactly_once(
+        source,
+        "    override fun computeMangaSlug(manga: SManga): String = super.computeMangaSlug(manga).let {",
+        """    // The upstream source documentation explicitly calls for non-reused
+    // image HTTP/1.1 connections on long chapters, but omitted this header.
+    // Keep the original image URL, Referer and MangaBox CDN fallback tag.
+    override fun imageRequest(page: Page): Request = super.imageRequest(page).newBuilder()
+        .header("Connection", "close")
+        .build()
+
+    override fun computeMangaSlug(manga: SManga): String = super.computeMangaSlug(manga).let {""",
+        "image-only Connection close request",
+    )
+    return source
+
+
 def patch_mangakakalot_request_pace(source: str) -> str:
     """Reduce request bursts in this Mangakakalot APK only.
 
@@ -273,6 +310,7 @@ def prepare(checkout: Path, version_code: int, verify_git: bool = True) -> list[
     # Long webtoons can exhaust image-host quotas even with serial page
     # downloads. Apply a more conservative request rate to this source alone.
     patched_module = patch_mangakakalot_request_pace(original_module)
+    patched_module = patch_mangakakalot_image_connection(patched_module)
     orphaned_sources.prepare(checkout, version_code, verify_git=verify_git)
     if not (checkout / TARGET).is_file():
         raise MangaKakalotContractError("Isolated Mangakakalot source was not generated")
