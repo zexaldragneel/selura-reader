@@ -2,21 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Automatically resume incomplete chapter downloads after temporary HTTP 503 service-unavailable failures, with bounded 1/2/5-minute delays."
+      "Manual extension discovery on refresh for APKs installed through the Android package installer."
     ],
     "fixed": [
-      "Avoid leaving an unfinished chapter in an error state after all immediate HTTP 503 attempts are exhausted."
+      "Resolved a refresh-path bug where manually installed or updated extensions were not rescanned when the Android package-change broadcast was missed."
     ],
     "improved": [
-      "Keep the current chapter first in the queue during a transient server outage, instead of skipping ahead to the next chapter.",
-      "Honor the server's Retry-After delay when present and retain existing automatic WorkManager recovery across app restarts.",
-      "Preserve partial chapter pages, one-page-at-a-time downloads, and the existing safe HTTP 429 recovery behavior."
+      "Refreshing Browse \u2192 Extensions now scans Android-installed and in-app extension APKs before updating the online store, including externally installed test APKs.",
+      "The Installed and Untrusted sections can update without force-stopping Seiryn after a manual extension install."
     ]
   },
-  "notes": "What's new: Automatically resume incomplete chapter downloads after temporary HTTP 503 service-unavailable failures, with bounded 1/2/5-minute delays.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-131-run-144",
+  "notes": "What's new: Manual extension discovery on refresh for APKs installed through the Android package installer.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-142-run-147",
   "schemaVersion": 1,
-  "sha256": "3d9237902b74dc14aef355f23ff0907196dcd938e520166fc382e3af2bf53be9",
-  "versionCode": 1144,
-  "versionName": "Seiryn Build 144"
+  "sha256": "42a685961b6d479570503bebec17240734b989a253b2c4aba751050c135c4f06",
+  "versionCode": 1147,
+  "versionName": "Seiryn Build 147"
 }
