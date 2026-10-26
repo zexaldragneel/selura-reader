@@ -6,6 +6,7 @@ on:
       - main
       - feature/selura-orphaned-18-sources
       - fix/seiryn-mangakakalot-cdn-response-lifecycle
+      - fix/seiryn-mangakakalot-reduce-image-request-bursts
     paths:
       - 'selura_extensions/mangakakalot_cdn_fix.py'
       - 'selura_extensions/tests/test_mangakakalot_cdn_fix.py'
@@ -104,9 +105,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.seluramangakakalot'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          # Must install in place over published fixed Mangakakalot v1.6.5417 (Android versionCode 111417).
+          # Must install in place over published Mangakakalot v1.6.5519 (Android versionCode 111519).
           # Preserve the original Android package/signing key/source ID.
-          test "$version" -gt 111417
+          test "$version" -gt 111519
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/seluramangakakalot.apk
@@ -148,4 +149,4 @@ jobs:
           gh release create "$tag" release/seluramangakakalot.apk \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" \
             --title "Mangakakalot gallery image reliability #${{ github.run_number }}" \
-            --notes "Fix Mangakakalot page image fallback: keep successful CDN response bodies open, skip repeated original hosts, preserve URL queries and honor 401/403/429 source limits. No new source/hostnames or bypass; source IDs and original signer remain unchanged. Android device acceptance for Killer Peter Chapter 75 pending." --prerelease
+            --notes "Mangakakalot request pacing and optional merge-image body lifecycle cleanup: close only intermediate merge and WebP-size probe responses, keep ordinary CDN responses open, preserve image URL queries and honor 401/403/429. Same source IDs, original signer, no extra hosts or requests; Chapter 70.1 Android retest pending." --prerelease
