@@ -65,6 +65,35 @@ class MangaKakalotCdnFixTests(unittest.TestCase):
         for forbidden in ("cloudflare", "cf_clearance", "Cookie", "User-Agent", "while (", "delay(", "Proxy", "mirrorUrl"):
             self.assertNotIn(forbidden, x)
 
+    def test_retryable_server_status_survives_all_failed_cdn_attempts(self):
+        source = fix.NEW_CDN
+        self.assertIn("var retryableResponse: Response?", source)
+        self.assertIn("originalResponse?.takeIf", source)
+        self.assertIn("it.code in setOf(500, 502, 503, 504, 522, 523, 524)", source)
+        self.assertIn("response.code in setOf(500, 502, 503, 504, 522, 523, 524)", source)
+        self.assertIn("retryableResponse = response", source)
+        self.assertIn("retryableResponse?.let { return it }", source)
+        self.assertIn("retryableResponse?.close()", source)
+        self.assertIn("response.close()", source)
+        self.assertIn("response.code in setOf(401, 403, 429)", source)
+        self.assertIn(".encodedQuery(url.encodedQuery)", source)
+        self.assertEqual(source.count("chain.proceed(newRequest)"), 1)
+        self.assertEqual(source.count("for (cdnUrl in alternateCdns)"), 1)
+        # No extra requests are allowed simply to obtain diagnostics.
+        for forbidden in ("retryWhen", "while (true)", "Proxy", "Cookie", "cloudflare"):
+            self.assertNotIn(forbidden, source)
+
+    def test_503_response_returned_open_not_transformed_into_io_exception(self):
+        code = fix.NEW_CDN
+        self.assertLess(code.index("retryableResponse?.let { return it }"),
+                        code.index('throw IOException('))
+        self.assertLess(code.index("if (response.isSuccessful)"),
+                        code.index("retryableResponse?.let { return it }"))
+        self.assertIn("if (retryableResponse == null) originalResponse?.close()", code)
+        self.assertIn("retryableResponse?.close()\n                    return response", code)
+        self.assertNotIn("return response.use", code)
+        self.assertIn("return originalResponse", code)
+
     def test_preserves_synchronized_host_set_instead_of_live_iteration(self):
         self.assertIn("synchronized(cdnSet)", fix.NEW_ADD)
         self.assertIn("synchronized(cdnSet)", fix.NEW_CDN)
