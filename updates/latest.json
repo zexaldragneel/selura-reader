@@ -2,23 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
-      "Automatic rate-limit cooldown with up to three increasingly spaced resume attempts."
+      "Private-safe HTTP 429 diagnostics identifying whether the failure occurred in the chapter list, image URL lookup, or image transfer.",
+      "Respect numeric Retry-After information supplied by the source, when available, rather than always guessing a long cooldown."
     ],
     "fixed": [
-      "Avoid overlapping chapter downloads and eliminate the need to manually resume after the first temporary HTTP 429 cooldown."
+      "Avoid hiding the stage where a source rejects a page, and avoid longer arbitrary backoff when the source explicitly permits an earlier retry."
     ],
     "improved": [
-      "Limit active manga sources and page requests to one at a time to reduce request bursts.",
-      "Respect HTTP 429 with durable WorkManager cooldowns of 15, 30 and 60 minutes, and stop automatic attempts after persistent limits.",
-      "Retain saved page files, unfinished chapters, queue order and existing Android network and Wi-Fi restrictions.",
-      "Preserve the scheduled cooldown across Android app process restarts; explicit Pause or Clear cancels automatic continuation."
+      "Preserve existing one-chapter-at-a-time download behavior, saved partial pages, network constraints and WorkManager automatic continuation.",
+      "Retain the existing HttpException constructor for binary compatibility with installed extensions."
     ]
   },
-  "notes": "What's new: Sequential chapter downloads: finish one complete chapter before starting the next queued chapter.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-116-run-140",
+  "notes": "What's new: Private-safe HTTP 429 diagnostics identifying whether the failure occurred in the chapter list, image URL lookup, or image transfer.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-128-run-143",
   "schemaVersion": 1,
-  "sha256": "a4b20f4325c907dc07313a8877fe648dc6c1e2bd6d54ae8c295759d3aac11223",
-  "versionCode": 1140,
-  "versionName": "Seiryn Build 140"
+  "sha256": "688973f6f32c0d009fe6468b0420194b4d818e1d47ee215ddd51e4c674300734",
+  "versionCode": 1143,
+  "versionName": "Seiryn Build 143"
 }
