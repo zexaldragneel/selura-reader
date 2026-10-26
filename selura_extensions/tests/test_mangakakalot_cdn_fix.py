@@ -16,10 +16,14 @@ q.loader.exec_module(fix)
 
 ORIGINAL_LIB = (
     "package eu.kanade.tachiyomi.multisrc.mangabox\n"
+    "import eu.kanade.tachiyomi.network.GET\n"
     "private class MangaBoxFallBackTag\n"
     "private fun HttpUrl.getBaseUrl()\n"
     + fix.OLD_CDN + "\n"
     + fix.OLD_ADD + "\n"
+    + fix.OLD_MERGE_IMAGE + "\n"
+    + fix.OLD_SIZE_PROBE + "\n"
+    + "                        } catch (_: Exception) {\n                            null\n                        }\n"
     + "override fun imageRequest(page: Page): Request = GET(\n"
     + "private val cdnsRegex = Regex(\n"
     + "private val backupImageRegex = Regex(\n"
@@ -66,6 +70,39 @@ class MangaKakalotCdnFixTests(unittest.TestCase):
         self.assertIn("synchronized(cdnSet)", fix.NEW_CDN)
         self.assertNotIn("for (cdnUrl in cdnSet)", fix.NEW_CDN)
         self.assertIn("for (cdnUrl in alternateCdns)", fix.NEW_CDN)
+
+    def test_optional_merged_image_composition_closes_all_intermediate_responses(self):
+        changed = fix.patch_library(ORIGINAL_LIB)
+        self.assertIn(fix.NEW_MERGE_IMAGE, changed)
+        self.assertIn(fix.NEW_SIZE_PROBE, changed)
+        self.assertNotIn(fix.OLD_MERGE_IMAGE, changed)
+        self.assertNotIn(fix.OLD_SIZE_PROBE, changed)
+        self.assertIn("chain.proceed(request.newBuilder().url(imageUrl).build()).use { response ->", changed)
+        self.assertIn("BitmapFactory.decodeStream(response.body.byteStream())", changed)
+        self.assertIn("bitmap.recycle()", changed)
+        self.assertIn("try {", fix.NEW_MERGE_IMAGE)
+        self.assertIn("finally {", fix.NEW_MERGE_IMAGE)
+        self.assertIn("awaitSuccess().use { response ->", changed)
+        self.assertIn("WebpSizeGetter(response.body.byteStream()).get()", changed)
+        self.assertIn("throw HttpException(response.code)", changed)
+        self.assertIn("if (e.code in setOf(401, 403, 429)) throw e", changed)
+        self.assertIn("import eu.kanade.tachiyomi.network.HttpException", changed)
+        # The successful *CDN response* must remain open for the real reader.
+        self.assertIn("return response", changed)
+        self.assertNotIn("response.use { return response }", changed)
+        # No extra network requests, alternate host discovery or unlock logic.
+        self.assertEqual(changed.count("chain.proceed(newRequest)"), 1)
+        self.assertEqual(changed.count("newCall("), 1)
+        self.assertNotIn("cloudflare", changed.lower())
+
+    def test_merge_response_patch_fails_closed_on_source_drift(self):
+        for changed in (
+            ORIGINAL_LIB.replace(fix.OLD_MERGE_IMAGE, ""),
+            ORIGINAL_LIB.replace(fix.OLD_SIZE_PROBE, ""),
+            fix.patch_library(ORIGINAL_LIB),
+        ):
+            with self.subTest(length=len(changed)), self.assertRaises(fix.MangaKakalotContractError):
+                fix.patch_library(changed)
 
     def test_mangakakalot_conservative_pacing_only_one_source(self):
         upstream = """package eu.kanade.tachiyomi.extension.en.mangakakalot
