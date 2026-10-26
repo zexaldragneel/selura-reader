@@ -252,6 +252,10 @@ def patch_mangakakalot_image_connection(source: str) -> str:
     OkHttp handles HTTP/2 hop-by-hop headers according to its own rules.
     Preserve inherited Referer, URL, existing fallback tag and all source IDs.
     """
+    if "override fun imageRequest(page: Page): Request" in source:
+        raise MangaKakalotContractError(
+            "Mangakakalot already overrides imageRequest; refusing duplicate request override"
+        )
     source = exactly_once(
         source,
         "import eu.kanade.tachiyomi.source.model.SManga\n",
