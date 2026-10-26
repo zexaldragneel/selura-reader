@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory, fix/seiryn-http503-preserve-chapter-auto-recovery-20261026]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -155,6 +155,7 @@ jobs:
           python3 native_manga/persisted_cooldown.py native-upstream
           python3 native_manga/http429_stage_diagnostics.py native-upstream
           python3 native_manga/http503_chapter_recovery.py native-upstream
+          python3 native_manga/extension_local_rescan.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
           # Offline Storage Manager 2.0: bounded and read-only size reporting.
@@ -206,6 +207,7 @@ jobs:
           grep -q 'describeDownloadFailure' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'private fun requestRateLimitPause(error: Throwable, stage: String)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'private fun requestServiceUnavailablePause(error: HttpException, stage: String)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'Re-enumerate local packages before refreshing the remote store.' native-upstream/app/src/main/java/eu/kanade/tachiyomi/extension/ExtensionManager.kt
           grep -Fq 'seirynHttp503Attempts.incrementAndGet()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'var retryAfterSeconds: Long? = null' native-upstream/core/common/src/main/kotlin/eu/kanade/tachiyomi/network/HttpException.kt
           grep -Fq 'header("Retry-After")?.trim()?.toLongOrNull()' native-upstream/core/common/src/main/kotlin/eu/kanade/tachiyomi/network/OkHttpExtensions.kt
