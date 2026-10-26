@@ -1,13 +1,13 @@
 {
-  "prNumber": 142,
+  "prNumber": 145,
   "added": [
-    "Manual extension discovery on refresh for APKs installed through the Android package installer."
+    "Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications."
   ],
   "improved": [
-    "Refreshing Browse → Extensions now scans Android-installed and in-app extension APKs before updating the online store, including externally installed test APKs.",
-    "The Installed and Untrusted sections can update without force-stopping Seiryn after a manual extension install."
+    "Identify which actual image server returned HTTP 503 without exposing a manga image link, chapter path, query parameters or account credentials.",
+    "Preserve Retry-After handling, bounded automatic chapter recovery, original extension compatibility and existing offline downloads."
   ],
   "fixed": [
-    "Resolved a refresh-path bug where manually installed or updated extensions were not rescanned when the Android package-change broadcast was missed."
+    "Download failure notifications previously lacked the identity of the responding image CDN, making repeated 503 errors hard to diagnose."
   ]
 }
