@@ -51,7 +51,7 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/mangakakalot_cdn_fix.py keiyoushi-deps \
-            --version-code "$((5800 + ${{ github.run_number }}))" \
+            --version-code "$((6400 + ${{ github.run_number }}))" \
             --task-file "$RUNNER_TEMP/mangakakalot-tasks.txt"
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
@@ -106,9 +106,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.seluramangakakalot'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          # Higher-version ROLLBACK of stable v1.6.5522 behavior if PR #134 test is worse.
+          # Higher-version signed rollback of stable v1.6.5522 behavior over PR #138 (>112111).
           # Preserve the original Android package/signing key/source ID.
-          test "$version" -gt 111609
+          test "$version" -gt 112111
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/seluramangakakalot.apk
@@ -150,4 +150,4 @@ jobs:
           gh release create "$tag" release/seluramangakakalot.apk \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" \
             --title "Mangakakalot gallery image reliability #${{ github.run_number }}" \
-            --notes "Safety rollback artifact containing original, publicly published v1.6.5522 image request code under a strictly higher signed version, if experimental PR #134 causes regressions. Preserves package, signer, source identity, queue and saved manga." --prerelease
+            --notes "Emergency safe rollback artifact restoring public v1.6.5522 Mangakakalot behavior over signed CDN-503 preservation experiment PR #138. Keep package, signer, source ID, downloaded and queued manga unchanged. Not a public store update." --prerelease
