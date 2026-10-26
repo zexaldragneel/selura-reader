@@ -1,13 +1,14 @@
 {
-  "prNumber": 100,
+  "prNumber": 128,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "Private-safe HTTP 429 diagnostics identifying whether the failure occurred in the chapter list, image URL lookup, or image transfer.",
+    "Respect numeric Retry-After information supplied by the source, when available, rather than always guessing a long cooldown."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Preserve existing one-chapter-at-a-time download behavior, saved partial pages, network constraints and WorkManager automatic continuation.",
+    "Retain the existing HttpException constructor for binary compatibility with installed extensions."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Avoid hiding the stage where a source rejects a page, and avoid longer arbitrary backoff when the source explicitly permits an earlier retry."
   ]
 }
