@@ -7,6 +7,7 @@ on:
       - feature/selura-orphaned-18-sources
       - fix/seiryn-mangakakalot-cdn-response-lifecycle
       - fix/seiryn-mangakakalot-reduce-image-request-bursts
+      - fix/seiryn-mangakakalot-close-merge-image-bodies-20261026
     paths:
       - 'selura_extensions/mangakakalot_cdn_fix.py'
       - 'selura_extensions/tests/test_mangakakalot_cdn_fix.py'
@@ -50,7 +51,7 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/mangakakalot_cdn_fix.py keiyoushi-deps \
-            --version-code "$((5500 + ${{ github.run_number }}))" \
+            --version-code "$((5800 + ${{ github.run_number }}))" \
             --task-file "$RUNNER_TEMP/mangakakalot-tasks.txt"
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
@@ -105,9 +106,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.seluramangakakalot'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          # Must install in place over published Mangakakalot v1.6.5519 (Android versionCode 111519).
+          # Higher-version ROLLBACK of stable v1.6.5522 behavior if PR #134 test is worse.
           # Preserve the original Android package/signing key/source ID.
-          test "$version" -gt 111519
+          test "$version" -gt 111609
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/seluramangakakalot.apk
@@ -149,4 +150,4 @@ jobs:
           gh release create "$tag" release/seluramangakakalot.apk \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" \
             --title "Mangakakalot gallery image reliability #${{ github.run_number }}" \
-            --notes "Mangakakalot request pacing and optional merge-image body lifecycle cleanup: close only intermediate merge and WebP-size probe responses, keep ordinary CDN responses open, preserve image URL queries and honor 401/403/429. Same source IDs, original signer, no extra hosts or requests; Chapter 70.1 Android retest pending." --prerelease
+            --notes "Safety rollback artifact containing original, publicly published v1.6.5522 image request code under a strictly higher signed version, if experimental PR #134 causes regressions. Preserves package, signer, source identity, queue and saved manga." --prerelease
