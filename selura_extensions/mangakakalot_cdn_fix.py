@@ -184,7 +184,7 @@ NEW_MERGE_IMAGE = """                    // Own each constituent HTTP body only 
                     // A decoded Bitmap no longer needs the response stream.
                     val bitmap = chain.proceed(request.newBuilder().url(imageUrl).build()).use { response ->
                         if (!response.isSuccessful) {
-                            throw IOException("Mangakakalot merged image fetch failed (HTTP ${response.code}).")
+                            throw HttpException(response.code)
                         }
                         BitmapFactory.decodeStream(response.body.byteStream())
                     } ?: throw IOException("Mangakakalot merged image could not be decoded.")
@@ -220,7 +220,27 @@ def patch_optional_merge_image_responses(source: str) -> str:
     Neither enables merge mode nor changes a single chapter's page mapping.
     """
     source = exactly_once(source, OLD_MERGE_IMAGE, NEW_MERGE_IMAGE, "merged image bodies")
-    return exactly_once(source, OLD_SIZE_PROBE, NEW_SIZE_PROBE, "image size probe bodies")
+    source = exactly_once(source, OLD_SIZE_PROBE, NEW_SIZE_PROBE, "image size probe bodies")
+    source = exactly_once(
+        source,
+        "import eu.kanade.tachiyomi.network.GET\n",
+        "import eu.kanade.tachiyomi.network.GET\n"
+        "import eu.kanade.tachiyomi.network.HttpException\n",
+        "recognized source status error import",
+    )
+    # If the source sends 401/403/429 during image-size detection,
+    # abandon the extra dimension probes immediately. The normal Seiryn
+    # downloader will honor the source status (including its 429 cooldown).
+    old_catch = NEW_SIZE_PROBE + """\n                        } catch (_: Exception) {
+                            null
+                        }"""
+    new_catch = NEW_SIZE_PROBE + """\n                        } catch (e: HttpException) {
+                            if (e.code in setOf(401, 403, 429)) throw e
+                            null
+                        } catch (_: Exception) {
+                            null
+                        }"""
+    return exactly_once(source, old_catch, new_catch, "stop size probes on source restrictions")
 
 
 def patch_mangakakalot_request_pace(source: str) -> str:
