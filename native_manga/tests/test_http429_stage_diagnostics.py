@@ -43,7 +43,7 @@ class Http429Tests(unittest.TestCase):
         actual = fix.http_exception(H)
         self.assertIn('class HttpException(val code: Int)', actual)
         self.assertIn('var retryAfterSeconds: Long? = null', actual)
-        self.assertNotIn('class HttpException(', actual)
+        self.assertNotIn('class HttpException(\n', actual)
         self.assertNotIn('token', actual.lower())
         with self.assertRaises(fix.RateLimitStagePatchError):
             fix.http_exception(actual)
