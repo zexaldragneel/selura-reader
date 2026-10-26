@@ -1,6 +1,8 @@
 {
   "prNumber": 142,
-  "added": [],
+  "added": [
+    "Manual extension discovery on refresh for APKs installed through the Android package installer."
+  ],
   "improved": [
     "Refreshing Browse → Extensions now scans Android-installed and in-app extension APKs before updating the online store, including externally installed test APKs.",
     "The Installed and Untrusted sections can update without force-stopping Seiryn after a manual extension install."
