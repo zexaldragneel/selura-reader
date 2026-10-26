@@ -163,7 +163,64 @@ def patch_library(source: str) -> str:
         if required not in source:
             raise MangaKakalotContractError("Pinned MangaBox contract changed: " + required)
     source = exactly_once(source, OLD_CDN, NEW_CDN, "CDN image lifecycle")
-    return exactly_once(source, OLD_ADD, NEW_ADD, "CDN host synchronization")
+    source = exactly_once(source, OLD_ADD, NEW_ADD, "CDN host synchronization")
+    return patch_optional_merge_image_responses(source)
+
+
+# Merge Split Images is off by default; when enabled, its source bitmap
+# composition and WebP-size probes must close each *intermediate* response.
+# These blocks never change the page list, URL selection or source identity.
+OLD_MERGE_IMAGE = """                    val bitmap = BitmapFactory.decodeStream(
+                        chain
+                            .proceed(request.newBuilder().url(imageUrl).build())
+                            .body
+                            .byteStream(),
+                    )
+                    canvas.drawBitmap(bitmap, 0f, yOffset.toFloat(), null)
+                    yOffset += bitmap.height
+                    bitmap.recycle()"""
+
+NEW_MERGE_IMAGE = """                    // Own each constituent HTTP body only while decoding it.
+                    // A decoded Bitmap no longer needs the response stream.
+                    val bitmap = chain.proceed(request.newBuilder().url(imageUrl).build()).use { response ->
+                        if (!response.isSuccessful) {
+                            throw IOException("Mangakakalot merged image fetch failed (HTTP \${response.code}).")
+                        }
+                        BitmapFactory.decodeStream(response.body.byteStream())
+                    } ?: throw IOException("Mangakakalot merged image could not be decoded.")
+                    try {
+                        canvas.drawBitmap(bitmap, 0f, yOffset.toFloat(), null)
+                        yOffset += bitmap.height
+                    } finally {
+                        bitmap.recycle()
+                    }"""
+
+OLD_SIZE_PROBE = """                            val response = client.newCall(
+                                GET(url, headers)
+                                    .newBuilder()
+                                    .tag(MangaBoxFallBackTag::class.java, MangaBoxFallBackTag())
+                                    .build(),
+                            ).awaitSuccess()
+                            WebpSizeGetter(response.body.byteStream()).get()"""
+
+NEW_SIZE_PROBE = """                            client.newCall(
+                                GET(url, headers)
+                                    .newBuilder()
+                                    .tag(MangaBoxFallBackTag::class.java, MangaBoxFallBackTag())
+                                    .build(),
+                            ).awaitSuccess().use { response ->
+                                WebpSizeGetter(response.body.byteStream()).get()
+                            }"""
+
+
+def patch_optional_merge_image_responses(source: str) -> str:
+    """Close intermediate responses, without closing CDN bodies passed to readers.
+
+    Both transforms are fail-closed if the pinned optional merge flow changes.
+    Neither enables merge mode nor changes a single chapter's page mapping.
+    """
+    source = exactly_once(source, OLD_MERGE_IMAGE, NEW_MERGE_IMAGE, "merged image bodies")
+    return exactly_once(source, OLD_SIZE_PROBE, NEW_SIZE_PROBE, "image size probe bodies")
 
 
 def patch_mangakakalot_request_pace(source: str) -> str:
