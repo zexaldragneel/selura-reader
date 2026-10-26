@@ -27,6 +27,8 @@ def exactly_once(source: str, before: str, after: str, label: str) -> str:
 
 
 def http_exception(source: str) -> str:
+    if "var retryAfterSeconds: Long? = null" in source:
+        raise RateLimitStagePatchError("HTTP Retry-After metadata already installed")
     return exactly_once(
         source,
         'class HttpException(val code: Int) : IllegalStateException("HTTP error $code")',
