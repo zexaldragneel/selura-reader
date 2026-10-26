@@ -30,11 +30,11 @@ def http_exception(source: str) -> str:
     return exactly_once(
         source,
         'class HttpException(val code: Int) : IllegalStateException("HTTP error $code")',
-        'class HttpException(\n'
-        '    val code: Int,\n'
-        '    // Optional server-supplied delay; never includes request URLs or headers.\n'
-        '    val retryAfterSeconds: Long? = null,\n'
-        ') : IllegalStateException("HTTP error $code")',
+        'class HttpException(val code: Int) : IllegalStateException("HTTP error $code") {\n'
+        '    // Mutable and optional to preserve the original JVM (Int) constructor\n'
+        '    // used by every existing third-party extension APK.\n'
+        '    var retryAfterSeconds: Long? = null\n'
+        '}',
         "backward-compatible HTTP error metadata",
     )
 
@@ -51,7 +51,7 @@ def http_extensions(source: str) -> str:
         'private fun Response.toSeirynHttpException(): HttpException {\n'
         '    val retrySeconds = header("Retry-After")?.trim()?.toLongOrNull()\n'
         '        ?.takeIf { it in 0L..86_400L }\n'
-        '    return HttpException(code, retrySeconds)\n'
+        '    return HttpException(code).apply { retryAfterSeconds = retrySeconds }\n'
         '}\n',
         "parse explicit safe Retry-After seconds",
     )
