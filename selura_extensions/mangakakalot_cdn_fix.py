@@ -97,7 +97,14 @@ NEW_CDN = """    protected fun useAltCdnInterceptor(chain: Interceptor.Chain): R
             )
         }
         var lastHttpCode = originalResponse?.code
-        originalResponse?.close()
+        // Keep one transient HTTP error response OPEN when every
+        // chapter-provided CDN is unavailable. The native downloader can
+        // then classify the real HTTP 503 and use its bounded recovery.
+        // All replaced/intermediate responses are always closed.
+        var retryableResponse: Response? = originalResponse?.takeIf {
+            it.code in setOf(500, 502, 503, 504, 522, 523, 524)
+        }
+        if (retryableResponse == null) originalResponse?.close()
 
         for (cdnUrl in alternateCdns) {
             val host = cdnUrl.toHttpUrlOrNull()?.takeIf { it.isHttps } ?: continue
@@ -112,19 +119,31 @@ NEW_CDN = """    protected fun useAltCdnInterceptor(chain: Interceptor.Chain): R
             try {
                 val response = chain.proceed(newRequest)
                 if (response.isSuccessful) {
+                    retryableResponse?.close()
                     cdnSet.moveItemToFirst(newRequest.url.getBaseUrl())
                     // The downloader owns the open body; do not close it here.
                     return response
                 }
                 lastHttpCode = response.code
                 if (response.code in setOf(401, 403, 429)) {
+                    retryableResponse?.close()
                     return response
                 }
-                response.close()
+                if (response.code in setOf(500, 502, 503, 504, 522, 523, 524)) {
+                    // Preserve the latest genuine source response, including
+                    // Retry-After; never manufacture a success or retry here.
+                    retryableResponse?.close()
+                    retryableResponse = response
+                } else {
+                    response.close()
+                }
             } catch (e: IOException) {
                 transportFailure = e
             }
         }
+        // A retryable 5xx response is more actionable than a synthetic
+        // "all CDNs failed" IOException. Transfer open body ownership.
+        retryableResponse?.let { return it }
         val code = lastHttpCode?.let { " (last HTTP $it)" }.orEmpty()
         throw IOException(
             "Mangakakalot chapter image unavailable across chapter-provided CDNs$code.",
