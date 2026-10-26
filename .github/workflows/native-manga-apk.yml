@@ -153,6 +153,7 @@ jobs:
           python3 native_manga/rate_limit_pause.py native-upstream
           python3 native_manga/sequential_cooldown.py native-upstream
           python3 native_manga/persisted_cooldown.py native-upstream
+          python3 native_manga/http429_stage_diagnostics.py native-upstream
           python3 native_manga/check_download_health.py native-upstream
           python3 native_manga/review_unfinished_transfers.py native-upstream
           # Offline Storage Manager 2.0: bounded and read-only size reporting.
@@ -202,10 +203,13 @@ jobs:
           grep -q 'retryFailedDownloads' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/download/DownloadQueueViewModel.kt
           grep -q 'isReadableChapterArchive' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -q 'describeDownloadFailure' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
-          grep -Fq 'private fun requestRateLimitPause(error: Throwable)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'private fun requestRateLimitPause(error: Throwable, stage: String)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'var retryAfterSeconds: Long? = null' native-upstream/core/common/src/main/kotlin/eu/kanade/tachiyomi/network/HttpException.kt
+          grep -Fq 'header("Retry-After")?.trim()?.toLongOrNull()' native-upstream/core/common/src/main/kotlin/eu/kanade/tachiyomi/network/OkHttpExtensions.kt
           grep -Fq 'val slots = Semaphore(1)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'job.join()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'DownloadWorker.scheduleRateLimitResume(context, minutes)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'require(minutes in 1L..1440L)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -Fq '.setInitialDelay(minutes, TimeUnit.MINUTES)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -Fq 'downloader.cancelRateLimitAutoResume()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'compareAndSet(false, true)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
