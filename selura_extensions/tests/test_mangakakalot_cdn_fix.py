@@ -16,12 +16,14 @@ q.loader.exec_module(fix)
 
 ORIGINAL_LIB = (
     "package eu.kanade.tachiyomi.multisrc.mangabox\n"
+    "import eu.kanade.tachiyomi.network.GET\n"
     "private class MangaBoxFallBackTag\n"
     "private fun HttpUrl.getBaseUrl()\n"
     + fix.OLD_CDN + "\n"
     + fix.OLD_ADD + "\n"
     + fix.OLD_MERGE_IMAGE + "\n"
     + fix.OLD_SIZE_PROBE + "\n"
+    + "                        } catch (_: Exception) {\n                            null\n                        }\n"
     + "override fun imageRequest(page: Page): Request = GET(\n"
     + "private val cdnsRegex = Regex(\n"
     + "private val backupImageRegex = Regex(\n"
@@ -82,7 +84,9 @@ class MangaKakalotCdnFixTests(unittest.TestCase):
         self.assertIn("finally {", fix.NEW_MERGE_IMAGE)
         self.assertIn("awaitSuccess().use { response ->", changed)
         self.assertIn("WebpSizeGetter(response.body.byteStream()).get()", changed)
-        self.assertIn("Mangakakalot merged image fetch failed (HTTP ${response.code})", changed)
+        self.assertIn("throw HttpException(response.code)", changed)
+        self.assertIn("if (e.code in setOf(401, 403, 429)) throw e", changed)
+        self.assertIn("import eu.kanade.tachiyomi.network.HttpException", changed)
         # The successful *CDN response* must remain open for the real reader.
         self.assertIn("return response", changed)
         self.assertNotIn("response.use { return response }", changed)
