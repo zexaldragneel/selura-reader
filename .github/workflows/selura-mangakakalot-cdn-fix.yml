@@ -8,9 +8,12 @@ on:
       - fix/seiryn-mangakakalot-cdn-response-lifecycle
       - fix/seiryn-mangakakalot-reduce-image-request-bursts
       - fix/seiryn-mangakakalot-close-merge-image-bodies-20261026
+      - fix/seiryn-mangakakalot-preserve-all-cdn-http503-20261026
     paths:
       - 'selura_extensions/mangakakalot_cdn_fix.py'
+      - 'selura_extensions/mangakakalot_chapter_cdn_scope.py'
       - 'selura_extensions/tests/test_mangakakalot_cdn_fix.py'
+      - 'selura_extensions/tests/test_mangakakalot_chapter_cdn_scope.py'
       - 'selura_extensions/MANGAKAKALOT_CDN_FIX.md'
       - '.github/workflows/selura-mangakakalot-cdn-fix.yml'
   workflow_dispatch:
@@ -36,6 +39,7 @@ jobs:
       - name: Test Mangakakalot CDN lifecycle and source identity
         run: |
           python3 -m unittest discover -s selura_extensions/tests -p 'test_mangakakalot_cdn_fix.py' -v
+          python3 -m unittest discover -s selura_extensions/tests -p 'test_mangakakalot_chapter_cdn_scope.py' -v
           python3 -m unittest discover -s selura_extensions/tests -p 'test_orphaned_sources.py' -v
 
       - name: Checkout audited Keiyoushi Apache-2.0 source
@@ -51,8 +55,9 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/mangakakalot_cdn_fix.py keiyoushi-deps \
-            --version-code "$((6100 + ${{ github.run_number }}))" \
+            --version-code "$((7200 + ${{ github.run_number }}))" \
             --task-file "$RUNNER_TEMP/mangakakalot-tasks.txt"
+          python3 selura_extensions/mangakakalot_chapter_cdn_scope.py keiyoushi-deps
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/mangakakalot-tasks.txt")" -eq 1
 
@@ -106,9 +111,9 @@ jobs:
           [[ "$line" == *"name='eu.kanade.tachiyomi.extension.en.seluramangakakalot'"* ]]
           version="$(sed -nE "s/.*versionCode='([0-9]+)'.*/\1/p" <<< "$line")"
           versionName="$(sed -nE "s/.*versionName='([^']+)'.*/\1/p" <<< "$line")"
-          # Must install over public v1.6.5522 and both prior experiment (111609) and rollback (111810) signed versions.
+          # Must install over public, prior tests and currently user-confirmed v1.6.6126 without uninstalling.
           # Preserve the original Android package/signing key/source ID.
-          test "$version" -gt 111810
+          test "$version" -gt 112126
           [[ "$versionName" =~ ^1\.6\.[0-9]+$ ]]
           mkdir -p release
           cp "$apk" release/seluramangakakalot.apk
@@ -150,4 +155,4 @@ jobs:
           gh release create "$tag" release/seluramangakakalot.apk \
             --repo "${{ github.repository }}" --target "${{ github.sha }}" \
             --title "Mangakakalot gallery image reliability #${{ github.run_number }}" \
-            --notes "Preserve the genuine HTTP 5xx response when chapter-provided fallback CDNs also fail, rather than converting the failure to generic IOException. Retain source Retry-After, original package/signature/source identity, 429/403 guard, original request pacing, and user files; no extra hosts or requests. Device acceptance pending." --prerelease
+            --notes "Prevent stale cross-chapter CDN fallback attempts: retry only the HTTPS image CDNs advertised by the current Mangakakalot chapter, preserve real HTTP 503/Retry-After and existing source denial handling, source ID, package and signer. No new network requests. Controlled Android test required." --prerelease
