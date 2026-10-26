@@ -151,7 +151,7 @@ class Mangakakalot : MangaBox() {
         self.assertIn('override fun imageRequest(page: Page): Request = super.imageRequest(page).newBuilder()', updated)
         self.assertIn('.header("Connection", "close")', updated)
         self.assertEqual(updated.count('header("Connection", "close")'), 1)
-        self.assertEqual(updated.count('imageRequest(page: Page)'), 2)
+        self.assertEqual(updated.count('imageRequest(page: Page)'), 1)
         self.assertIn('addInterceptor(::useAltCdnInterceptor)', updated)
         self.assertIn('super.imageRequest(page).newBuilder()', updated)
         self.assertNotIn('chain.proceed(', updated)
