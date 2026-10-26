@@ -184,7 +184,7 @@ NEW_MERGE_IMAGE = """                    // Own each constituent HTTP body only 
                     // A decoded Bitmap no longer needs the response stream.
                     val bitmap = chain.proceed(request.newBuilder().url(imageUrl).build()).use { response ->
                         if (!response.isSuccessful) {
-                            throw IOException("Mangakakalot merged image fetch failed (HTTP \${response.code}).")
+                            throw IOException("Mangakakalot merged image fetch failed (HTTP ${response.code}).")
                         }
                         BitmapFactory.decodeStream(response.body.byteStream())
                     } ?: throw IOException("Mangakakalot merged image could not be decoded.")
