@@ -79,7 +79,7 @@ def downloader(s):
                             }""",
         """                            } catch (e: Throwable) {
                                 if (e is CancellationException) throw e
-                                download.failureReason = "Page " + page.number + ": " + describeDownloadFailure(e)
+                                recordPageDownloadFailure(download, page.number, e)
                                 page.status = Page.State.Error(e)
                             }""",
         "image URL request reason",
@@ -120,34 +120,85 @@ def downloader(s):
             notifier.onError(e.message, download.chapter.name, download.manga.title, download.manga.id)""",
         """            page.progress = 0
             page.status = Page.State.Error(e)
-            download.failureReason = "Page " + page.number + ": " + describeDownloadFailure(e)
+            recordPageDownloadFailure(download, page.number, e)
             notifier.onError(e.message, download.chapter.name, download.manga.title, download.manga.id)""",
         "individual page request reason",
     )
     s = only_once(
         s,
         """    private fun isTransientDownloadFailure(error: Throwable): Boolean = when (error) {""",
-        """    // Do not expose raw URLs, cookies, credentials or provider exception
-    // payloads in the user-facing dialog. Describe only known categories.
-    // A locked chapter is never unlocked or fetched through an alternate host.
-    private fun describeDownloadFailure(error: Throwable): String = when (error) {
-        is HttpException -> when (error.code) {
-            401, 403 -> "This chapter or image requires source access or unlocking (HTTP " + error.code + "). Check its WebView."
-            404 -> "The source cannot find this chapter or image (HTTP 404). Refresh chapters or try later."
-            429 -> "The source is rate limiting downloads (HTTP 429). Retry later."
-            else -> "Source request failed (HTTP " + error.code + ")."
+        """    // Follow a bounded error cause chain, without exposing raw URLs,
+    // cookies, tokens, HTTP response contents, or exception messages.
+    private fun diagnosticCause(error: Throwable): Throwable {
+        var cursor: Throwable? = error
+        var fallback: Throwable = error
+        repeat(4) {
+            val cause = cursor ?: return fallback
+            if (cause is HttpException || cause is java.net.SocketException ||
+                cause is java.io.EOFException || cause is java.io.FileNotFoundException ||
+                cause is SecurityException || cause is IllegalStateException ||
+                cause is NullPointerException
+            ) {
+                return cause
+            }
+            if (cause is IOException) fallback = cause
+            cursor = cause.cause?.takeUnless { it === cause }
         }
-        is SocketTimeoutException, is ConnectException ->
-            "Connection timed out or failed. Check your connection and retry."
-        is IOException -> when {
-            error.message?.startsWith("Hive Scans did not provide public chapter images") == true ->
-                "Hive Scans has no publicly accessible images for this chapter. It may be locked; check WebView."
-            error.message?.startsWith("Could not finalize downloaded chapter") == true ||
-                error.message?.startsWith("Finalized chapter is not readable") == true ->
-                "Android download storage could not finalize this chapter. Check storage permissions and free space."
-            else -> "Chapter images could not be accessed or saved. Check source WebView and available storage."
+        return fallback
+    }
+
+    // Sibling image requests may fail simultaneously: retain the first
+    // actionable page diagnosis without overwriting it from a later page.
+    private fun recordPageDownloadFailure(download: Download, number: Int, error: Throwable) {
+        val summary = "Page " + number + ": " + describeDownloadFailure(error)
+        synchronized(download) {
+            if (download.failureReason == null) download.failureReason = summary
         }
-        else -> "Chapter download failed. Check source access, network and available storage."
+    }
+
+    // These are bounded, privacy-safe cause CATEGORIES, not raw exception text.
+    // Respect HTTP 401/403/429 restrictions; no bypasses or extra requests.
+    private fun describeDownloadFailure(error: Throwable): String {
+        val cause = diagnosticCause(error)
+        return when (cause) {
+            is HttpException -> when (cause.code) {
+                401, 403 -> "This chapter or image requires source access or unlocking (HTTP " + cause.code + "). Check its WebView."
+                404 -> "The source cannot find this chapter or image (HTTP 404). Refresh chapters or try later."
+                429 -> "The source is rate limiting downloads (HTTP 429). Retry later."
+                else -> "Source request failed (HTTP " + cause.code + ")."
+            }
+            is SocketTimeoutException, is ConnectException ->
+                "Connection timed out or failed. Check your connection and retry."
+            is java.net.SocketException, is java.io.EOFException ->
+                "Image connection was interrupted before the page completed. Retry later."
+            is java.io.FileNotFoundException ->
+                "An image or download file could not be opened. Check source and storage access."
+            is SecurityException ->
+                "Android refused download file access. Check the configured storage permission."
+            is IllegalStateException -> if (cause.message?.contains("closed", ignoreCase = true) == true) {
+                "Image HTTP response was closed before Seiryn could read it. Check the installed extension version."
+            } else {
+                "Source or downloader entered an invalid state (IllegalStateException)."
+            }
+            is NullPointerException ->
+                "Source or downloader encountered missing required data (NullPointerException)."
+            is IOException -> when {
+                cause.message?.startsWith("Hive Scans did not provide public chapter images") == true ->
+                    "Hive Scans has no publicly accessible images for this chapter. It may be locked; check WebView."
+                cause.message?.startsWith("Mangakakalot chapter image unavailable across chapter-provided CDNs") == true ->
+                    "Mangakakalot image hosts could not supply this page. Retry later or check source access."
+                cause.message?.startsWith("Could not finalize downloaded chapter") == true ||
+                    cause.message?.startsWith("Finalized chapter is not readable") == true ->
+                    "Android download storage could not finalize this chapter. Check storage permissions and free space."
+                else -> "Image transfer or file access failed (IOException). Check network and storage."
+            }
+            else -> {
+                // Class names, unlike exception messages, never include source URLs.
+                val type = cause.javaClass.simpleName.filter { it.isLetterOrDigit() }
+                    .take(40).ifBlank { "Unknown" }
+                "Unexpected source or downloader failure (" + type + ")."
+            }
+        }
     }
 
     private fun isTransientDownloadFailure(error: Throwable): Boolean = when (error) {""",

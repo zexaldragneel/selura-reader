@@ -1,13 +1,14 @@
 {
-  "prNumber": 100,
+  "prNumber": 131,
   "added": [
-    "Reader Performance 2.0 Phase 2: conservative memory guard for exceptionally tall webtoon pages."
+    "Automatically resume incomplete chapter downloads after temporary HTTP 503 service-unavailable failures, with bounded 1/2/5-minute delays."
   ],
   "improved": [
-    "Downsample unusually large webtoon images before full-page bitmap allocation, targeting a 96 MiB temporary pixel budget.",
-    "Retain normal-page decoding quality, previous prefetch improvements and unchanged paged/animated reading behavior."
+    "Keep the current chapter first in the queue during a transient server outage, instead of skipping ahead to the next chapter.",
+    "Honor the server's Retry-After delay when present and retain existing automatic WorkManager recovery across app restarts.",
+    "Preserve partial chapter pages, one-page-at-a-time downloads, and the existing safe HTTP 429 recovery behavior."
   ],
   "fixed": [
-    "Avoid allocating an unrestricted full-resolution intermediate bitmap before webtoon strip creation."
+    "Avoid leaving an unfinished chapter in an error state after all immediate HTTP 503 attempts are exhausted."
   ]
 }
