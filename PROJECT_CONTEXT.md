@@ -1,6 +1,12 @@
 # Selura — Project Context
 Last updated: 2026-10-25
 
+## 2026-10-26 1:50 PM — Mangakakalot visible in Seiryn after manual APK install
+
+- **Owner-tested screenshot:** Seiryn → Browse → Extensions, searched `mangakaka`, now lists **Installed → Mangakakalot** from **Selura Extensions**, **English · 1.6.6126**, with a gear and **Mixed** content warning. **The installed-extension visibility symptom is resolved on the owner's phone**. The screenshot verifies UI visibility but not precisely which GitHub test-release implementation is in that APK; v1.6.6126 is a different version than the earlier PR #138 run #11 test release. It also does not establish that HTTP 503 page downloads or Chapter 102.5 have recovered.
+- **Technical finding:** Pinned Mihon ExtensionManager’s Browse refresh previously fetched remote store listings only; it did not call the existing local installed-package scan. Full app restart can also rediscover Android-installed APKs. [Native PR #142](https://github.com/zexaldragneel/selura-reader/pull/142) implements local rescan on refresh using the existing trust and package validation; [native CI #147](https://github.com/zexaldragneel/selura-reader/actions/runs/40275356010) completed successfully. **The screenshot alone does not verify that Build #147 is installed or its new rescan behavior was tested**.
+- **Data safety:** No uninstall, clear-storage, reinstall, source migration, cache deletion or queue reset is required. Keep `com.selura.manga` and original extension source identity `5690172267177159639` and signature. The `Mixed` label indicates content classification, not an extension failure. Keep the separate HTTP 503 incident [#110](https://github.com/zexaldragneel/selura-reader/issues/110) open until owner demonstrates complete downloading of the previously failing Killer Peter chapter and offline progress preservation.
+
 ## October 26 — Manually installed Mangakakalot signed test APK not visible in Seiryn Extensions
 
 - **New Android owner report:** Owner installed the signed [Mangakakalot PR #138 run #11 test APK](https://github.com/zexaldragneel/selura-reader/releases/tag/test-mangakakalot-pr-138-run-11) but said it **doesn't appear under Seiryn extensions**. This does **not yet establish** whether Android PackageInstaller actually installed/upgraded the package or whether it was installed but missed by Seiryn's UI. Do not uninstall or delete app/extension data, source libraries, partial pages, progress or queue entries.
