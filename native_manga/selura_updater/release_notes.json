@@ -1,13 +1,13 @@
 {
-  "prNumber": 145,
+  "prNumber": 157,
   "added": [
-    "Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications."
+    "Storage overview now lists the largest unfinished manga folders with the saved partial-chapter space used."
   ],
   "improved": [
-    "Identify which actual image server returned HTTP 503 without exposing a manga image link, chapter path, query parameters or account credentials.",
-    "Preserve Retry-After handling, bounded automatic chapter recovery, original extension compatibility and existing offline downloads."
+    "Show up to ten manga with unfinished transfers separately from completed downloads, including saved sizes and unfinished folder counts.",
+    "Keep the existing read-only storage scan, partial-result limits, incomplete-size warnings, source compatibility and chapter data unchanged."
   ],
   "fixed": [
-    "Download failure notifications previously lacked the identity of the responding image CDN, making repeated 503 errors hard to diagnose."
+    "Previously large unfinished manga were absent from the storage overview's largest-manga breakdown unless completed chapters also existed."
   ]
 }
