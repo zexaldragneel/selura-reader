@@ -2,20 +2,20 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications."
+      "Storage overview now lists the largest unfinished manga folders with the saved partial-chapter space used."
     ],
     "fixed": [
-      "Download failure notifications previously lacked the identity of the responding image CDN, making repeated 503 errors hard to diagnose."
+      "Previously large unfinished manga were absent from the storage overview's largest-manga breakdown unless completed chapters also existed."
     ],
     "improved": [
-      "Identify which actual image server returned HTTP 503 without exposing a manga image link, chapter path, query parameters or account credentials.",
-      "Preserve Retry-After handling, bounded automatic chapter recovery, original extension compatibility and existing offline downloads."
+      "Show up to ten manga with unfinished transfers separately from completed downloads, including saved sizes and unfinished folder counts.",
+      "Keep the existing read-only storage scan, partial-result limits, incomplete-size warnings, source compatibility and chapter data unchanged."
     ]
   },
-  "notes": "What's new: Privacy-safe failing image CDN hostname in HTTP 429 and HTTP 503 download notifications.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-145-run-149",
+  "notes": "What's new: Storage overview now lists the largest unfinished manga folders with the saved partial-chapter space used.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-157-run-150",
   "schemaVersion": 1,
-  "sha256": "e7060fa65567b5d95f74b4dcf88c3bedfaf849356c2f41e929130826c18e5661",
-  "versionCode": 1149,
-  "versionName": "Seiryn Build 149"
+  "sha256": "c8fbe0ce542d83e7fad59eb8f38f908e608620af969d0848bc4eb0140bb2f446",
+  "versionCode": 1150,
+  "versionName": "Seiryn Build 150"
 }
