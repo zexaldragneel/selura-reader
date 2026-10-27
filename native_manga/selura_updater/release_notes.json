@@ -1,13 +1,13 @@
 {
-  "prNumber": 142,
+  "prNumber": 157,
   "added": [
-    "Manual extension discovery on refresh for APKs installed through the Android package installer."
+    "Storage overview now lists the largest unfinished manga folders with the saved partial-chapter space used."
   ],
   "improved": [
-    "Refreshing Browse → Extensions now scans Android-installed and in-app extension APKs before updating the online store, including externally installed test APKs.",
-    "The Installed and Untrusted sections can update without force-stopping Seiryn after a manual extension install."
+    "Show up to ten manga with unfinished transfers separately from completed downloads, including saved sizes and unfinished folder counts.",
+    "Keep the existing read-only storage scan, partial-result limits, incomplete-size warnings, source compatibility and chapter data unchanged."
   ],
   "fixed": [
-    "Resolved a refresh-path bug where manually installed or updated extensions were not rescanned when the Android package-change broadcast was missed."
+    "Previously large unfinished manga were absent from the storage overview's largest-manga breakdown unless completed chapters also existed."
   ]
 }

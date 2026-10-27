@@ -89,6 +89,7 @@ object SeirynStorageOverview {
         val completedChapters: Int,
         val knownBytes: Long,
         val unfinishedChapters: Int,
+        val knownUnfinishedBytes: Long,
     )
 
     data class Report(
@@ -102,6 +103,7 @@ object SeirynStorageOverview {
         val capped: Boolean,
         val storageUnavailable: Boolean,
         val largestSeries: List<SeriesUsage>,
+        val largestUnfinishedSeries: List<SeriesUsage>,
     ) {
         fun describe(context: Context): String {
             if (storageUnavailable) return context.getString(R.string.seiryn_storage_overview_missing)
@@ -122,6 +124,16 @@ object SeirynStorageOverview {
                             " (" + entry.completedChapters + " chapters)"
                     }
             }
+            val unfinishedTop = if (largestUnfinishedSeries.isEmpty()) "" else {
+                "\n\n" + context.getString(R.string.seiryn_storage_overview_largest_unfinished) +
+                    "\n" + largestUnfinishedSeries.joinToString("\n") { entry ->
+                        entry.name + " — " + context.getString(
+                            R.string.seiryn_storage_overview_unfinished_entry,
+                            Formatter.formatShortFileSize(context, entry.knownUnfinishedBytes),
+                            entry.unfinishedChapters,
+                        )
+                    }
+            }
             val unknown = if (unknownFileSizes == 0) "" else {
                 "\n\n" + context.getString(
                     R.string.seiryn_storage_overview_unknown,
@@ -133,7 +145,7 @@ object SeirynStorageOverview {
             } else {
                 ""
             }
-            return summary + top + unknown + limit + "\n\n" +
+            return summary + top + unfinishedTop + unknown + limit + "\n\n" +
                 context.getString(R.string.seiryn_storage_overview_disclaimer)
         }
     }
@@ -143,6 +155,7 @@ object SeirynStorageOverview {
         var completed: Int = 0,
         var unfinished: Int = 0,
         var bytes: Long = 0L,
+        var unfinishedBytes: Long = 0L,
     )
 
     /**
@@ -158,7 +171,7 @@ object SeirynStorageOverview {
             // Only inspect the existing SAF downloads folder; do not create one.
             val root = base?.findFile("downloads")
             if (root == null || !root.isDirectory) {
-                return@withContext Report(0, 0, 0L, 0L, 0, 0, 0, false, true, emptyList())
+                return@withContext Report(0, 0, 0L, 0L, 0, 0, 0, false, true, emptyList(), emptyList())
             }
 
             val series = mutableListOf<CountedSeries>()
@@ -222,6 +235,7 @@ object SeirynStorageOverview {
                                 unknownSizes++
                             } else if (isPending) {
                                 knownUnfinishedBytes += length
+                                usage.unfinishedBytes += length
                             } else {
                                 knownCompletedBytes += length
                                 usage.bytes += length
@@ -234,11 +248,18 @@ object SeirynStorageOverview {
                 .filter { it.completed > 0 }
                 .sortedByDescending { it.bytes }
                 .take(MAX_DISPLAY_SERIES)
-                .map { SeriesUsage(it.label, it.completed, it.bytes, it.unfinished) }
+                .map { SeriesUsage(it.label, it.completed, it.bytes, it.unfinished, it.unfinishedBytes) }
+                .toList()
+            // Include manga with no completed chapters in the unfinished ranking.
+            val topUnfinished = series.asSequence()
+                .filter { it.unfinished > 0 }
+                .sortedByDescending { it.unfinishedBytes }
+                .take(MAX_DISPLAY_SERIES)
+                .map { SeriesUsage(it.label, it.completed, it.bytes, it.unfinished, it.unfinishedBytes) }
                 .toList()
             Report(
                 completed, unfinished, knownCompletedBytes, knownUnfinishedBytes,
-                unknownSizes, visitedFiles, series.size, capped, false, top,
+                unknownSizes, visitedFiles, series.size, capped, false, top, topUnfinished,
             )
         }
 }
@@ -251,6 +272,8 @@ LABELS = '''<?xml version="1.0" encoding="utf-8"?>
     <string name="seiryn_storage_overview_scanning">Calculating storage usage…</string>
     <string name="seiryn_storage_overview_summary">Completed chapter files: %1$s\\nUnfinished transfers: %2$s\\n\\nCompleted chapters: %3$d\\nUnfinished folders: %4$d\\nManga folders inspected: %5$d\\nFiles inspected: %6$d</string>
     <string name="seiryn_storage_overview_largest">Largest manga folders (completed files only):</string>
+    <string name="seiryn_storage_overview_largest_unfinished">Largest unfinished manga folders (saved bytes only):</string>
+    <string name="seiryn_storage_overview_unfinished_entry">%1$s across %2$d unfinished chapter folders</string>
     <string name="seiryn_storage_overview_unknown">%1$d files had unknown sizes; totals exclude those bytes.</string>
     <string name="seiryn_storage_overview_limited">The scan reached its safety limit. These are PARTIAL totals, not your entire downloaded library.</string>
     <string name="seiryn_storage_overview_disclaimer">Read-only measurement of existing downloaded files. SAF storage providers may not report every file size. This is not free-space information or proof that chapters are intact. No downloads, manga, progress, or backups were changed.</string>

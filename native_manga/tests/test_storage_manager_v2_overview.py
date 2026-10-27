@@ -79,6 +79,41 @@ class StorageOverviewTests(unittest.TestCase):
         self.assertNotIn("freeBytes", k)
         self.assertIn("No files were changed", overview.LABELS)
 
+    def test_unfinished_manga_footprints_are_independent_of_completed_ranking(self):
+        k = overview.KOTLIN
+        # A manga containing only unfinished chapter directories must still
+        # be eligible for the second ranking. It must count retained bytes.
+        self.assertIn("var unfinishedBytes: Long = 0L", k)
+        self.assertIn("usage.unfinishedBytes += length", k)
+        self.assertIn(".filter { it.unfinished > 0 }", k)
+        self.assertIn(".sortedByDescending { it.unfinishedBytes }", k)
+        self.assertIn(".filter { it.completed > 0 }", k)
+        self.assertIn(".sortedByDescending { it.bytes }", k)
+        self.assertIn("largestUnfinishedSeries: List<SeriesUsage>", k)
+        self.assertIn("val knownUnfinishedBytes: Long", k)
+        self.assertIn("top, topUnfinished,", k)
+        self.assertIn("emptyList(), emptyList()", k)
+        # The scanned .tmp images are preserved as user data.
+        self.assertNotIn("file.delete()", k)
+        self.assertNotIn("chapter.delete()", k)
+        self.assertNotIn("chapter.renameTo(", k)
+
+    def test_unfinished_section_has_bounded_read_only_ui_and_localized_units(self):
+        k = overview.KOTLIN
+        self.assertIn("largestUnfinishedSeries.isEmpty()", k)
+        self.assertIn("seiryn_storage_overview_largest_unfinished", k)
+        self.assertIn("seiryn_storage_overview_unfinished_entry", k)
+        self.assertIn("Formatter.formatShortFileSize(context, entry.knownUnfinishedBytes)", k)
+        self.assertIn("return summary + top + unfinishedTop + unknown + limit", k)
+        self.assertEqual(k.count(".take(MAX_DISPLAY_SERIES)"), 2)
+        self.assertIn("MAX_DISPLAY_SERIES = 10", k)
+        root = ET.fromstring(overview.LABELS)
+        resources = {item.attrib["name"]: item.text for item in root.findall("string")}
+        self.assertIn("saved bytes only", resources["seiryn_storage_overview_largest_unfinished"])
+        self.assertIn("%1$s", resources["seiryn_storage_overview_unfinished_entry"])
+        self.assertIn("%2$d", resources["seiryn_storage_overview_unfinished_entry"])
+        self.assertIn("unknown sizes", resources["seiryn_storage_overview_unknown"])
+
     def test_resource_strings_valid_and_no_duplicate_ids(self):
         root = ET.fromstring(overview.LABELS)
         ids = [x.attrib["name"] for x in root.findall("string")]
