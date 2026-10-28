@@ -1,13 +1,13 @@
 {
-  "prNumber": 157,
+  "prNumber": 161,
   "added": [
-    "Storage overview now lists the largest unfinished manga folders with the saved partial-chapter space used."
+    "Seiryn-branded Android startup splash icon using the same approved artwork as the installed app icon."
   ],
   "improved": [
-    "Show up to ten manga with unfinished transfers separately from completed downloads, including saved sizes and unfinished folder counts.",
-    "Keep the existing read-only storage scan, partial-result limits, incomplete-size warnings, source compatibility and chapter data unchanged."
+    "Keep the existing premium Seiryn startup background and return directly to the current reader/library after launch.",
+    "Preserve the latest read-only Offline Storage Manager 2.0 improvements and all existing offline chapters."
   ],
   "fixed": [
-    "Previously large unfinished manga were absent from the storage overview's largest-manga breakdown unless completed chapters also existed."
+    "Removed the leftover original Mihon emblem from the Android 12+ launch splash screen."
   ]
 }
