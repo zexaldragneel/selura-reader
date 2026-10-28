@@ -37,6 +37,11 @@ subtitle = "Review and add the Selura extension store",
 "com.selura.manga"
 "https://github.com/zexaldragneel/selura-reader/releases"''',
     b.GRADLE: 'rootProject.name = "SeluraManga" // Selura customization',
+    b.SPLASH_THEME: """<resources><style name="Theme.Tachiyomi.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_mihon_splash</item>
+        <item name="windowSplashScreenBackground">@color/splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Tachiyomi</item>
+    </style></resources>""",
 }
 
 
@@ -56,9 +61,15 @@ class SeirynBrandingTests(unittest.TestCase):
         self.assertIn('zexaldragneel/selura-reader', values[b.UPDATER])
         self.assertIn('zexaldragneel/selura-extensions/repo/repo.json', values[b.BROWSE])
         self.assertIn('rootProject.name = "Seiryn"', values[b.GRADLE])
+        self.assertIn('windowSplashScreenAnimatedIcon', values[b.SPLASH_THEME])
+        self.assertIn('@drawable/seiryn_splash_icon', values[b.SPLASH_THEME])
+        self.assertNotIn('@drawable/ic_mihon_splash', values[b.SPLASH_THEME])
+        self.assertIn('postSplashScreenTheme', values[b.SPLASH_THEME])
+        self.assertIn('@drawable/seiryn_launcher_icon', b.SPLASH_XML)
+        self.assertIn('72dp', b.SPLASH_XML)
 
     def test_no_deletion_or_migration_targets(self):
-        self.assertEqual(len(PREVIOUS), 7)
+        self.assertEqual(len(PREVIOUS), 8)
         self.assertNotIn("DownloadManager", str(b.updated_files(PREVIOUS)))
         paths = " ".join(PREVIOUS)
         for p in ("downloads", "backup", "migration", "extension", "library", "database", "signing"):
@@ -73,6 +84,24 @@ class SeirynBrandingTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(payload).hexdigest(), expected_digest)
             self.assertEqual(payload[:4], b"RIFF")
             self.assertEqual(payload[8:12], b"WEBP")
+
+    def test_splash_rebrand_preserves_theme_and_refuses_unknown_upstream(self):
+        transformed = b.updated_files(PREVIOUS)[b.SPLASH_THEME]
+        self.assertEqual(transformed.count("windowSplashScreenAnimatedIcon"), 1)
+        self.assertEqual(transformed.count("@drawable/seiryn_splash_icon"), 1)
+        self.assertIn("@color/splash", transformed)
+        self.assertIn("@style/Theme.Tachiyomi", transformed)
+        sample = PREVIOUS.copy()
+        sample[b.SPLASH_THEME] = sample[b.SPLASH_THEME].replace(
+            "@drawable/ic_mihon_splash", "@drawable/unknown_vendor_icon",
+        )
+        with self.assertRaises(b.SeirynBrandError):
+            b.updated_files(sample)
+        import xml.etree.ElementTree as ET
+        doc = ET.fromstring(b.SPLASH_XML)
+        android = "{http://schemas.android.com/apk/res/android}"
+        item = doc.find("item")
+        self.assertEqual(item.attrib[android + "drawable"], "@drawable/seiryn_launcher_icon")
 
     def test_changed_native_anchor_fails_closed(self):
         for path in PREVIOUS:
@@ -97,6 +126,8 @@ class SeirynBrandingTests(unittest.TestCase):
             with self.assertRaises(b.SeirynBrandError):
                 b.patch(root)
             self.assertEqual((root / b.MANIFEST).read_text(), PREVIOUS[b.MANIFEST])
+            self.assertEqual((root / b.SPLASH_THEME).read_text(), PREVIOUS[b.SPLASH_THEME])
+            self.assertFalse((root / b.SPLASH_DRAWABLE).exists())
 
 
 if __name__ == "__main__":
