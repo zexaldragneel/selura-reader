@@ -1,13 +1,14 @@
 {
-  "prNumber": 161,
+  "prNumber": 163,
   "added": [
-    "Seiryn-branded Android startup splash icon using the same approved artwork as the installed app icon."
+    "Premium Library 2.0 Reading Desk in Neon Night and Celestial Xianxia: live counts for visible titles, unread chapters and in-progress manga.",
+    "One-tap Resume for the most recently read unfinished manga, using existing chapter navigation and your actual reading history."
   ],
   "improved": [
-    "Keep the existing premium Seiryn startup background and return directly to the current reader/library after launch.",
-    "Preserve the latest read-only Offline Storage Manager 2.0 improvements and all existing offline chapters."
+    "Reuse the existing library's lazy grid, search, categories, sorting and selection without extra cover, source or database requests.",
+    "Keep the approved Seiryn splash branding and Storage Manager 2.0 functionality from the prior signed baseline."
   ],
   "fixed": [
-    "Removed the leftover original Mihon emblem from the Android 12+ launch splash screen."
+    "Avoid cluttering manga covers with reading progress bars; Reading Desk stays hidden in search, selection and default library theme."
   ]
 }
