@@ -23,6 +23,20 @@ LOGO = "app/src/main/java/eu/kanade/presentation/more/LogoHeader.kt"
 BROWSE = "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsBrowseScreen.kt"
 UPDATER = "app/src/main/java/eu/kanade/tachiyomi/ui/main/SeluraStartupUpdateCheck.kt"
 GRADLE = "settings.gradle.kts"
+SPLASH_THEME = "app/src/main/res/values/themes.xml"
+SPLASH_DRAWABLE = "app/src/main/res/drawable/seiryn_splash_icon.xml"
+# Android 12+ splash uses the activity's Theme.SplashScreen animated-icon
+# resource, NOT the application launcher icon in AndroidManifest.xml.
+SPLASH_XML = """<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="72dp"
+        android:height="72dp"
+        android:drawable="@drawable/seiryn_launcher_icon"
+        android:gravity="center" />
+</layer-list>
+"""
+
 
 
 class SeirynBrandError(RuntimeError):
@@ -94,6 +108,13 @@ def updated_files(before: dict[str, str]) -> dict[str, str]:
         s = one(s, old, new, UPDATER)
     after[UPDATER] = s
 
+    after[SPLASH_THEME] = one(
+        after[SPLASH_THEME],
+        '<item name="windowSplashScreenAnimatedIcon">@drawable/ic_mihon_splash</item>',
+        '<item name="windowSplashScreenAnimatedIcon">@drawable/seiryn_splash_icon</item>',
+        "Android launch splash visual",
+    )
+
     after[GRADLE] = one(after[GRADLE],
                         'rootProject.name = "SeluraManga" // Selura customization',
                         'rootProject.name = "Seiryn" // visible branding only; app ID unchanged', GRADLE)
@@ -108,7 +129,7 @@ def patch(root: Path) -> None:
     if 'applicationId = "com.selura.manga"' not in app_build:
         raise SeirynBrandError("Existing com.selura.manga upgrade identity must remain")
     pending = {}
-    for rel in (I18N, MANIFEST, ABOUT, LOGO, BROWSE, UPDATER, GRADLE):
+    for rel in (I18N, MANIFEST, ABOUT, LOGO, BROWSE, UPDATER, GRADLE, SPLASH_THEME):
         f = root / rel
         if not f.is_file():
             raise SeirynBrandError(f"Missing pinned native branding path: {rel}")
@@ -129,6 +150,10 @@ def patch(root: Path) -> None:
             raise SeirynBrandError(f"Seiryn owner image digest mismatch: {name}")
         files[target] = raw
 
+    if (root / SPLASH_DRAWABLE).exists():
+        raise SeirynBrandError("Conflicting Seiryn splash XML already exists")
+    files[root / SPLASH_DRAWABLE] = SPLASH_XML.encode("utf-8")
+
     if 'applicationId = "com.selura.manga"' not in app_build:
         raise SeirynBrandError("App ID changed")
     if 'https://raw.githubusercontent.com/zexaldragneel/selura-extensions/repo/repo.json' not in after[BROWSE]:
@@ -140,8 +165,9 @@ def patch(root: Path) -> None:
         (root / rel).write_text(content, encoding="utf-8")
     (root / RES).mkdir(parents=True, exist_ok=True)
     for destination, payload in files.items():
+        destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(payload)
-    print("Applied Seiryn name + user-approved art, retained com.selura.manga and signer.")
+    print("Applied Seiryn name, launcher + system splash art; retained com.selura.manga and signer.")
 
 
 if __name__ == "__main__":
