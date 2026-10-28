@@ -2,20 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Seiryn-branded Android startup splash icon using the same approved artwork as the installed app icon."
+      "Premium Library 2.0 Reading Desk in Neon Night and Celestial Xianxia: live counts for visible titles, unread chapters and in-progress manga.",
+      "One-tap Resume for the most recently read unfinished manga, using existing chapter navigation and your actual reading history."
     ],
     "fixed": [
-      "Removed the leftover original Mihon emblem from the Android 12+ launch splash screen."
+      "Avoid cluttering manga covers with reading progress bars; Reading Desk stays hidden in search, selection and default library theme."
     ],
     "improved": [
-      "Keep the existing premium Seiryn startup background and return directly to the current reader/library after launch.",
-      "Preserve the latest read-only Offline Storage Manager 2.0 improvements and all existing offline chapters."
+      "Reuse the existing library's lazy grid, search, categories, sorting and selection without extra cover, source or database requests.",
+      "Keep the approved Seiryn splash branding and Storage Manager 2.0 functionality from the prior signed baseline."
     ]
   },
-  "notes": "What's new: Seiryn-branded Android startup splash icon using the same approved artwork as the installed app icon.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-161-run-152",
+  "notes": "What's new: Premium Library 2.0 Reading Desk in Neon Night and Celestial Xianxia: live counts for visible titles, unread chapters and in-progress manga.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-163-run-155",
   "schemaVersion": 1,
-  "sha256": "96159c2a0f34d75617a8feaa152ca3232ad7a83e65fcfe05b8674843f0331cd4",
-  "versionCode": 1152,
-  "versionName": "Seiryn Build 152"
+  "sha256": "47b90a6f8333c1b58ec65fdc33b20922971f7891a351c394640cdd3a54c6d611",
+  "versionCode": 1155,
+  "versionName": "Seiryn Build 155"
 }
