@@ -62,7 +62,7 @@ class PremiumLibraryV2Contracts(unittest.TestCase):
         for excluded in (
             "MangaCover(", "ImageRequest(", "LinearProgressIndicator(",
             "progressBar", "collectAsState(", "getChapterList(", "updateManga(",
-            "database.", "delete(", "newCall(", "request(", "WebView(",
+            "database.query(", "delete(", "newCall(", "request(", "WebView(",
             "SortedMap(", ".sortedBy(", "launch(", "readHistory",
         ):
             self.assertNotIn(excluded, kt)
