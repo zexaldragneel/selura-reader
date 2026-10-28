@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   pull_request:
-    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory, fix/seiryn-http503-preserve-chapter-auto-recovery-20261026, fix/seiryn-extension-manual-apk-rescan-20261026, feature/seiryn-storage-v2-unfinished-footprint-20261027]
+    branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory, fix/seiryn-http503-preserve-chapter-auto-recovery-20261026, fix/seiryn-extension-manual-apk-rescan-20261026, feature/seiryn-storage-v2-unfinished-footprint-20261027, fix/seiryn-android-splash-logo-20261028]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -167,6 +167,13 @@ jobs:
           # Final user-facing Seiryn visual rebrand; package, source IDs, signer
           # and native updater endpoint remain unchanged for in-place installs.
           python3 native_manga/apply_seiryn_branding.py native-upstream
+          # Premium Library 2.0: read-only current-shelf stats and resume action.
+          python3 native_manga/premium_library_v2.py native-upstream
+          grep -Fq 'SeirynReadingDesk(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryContent.kt
+          test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
+          grep -Fq 'onContinueReading(toResume)' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
+          ! grep -Fq 'LinearProgressIndicator(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
+          test -s native-upstream/app/src/main/res/values/seiryn_premium_library_v2_strings.xml
           grep -Fq 'suspend fun inspectUnfinishedChapter(' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'canonicalDir + Downloader.TMP_DIR_SUFFIX' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
           grep -Fq 'selura_single_recovery_retry' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/manga/MangaScreen.kt
