@@ -59,8 +59,14 @@ class SeluraNhentaiTests(unittest.TestCase):
         self.assertIn("lastGoodHost()", source)
         self.assertIn("rememberGoodHost(host)", source)
         self.assertIn("response.code == 404", source)
-        self.assertIn("versionCode = 2", (self.provider / "build.gradle.kts").read_text())
+        self.assertIn("versionCode = 3", (self.provider / "build.gradle.kts").read_text())
         self.assertIn("response.close()", source)
+
+    def test_browse_thumbnail_host_is_stable(self):
+        source = (self.provider / "NHentai.kt").read_text()
+        self.assertNotIn("nhConfig.thumbServers.random()", source)
+        self.assertIn('nhConfig.thumbServers.firstOrNull { it.startsWith("https://") }', source)
+        self.assertIn('thumbnail_url = "$thumbServer/', source)
 
     def test_duplicate_patching_fails(self):
         patch(self.upstream, self.provider, verify_git=False)
