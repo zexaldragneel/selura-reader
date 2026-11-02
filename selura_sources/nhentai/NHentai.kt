@@ -150,7 +150,8 @@ class NHentai(
             ?: "https://i1.nhentai.net"
 
     val thumbServer
-        get() = nhConfig.thumbServers.random()
+        get() = nhConfig.thumbServers.firstOrNull { it.startsWith("https://") }
+            ?: "https://t1.nhentai.net"
 
     // Preferences
 
