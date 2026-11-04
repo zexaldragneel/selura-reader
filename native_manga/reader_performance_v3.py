@@ -44,7 +44,7 @@ def patch_source(source):
     source = once(source,
                   "            if (force || !chapterCache.isImageInCache(imageUrl)) {",
                   """            if (force || !chapterCache.isImageInCache(imageUrl)) {
-                imageOrigin = "network"""")
+                imageOrigin = "network"\n""")
     source = once(source,
                   "            page.status = Page.State.Error(e)\n        }\n    }",
                   """            page.status = Page.State.Error(e)
