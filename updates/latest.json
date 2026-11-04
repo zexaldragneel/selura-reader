@@ -1,9 +1,22 @@
 {
   "applicationId": "com.selura.manga",
-  "notes": "Seiryn improvements and fixes. Review the GitHub release before installing.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-162",
+  "changes": {
+    "added": [
+      "Slow-only reader diagnostics for chapter lists and page images (750 ms threshold)."
+    ],
+    "fixed": [
+      "Correct public update descriptions so this release lists its actual changes."
+    ],
+    "improved": [
+      "Bound online page preloading to nearby pages instead of scheduling entire long chapters.",
+      "Limit webtoon decode memory pressure and retain chapter image caching.",
+      "Preserve signed in-app updates and existing offline chapters, library, and reading progress."
+    ]
+  },
+  "notes": "What's new: Slow-only reader diagnostics for chapter lists and page images (750 ms threshold).",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-166",
   "schemaVersion": 1,
-  "sha256": "e66843893c11355c47ad2d17951f12a7402428458b5fdfcef698321bc7b4ea78",
-  "versionCode": 1162,
-  "versionName": "Seiryn Build 162"
+  "sha256": "f8ff52448d3c8a18de1639baabfe27a42d12d78087e11dbd515d0d562581c972",
+  "versionCode": 1166,
+  "versionName": "Seiryn Build 166"
 }
