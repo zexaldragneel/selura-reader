@@ -122,6 +122,7 @@ jobs:
     needs: build
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/fix/nhentai-browse-thumbnail-stability-20261102') ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -139,6 +140,8 @@ jobs:
           set -euo pipefail
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             TAG="test-selura-source-pr-${{ github.event.pull_request.number }}-run-${{ github.run_number }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            TAG="test-selura-nhentai-v3-run-${{ github.run_number }}"
           else
             TAG="test-selura-source-dispatch-run-${{ github.run_number }}"
           fi
