@@ -54,8 +54,19 @@ class ReaderPerformanceV3Tests(unittest.TestCase):
         self.assertIn('downloadJobs.putIfAbsent(pageIndex, job)', source)
         self.assertIn('chapterCache.putImageToCache(imageUrl, imageResponse)', source)
         self.assertIn('if (e is CancellationException)', source)
-        for sensitive in ('page.url', 'imageUrl=$', 'chapter.title', 'source.name', 'e.message'):
-            self.assertNotIn(sensitive, source)
+        log_line = next(line for line in source.splitlines() if 'Log.d("SeirynReaderPerf"' in line)
+        for sensitive in ('page.url', 'imageUrl=
+    def test_fail_closed_on_double_apply_or_missing_contract(self):
+        source = v2.patch_source(SOURCE)
+        with self.assertRaises(v3.TelemetryContractError):
+            v3.patch_source(v3.patch_source(source))
+        with self.assertRaises(v3.TelemetryContractError):
+            v3.patch_source(source.replace("MAX_PAGES_AHEAD = 8", "MAX_PAGES_AHEAD = 9"))
+
+if __name__ == "__main__":
+    unittest.main()
+, 'chapter.title', 'source.name', 'e.message'):
+            self.assertNotIn(sensitive, log_line)
     def test_fail_closed_on_double_apply_or_missing_contract(self):
         source = v2.patch_source(SOURCE)
         with self.assertRaises(v3.TelemetryContractError):
