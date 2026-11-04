@@ -400,7 +400,7 @@ jobs:
           # PR releases require human-reviewed release-specific changes.
           # A stacked PR must update release_notes.json for its own PR number.
           # Workflow dispatch without a PR continues with legacy notes.
-          CHANGELOG_ARGS=()
+          CHANGELOG_ARGS=(--changes-file native_manga/selura_updater/dispatch_release_notes.json)
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             CHANGELOG_ARGS=(--changes-file native_manga/selura_updater/release_notes.json)
           fi
