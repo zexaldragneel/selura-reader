@@ -1,14 +1,14 @@
 {
   "prNumber": 0,
   "added": [
-    "Slow-only reader diagnostics for chapter lists and page images (750 ms threshold)."
+    "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
   ],
   "improved": [
-    "Bound online page preloading to nearby pages instead of scheduling entire long chapters.",
-    "Limit webtoon decode memory pressure and retain chapter image caching.",
-    "Preserve signed in-app updates and existing offline chapters, library, and reading progress."
+    "Keep nearby page preloading bounded to limit memory and network pressure.",
+    "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
+    "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
   ],
   "fixed": [
-    "Correct public update descriptions so this release lists its actual changes."
+    "Public in-app update descriptions now reflect the actual release changes."
   ]
 }
