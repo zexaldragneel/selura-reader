@@ -1,6 +1,12 @@
 name: Selura NHentai Source Extension APK
 
 on:
+  push:
+    branches:
+      - fix/nhentai-browse-thumbnail-stability-20261102
+    paths:
+      - "selura_sources/**"
+      - ".github/workflows/selura-sources.yml"
   pull_request:
     branches: [main]
     paths:
