@@ -1,0 +1,14 @@
+{
+  "prNumber": 0,
+  "added": [
+    "Slow-only reader diagnostics for chapter lists and page images (750 ms threshold)."
+  ],
+  "improved": [
+    "Bound online page preloading to nearby pages instead of scheduling entire long chapters.",
+    "Limit webtoon decode memory pressure and retain chapter image caching.",
+    "Preserve signed in-app updates and existing offline chapters, library, and reading progress."
+  ],
+  "fixed": [
+    "Correct public update descriptions so this release lists its actual changes."
+  ]
+}
