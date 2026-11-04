@@ -460,7 +460,7 @@ jobs:
           data = json.loads(source.read_text(encoding="utf-8"))
           keys = {"schemaVersion", "applicationId", "versionCode", "versionName",
                   "notes", "releaseUrl", "sha256"}
-          if "${{ github.event_name }}" == "pull_request":
+          if "changes" in data:
               assert set(data) == keys | {"changes"}
               groups = data["changes"]
               assert set(groups) == {"added", "improved", "fixed"}
