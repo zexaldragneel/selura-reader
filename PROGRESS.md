@@ -1,5 +1,12 @@
 # Selura — Development Progress
 
+## November 4 — Performance 3.1 foreground-first reader loading (CI pending)
+
+- Implemented `native_manga/reader_performance_v31.py` after v2/v3 patches. Changes the first HTTP prefetch chunk from two pages to one, so the currently visible page can be scheduled before speculative neighbors; retains bounded later chunks, cache, retries and cancellation. No claim of measured speed gain yet.
+- Added three fail-closed regression tests and enabled patch in native GitHub Actions; updated categorized release notes. Commits `f930b508`, `f6ee90af`, `a2647f0e`, `c0f4e883`.
+- User confirmed Build #166 acceptable. Signed APK build and device validation for the new patch remain pending. Adaptive network scheduling, webtoon changes, download recovery and offline optimizations are future work, not completed by this patch.
+
+
 ## November 4 — Performance 3.1 preparation: accurate public release notes
 
 - User authorized next-stage performance work without Work mode. First change: dispatch/push releases now generate validated, categorized release-specific update notes, rather than generic descriptions. Commits `59122682`, `0accdaef`, `2b69c5b`, `4b0b872f`.
