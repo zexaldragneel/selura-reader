@@ -1,22 +1,9 @@
 {
   "applicationId": "com.selura.manga",
-  "changes": {
-    "added": [
-      "Premium Library 2.0 Reading Desk in Neon Night and Celestial Xianxia: live counts for visible titles, unread chapters and in-progress manga.",
-      "One-tap Resume for the most recently read unfinished manga, using existing chapter navigation and your actual reading history."
-    ],
-    "fixed": [
-      "Avoid cluttering manga covers with reading progress bars; Reading Desk stays hidden in search, selection and default library theme."
-    ],
-    "improved": [
-      "Reuse the existing library's lazy grid, search, categories, sorting and selection without extra cover, source or database requests.",
-      "Keep the approved Seiryn splash branding and Storage Manager 2.0 functionality from the prior signed baseline."
-    ]
-  },
-  "notes": "What's new: Premium Library 2.0 Reading Desk in Neon Night and Celestial Xianxia: live counts for visible titles, unread chapters and in-progress manga.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-pr-163-run-155",
+  "notes": "Seiryn improvements and fixes. Review the GitHub release before installing.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-162",
   "schemaVersion": 1,
-  "sha256": "47b90a6f8333c1b58ec65fdc33b20922971f7891a351c394640cdd3a54c6d611",
-  "versionCode": 1155,
-  "versionName": "Seiryn Build 155"
+  "sha256": "e66843893c11355c47ad2d17951f12a7402428458b5fdfcef698321bc7b4ea78",
+  "versionCode": 1162,
+  "versionName": "Seiryn Build 162"
 }
