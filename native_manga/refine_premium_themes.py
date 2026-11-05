@@ -188,6 +188,8 @@ def patch(root: Path) -> None:
                 Brush.horizontalGradient(
                     if (premium == SeluraLibraryTheme.CELESTIAL_XIANXIA) {
                         listOf(Color(0xFF101B30), Color(0xFF2C3852), Color(0xFF11192D))
+                    } else if (premium == SeluraLibraryTheme.SEIRYN_OBSIDIAN) {
+                        listOf(Color(0xFF101116), Color(0xFF262118), Color(0xFF101116))
                     } else {
                         listOf(Color(0xFF0E1024), Color(0xFF24184B), Color(0xFF11152C))
                     },
