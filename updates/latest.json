@@ -2,23 +2,23 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
-      "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
+      "Obsidian Home: real reading history, Continue Reading, recently updated titles and unread library shelves.",
+      "Dedicated Home navigation with Library, Updates, Browse and More; history and downloads remain accessible."
     ],
     "fixed": [
-      "Public in-app update descriptions now reflect the actual release changes."
+      "Continue Reading resumes the historical partial chapter or advances after a completed chapter."
     ],
     "improved": [
-      "Seiryn-branded atmospheric library header and matching dark-gold search toolbar.",
-      "Keep nearby page preloading bounded to limit memory and network pressure.",
-      "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
-      "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
+      "Persistent library search, gold cover frames and existing category, sorting and selection controls.",
+      "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
+      "Reader tools now have labels and a reading-room page/percentage indicator in Obsidian.",
+      "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
     ]
   },
-  "notes": "What's new: Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-176",
+  "notes": "What's new: Obsidian Home: real reading history, Continue Reading, recently updated titles and unread library shelves.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-178",
   "schemaVersion": 1,
-  "sha256": "6158b1802d54eb03e4e6bca6a29ca041b7f879d0774414d93e57a9624ee7fb14",
-  "versionCode": 1176,
-  "versionName": "Seiryn Build 176"
+  "sha256": "0e62402f2a8c63c6d480320a219f9c41415a69e362b4c84edbb449035aa9fe64",
+  "versionCode": 1178,
+  "versionName": "Seiryn Build 178"
 }
