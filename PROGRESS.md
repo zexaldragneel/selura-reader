@@ -1,5 +1,12 @@
 # Selura — Development Progress
 
+## November 5 — Seiryn Obsidian identity preview (build pending)
+
+- User approved the four-screen dark/gold visual mockup. Created feature branch `feature/seiryn-obsidian-identity-20261105` from the current native reader branch.
+- First implementation slice: opt-in **Seiryn Obsidian** Material 3 palette (black/graphite, warm gold, jade secondary), vector library header, and visible header branding corrected from SELURA to SEIRYN. Existing theme selection is persistent via display-only SharedPreferences; original themes and manga database untouched. Commits `069d4dda`, `e1012672`.
+- Enabled preview branch builds in native GitHub Actions, without opting preview builds into the public update feed (`4e08aad4`). **Not a complete reproduction of the mockup**: dedicated Home dashboard, manga details, chapter reader chrome and navigation redesign are pending. CI and device testing pending. Preserve `com.selura.manga`, original signer, source IDs and user data.
+
+
 ## November 4 — Performance 3.1 foreground-first reader loading (CI pending)
 
 - Implemented `native_manga/reader_performance_v31.py` after v2/v3 patches. Changes the first HTTP prefetch chunk from two pages to one, so the currently visible page can be scheduled before speculative neighbors; retains bounded later chunks, cache, retries and cancellation. No claim of measured speed gain yet.
