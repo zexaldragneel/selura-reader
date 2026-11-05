@@ -1,5 +1,14 @@
 # Selura — Development Progress
 
+## November 5 — Integrated Obsidian screens, Build #177 compiling
+
+- Commit `c064b110b3b2ae4d59853c127dc71632fb0e93c5` implements native Kotlin/Compose Home with library/history flows, historical chapter resume, real recently fetched and unread library shelves, empty/loading/error states, history/download shortcuts and five-destination Obsidian navigation.
+- Library gains a persistent search field, visible active-filter hint and gold cover frames while retaining categories, sort/filter, selection, refresh and native chapter navigation. Details gains a cinematic cover composition, read/total chapter summary, Start/Continue and sort/filter entry points, plus bookmark-aware chapter cards. Reader gains labeled mode/orientation/crop/settings tools and live page/percentage chrome; engine gestures, RTL/webtoon and chapter slider remain in place.
+- The new final patch only edits presentation and adds a read-only Home ViewModel. No schema, backup, source-ID, signing, download, progress or migration changes. Existing themes remain selectable; select Seiryn Obsidian in Appearance for the new screens.
+- Local: full pinned-source patch sequence succeeds; **170 Python patch-contract tests passed**. GitHub Actions [Build #177](https://github.com/zexaldragneel/selura-reader/actions/runs/41985048870) has passed snapshot, tests and patch integration; Android release compilation is in progress. Signed identity/artifact/release/feed checks are still pending.
+- Device acceptance and visual parity with the earlier mockup are **not verified**. See `native_manga/obsidian/README.md` for device acceptance covering in-place data retention, resume, library controls, details, reading modes, large fonts and tablet layout. This is substantial integrated implementation, not a claim that every visual detail has been device-approved.
+
+
 ## November 5 — Obsidian UI correction following Android screenshot
 
 - Android screenshot of Build #175 confirms functioning Obsidian theme and real library covers, but the layout still follows Mihon. Full four-screen mockup implementation remains incomplete; no device verification of further changes.
