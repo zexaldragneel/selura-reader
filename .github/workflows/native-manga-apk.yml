@@ -259,7 +259,7 @@ jobs:
           grep -Fq 'MAX_TEMP_WEBTOON_PAGE_BYTES = 96L * 1024 * 1024' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/coil/ImageDecoder.kt
           grep -Fq 'private const val MAX_PAGES_AHEAD = 8' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
-          grep -Fq 'pages.loadByRollingChunked(page.index, 2, 3)' \
+          grep -Fq 'pages.loadByRollingChunked(page.index, 1, 3)' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
           ! grep -Fq 'items.subList(index + 2, items.size)' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
