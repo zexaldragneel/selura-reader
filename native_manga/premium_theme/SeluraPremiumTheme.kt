@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
  */
 enum class SeluraLibraryTheme(val key: String, val label: String) {
     DEFAULT("default", "Default"),
+    SEIRYN_OBSIDIAN("seiryn_obsidian", "Seiryn Obsidian"),
     CELESTIAL_XIANXIA("celestial_xianxia", "Celestial Xianxia"),
     NEON_NIGHT("neon_night", "Neon Night");
 
@@ -59,6 +60,23 @@ val LocalSeluraLibraryAppearance = staticCompositionLocalOf<SeluraLibraryAppeara
 fun seluraColorScheme(base: ColorScheme, selected: SeluraLibraryTheme): ColorScheme =
     when (selected) {
         SeluraLibraryTheme.DEFAULT -> base
+        SeluraLibraryTheme.SEIRYN_OBSIDIAN -> darkColorScheme(
+            primary = Color(0xFFF1C66D), onPrimary = Color(0xFF211600),
+            primaryContainer = Color(0xFF49391E), onPrimaryContainer = Color(0xFFFFE5A7),
+            secondary = Color(0xFFB8CBBE), onSecondary = Color(0xFF14231B),
+            secondaryContainer = Color(0xFF27392F), onSecondaryContainer = Color(0xFFD5E9DC),
+            tertiary = Color(0xFFE8C58B), onTertiary = Color(0xFF281C0B),
+            background = Color(0xFF08090D), onBackground = Color(0xFFF4F1EB),
+            surface = Color(0xFF111319), onSurface = Color(0xFFF4F1EB),
+            surfaceVariant = Color(0xFF25272E), onSurfaceVariant = Color(0xFFBDBBC1),
+            outline = Color(0xFF8E774D), outlineVariant = Color(0xFF38332B),
+            surfaceContainerLowest = Color(0xFF08090D),
+            surfaceContainerLow = Color(0xFF111319),
+            surfaceContainer = Color(0xFF181A21),
+            surfaceContainerHigh = Color(0xFF23252C),
+            surfaceContainerHighest = Color(0xFF30313A),
+            surfaceBright = Color(0xFF373943), surfaceDim = Color(0xFF08090D),
+        )
         SeluraLibraryTheme.CELESTIAL_XIANXIA -> darkColorScheme(
             primary = Color(0xFFEBC78B),
             onPrimary = Color(0xFF211525),
@@ -119,6 +137,10 @@ fun seluraColorScheme(base: ColorScheme, selected: SeluraLibraryTheme): ColorSch
 fun seluraLibraryBackground(selected: SeluraLibraryTheme, artwork: Boolean): Brush =
     when (selected) {
         SeluraLibraryTheme.DEFAULT -> Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent))
+        SeluraLibraryTheme.SEIRYN_OBSIDIAN -> Brush.verticalGradient(
+            if (artwork) listOf(Color(0xFF27231C), Color(0xFF121319), Color(0xFF08090D))
+            else listOf(Color(0xFF08090D), Color(0xFF08090D)),
+        )
         SeluraLibraryTheme.CELESTIAL_XIANXIA -> Brush.verticalGradient(
             if (artwork) listOf(Color(0xFF253954), Color(0xFF111B33), Color(0xFF080F20))
             else listOf(Color(0xFF080F20), Color(0xFF080F20)),
