@@ -175,6 +175,7 @@ private fun ReaderTool(icon: androidx.compose.ui.graphics.vector.ImageVector, la
     changed[p] = s
 
     copies = {
+        "SeirynHomeIcon.kt": BASE + "tachiyomi/ui/home/SeirynHomeIcon.kt",
         "SeirynHomeViewModel.kt": BASE + "tachiyomi/ui/home/SeirynHomeViewModel.kt",
         "SeirynHomeTab.kt": BASE + "tachiyomi/ui/home/SeirynHomeTab.kt",
         "SeirynDetailActions.kt": BASE + "presentation/manga/components/SeirynDetailActions.kt",

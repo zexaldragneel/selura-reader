@@ -37,8 +37,6 @@ import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Home
 import tachiyomi.domain.library.model.LibraryManga
 
 data object SeirynHomeTab : Tab {
@@ -46,7 +44,7 @@ data object SeirynHomeTab : Tab {
         @Composable get() = TabOptions(
             index = 5u,
             title = stringResource(R.string.seiryn_home),
-            icon = rememberVectorPainter(MaterialSymbols.Rounded.Home),
+            icon = rememberVectorPainter(SeirynHomeIcon),
         )
 
     @Composable
