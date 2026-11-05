@@ -1,5 +1,13 @@
 # Selura — Development Progress
 
+## November 5 — Deeper Obsidian Library and genre-aware Home, Build #179 pending
+
+- Follow-up to Build #178 after owner pointed out that the first release still left the Library mostly Mihon-shaped and had no recommendations. Commit `89c3a39e48142c3dbb258772017f2a3f7210cb85` adds a custom responsive Obsidian cover grid with live unread/download/bookmark/read-progress details, long-press selection, global search, chapter resume and existing category/filter/sort data. Other themes continue to use their original grids.
+- Home now ranks up to eight unread library titles using genres shared with the latest read title; titles without genre overlap are omitted. This is a transparent local-library recommendation, not a source catalog search. Details retains the complete native chapter list and actions; the visual header/progress/action card is the added redesign there. Reader retains native gestures/viewers, with redesigned Obsidian progress and labeled controls.
+- Local verification: full patch pipeline applied against a fresh checkout of pinned Mihon; **171 Python tests passed**. CI Build #179 is running for full Kotlin/Android compile, signing, release and update-feed verification. Results pending.
+- Device verification and parity with the approved mockup are still outstanding. `native_manga/obsidian/README.md` has the acceptance steps. Build #178 is the last verified APK until #179 completes.
+
+
 ## November 5 — Integrated Obsidian screens, signed Build #178 verified
 
 - Commit `c064b110b3b2ae4d59853c127dc71632fb0e93c5` implements native Kotlin/Compose Home with library/history flows, historical chapter resume, real recently fetched and unread library shelves, empty/loading/error states, history/download shortcuts and five-destination Obsidian navigation.
