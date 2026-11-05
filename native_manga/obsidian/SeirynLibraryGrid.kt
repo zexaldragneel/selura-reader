@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.library.model.LibraryManga
 
@@ -58,14 +59,14 @@ internal fun SeirynLibraryGrid(
                     ),
                 shape = RoundedCornerShape(20.dp),
                 color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
-                border = BorderStroke(
-                    if (selected) 2.dp else 1.dp,
-                    if (selected) MaterialTheme.colorScheme.primary
-                    else Brush.linearGradient(listOf(
+                border = if (selected) {
+                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                } else {
+                    BorderStroke(1.dp, Brush.linearGradient(listOf(
                         MaterialTheme.colorScheme.outlineVariant,
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.32f),
-                    )),
-                ),
+                    )))
+                },
             ) {
                 Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box {
