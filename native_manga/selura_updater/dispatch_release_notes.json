@@ -1,9 +1,11 @@
 {
   "prNumber": 0,
   "added": [
+    "Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
     "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
   ],
   "improved": [
+    "Seiryn-branded atmospheric library header and matching dark-gold search toolbar.",
     "Keep nearby page preloading bounded to limit memory and network pressure.",
     "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
     "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
