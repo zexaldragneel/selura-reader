@@ -1,5 +1,12 @@
 # Selura — Development Progress
 
+## November 5 — Obsidian UI correction following Android screenshot
+
+- Android screenshot of Build #175 confirms functioning Obsidian theme and real library covers, but the layout still follows Mihon. Full four-screen mockup implementation remains incomplete; no device verification of further changes.
+- Reduced Obsidian library skyline height from 84dp to 44dp to reclaim vertical space for real manga covers; preserves all other themes and library behavior. Commit `683e8b0`. GitHub Actions compile and device result pending.
+- Required follow-up: implement real Home dashboard backed by reading state, library card layout, manga details, reader controls and navigation; verify with signed build and Android testing. Do not call a theme-only build the final redesign.
+
+
 ## November 5 — Seiryn Obsidian identity preview (build pending)
 
 - User approved the four-screen dark/gold visual mockup. Created feature branch `feature/seiryn-obsidian-identity-20261105` from the current native reader branch.
