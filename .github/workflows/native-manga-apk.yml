@@ -177,6 +177,8 @@ jobs:
           python3 native_manga/apply_seiryn_branding.py native-upstream
           # Premium Library 2.0: read-only current-shelf stats and resume action.
           python3 native_manga/premium_library_v2.py native-upstream
+          # Integrated native Home, Library, Details and Reader presentation.
+          python3 native_manga/obsidian_ui.py native-upstream
           grep -Fq 'SeirynReadingDesk(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryContent.kt
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
           grep -Fq 'onContinueReading(toResume)' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt

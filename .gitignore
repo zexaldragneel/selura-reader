@@ -1,0 +1,5 @@
+native-upstream/
+__pycache__/
+*.pyc
+.test-tmp/
+test-results.txt

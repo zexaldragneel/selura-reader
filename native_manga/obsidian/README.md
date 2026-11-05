@@ -1,0 +1,33 @@
+# Integrated Seiryn Obsidian UI
+
+Select **Seiryn Obsidian** under Settings → Appearance → Library theme.
+The added Home tab uses the existing library/history flows and reader intent.
+Home history is deduplicated by manga; recent titles use chapter-fetch timestamps;
+the unread shelf contains real library titles without reading history. These are
+local shelves, not network recommendations. Home resumes the historical chapter
+through GetNextChapters with onlyUnread=false, preserving partial page progress.
+
+The patch runs last, after premium_library_v2.py. It validates all replacements
+before writing. It changes presentation files and adds one read-only ViewModel;
+database schema, backups, source identity, downloads and signing stay with the
+existing engine. Other appearance themes retain their existing screen layouts.
+
+## Device acceptance (not covered by APK compilation)
+
+- Upgrade the existing installation; confirm library counts, category membership,
+  history, bookmarks, offline downloads and extension sources remain present.
+- Select Obsidian, restart, and navigate Home/Library/Updates/Browse/More.
+  Check Home history and downloads shortcuts; Back returns to Home.
+- Resume a partially read chapter and confirm the saved page. Complete a chapter,
+  return Home and confirm Continue advances. Test a finished series and a removed
+  source: the app must give feedback instead of losing state or crashing.
+- Search Library, clear search, change categories, sort/filter, long-press/select,
+  bookmark/mark read/download. Clear filters to distinguish filtering from missing data.
+- Open Details, cover dialog, author/source search, description/tags, notes,
+  category/track actions and chapter sort/filter; test chapter swipe and selection.
+- Read online and downloaded chapters in LTR, RTL, webtoon and landscape modes.
+  Check chapter skip, slider, crop, orientation, bookmarks and immersive hide/show.
+- Test large fonts, small phones and tablet rails; switch to another theme and back.
+
+Automated checks establish source integration, compilation and artifact identity.
+They do not establish visual parity with the approved mockup or device behavior.

@@ -1,16 +1,16 @@
 {
   "prNumber": 0,
   "added": [
-    "Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
-    "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
+    "Obsidian Home: real reading history, Continue Reading, recently updated titles and unread library shelves.",
+    "Dedicated Home navigation with Library, Updates, Browse and More; history and downloads remain accessible."
   ],
   "improved": [
-    "Seiryn-branded atmospheric library header and matching dark-gold search toolbar.",
-    "Keep nearby page preloading bounded to limit memory and network pressure.",
-    "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
-    "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
+    "Persistent library search, gold cover frames and existing category, sorting and selection controls.",
+    "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
+    "Reader tools now have labels and a reading-room page/percentage indicator in Obsidian.",
+    "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
   ],
   "fixed": [
-    "Public in-app update descriptions now reflect the actual release changes."
+    "Continue Reading resumes the historical partial chapter or advances after a completed chapter."
   ]
 }

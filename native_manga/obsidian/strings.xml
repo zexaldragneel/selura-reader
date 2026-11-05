@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="seiryn_home">Home</string>
+    <string name="seiryn_home_heading">A world between pages.</string>
+    <string name="seiryn_home_subtitle">Your stories, ready when you are.</string>
+    <string name="seiryn_titles">In library</string>
+    <string name="seiryn_unread">Unread chapters</string>
+    <string name="seiryn_started">Started</string>
+    <string name="seiryn_continue">Continue reading</string>
+    <string name="seiryn_resume">Continue reading</string>
+    <string name="seiryn_start">Start reading</string>
+    <string name="seiryn_no_resume">No next chapter available. Open the title to choose a chapter.</string>
+    <string name="seiryn_open_error">Could not open this chapter. Try again from its details.</string>
+    <string name="seiryn_history_empty">Read a chapter to see your recent stories here.</string>
+    <string name="seiryn_home_error">Could not load your reading desk. Your library is still available.</string>
+    <string name="seiryn_library">Library</string>
+    <string name="seiryn_updates">Updates</string>
+    <string name="seiryn_downloads">Downloads</string>
+    <string name="seiryn_recent">Recently updated</string>
+    <string name="seiryn_rediscover">Waiting on your shelf</string>
+    <string name="seiryn_view_all">View all</string>
+    <string name="seiryn_shelf_empty">No titles here yet.</string>
+    <string name="seiryn_library_empty">Add stories from Browse, or restore your backup in Settings.</string>
+    <string name="seiryn_browse">Explore sources</string>
+    <string name="seiryn_collection">Your collection.</string>
+    <string name="seiryn_search_library">Search your library</string>
+    <string name="seiryn_clear">Clear</string>
+    <string name="seiryn_filters_active">Filters are active. Use the filter button to change them.</string>
+    <string name="seiryn_chapter_progress">%1$d of %2$d chapters read</string>
+    <string name="seiryn_chapter_controls">Sort and filter</string>
+    <string name="seiryn_reader_progress">Page %1$d of %2$d · %3$d%%</string>
+    <string name="seiryn_reader_focus">READING ROOM</string>
+</resources>
