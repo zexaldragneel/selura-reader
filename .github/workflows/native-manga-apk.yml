@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   push:
-    branches: [feature/seiryn-reader-performance-v3-telemetry-20261104]
+    branches: [feature/seiryn-reader-performance-v3-telemetry-20261104, feature/seiryn-obsidian-identity-20261105]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
