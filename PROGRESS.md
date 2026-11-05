@@ -1,12 +1,13 @@
 # Selura — Development Progress
 
-## November 5 — Deeper Obsidian Library and genre-aware Home, Build #179 pending
+## November 5 — Deeper Obsidian Library and genre-aware Home, signed Build #180 verified
 
 - Follow-up to Build #178 after owner pointed out that the first release still left the Library mostly Mihon-shaped and had no recommendations. Commit `89c3a39e48142c3dbb258772017f2a3f7210cb85` adds a custom responsive Obsidian cover grid with live unread/download/bookmark/read-progress details, long-press selection, global search, chapter resume and existing category/filter/sort data. Other themes continue to use their original grids.
 - Home now ranks up to eight unread library titles using genres shared with the latest read title; titles without genre overlap are omitted. This is a transparent local-library recommendation, not a source catalog search. Details retains the complete native chapter list and actions; the visual header/progress/action card is the added redesign there. Reader retains native gestures/viewers, with redesigned Obsidian progress and labeled controls.
-- Local verification: full patch pipeline applied against a fresh checkout of pinned Mihon; **171 Python tests passed**. CI Build #179 is running for full Kotlin/Android compile, signing, release and update-feed verification. Results pending.
-- Device verification and parity with the approved mockup are still outstanding. `native_manga/obsidian/README.md` has the acceptance steps. Build #178 is the last verified APK until #179 completes.
-
+- Local verification: full patch pipeline applied against a fresh checkout of pinned Mihon; **171 Python tests passed**. Build #179 exposed two Kotlin errors in the new grid (cover component import and border type); commit `de0c6aaf6abcce813ceb8dcf3e495e6bbd5911df` corrected them.
+- **AUTOMATED VERIFIED:** [Build #180, run 41992477024](https://github.com/zexaldragneel/selura-reader/actions/runs/41992477024) succeeded in all four jobs: pinned Mihon engine, patch tests and full Android release assembly, signed APK publication, and update metadata publication. Gradle reported **BUILD SUCCESSFUL**. Application ID `com.selura.manga`, versionCode **1180**. Original certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` verified by apksigner.
+- [Signed release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-180), APK **68,173,701 bytes**, SHA-256 `5dd0a1387071337f46ed1db7d513c7b4d6c4ee95f7ee4ae5772124a531d138bf`. GitHub release asset digest and live `gh-pages/updates/latest.json` match that hash, release URL and version 1180.
+- Device acceptance and visual parity with the approved mockup remain **unverified**. Details and Reader retain core Mihon layouts/viewers with targeted Obsidian additions; the release is a substantial integrated redesign, not a claim of pixel-perfect completion. See `native_manga/obsidian/README.md` for device acceptance steps.
 
 ## November 5 — Integrated Obsidian screens, signed Build #178 verified
 
