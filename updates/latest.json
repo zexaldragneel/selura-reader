@@ -2,21 +2,23 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
+      "Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
       "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
     ],
     "fixed": [
       "Public in-app update descriptions now reflect the actual release changes."
     ],
     "improved": [
+      "Seiryn-branded atmospheric library header and matching dark-gold search toolbar.",
       "Keep nearby page preloading bounded to limit memory and network pressure.",
       "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
       "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
     ]
   },
-  "notes": "What's new: Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-171",
+  "notes": "What's new: Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-175",
   "schemaVersion": 1,
-  "sha256": "b9e0307c98555fae7eb54e67302a68526790d1e7e1b26bf3580809dd89d98d80",
-  "versionCode": 1171,
-  "versionName": "Seiryn Build 171"
+  "sha256": "a05c4db6988f8aef96e4c7aa1e8204af53a4ed6adde62b17d9cad9946cf19894",
+  "versionCode": 1175,
+  "versionName": "Seiryn Build 175"
 }
