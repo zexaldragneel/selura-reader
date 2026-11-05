@@ -38,7 +38,7 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
     val celestial = theme == SeluraLibraryTheme.CELESTIAL_XIANXIA
     val primary = MaterialTheme.colorScheme.primary
     val artwork = appearance?.backgroundArtwork != false
-    val height = if (celestial) 108.dp else if (obsidian) 84.dp else 68.dp
+    val height = if (celestial) 108.dp else if (obsidian) 44.dp else 68.dp
 
     Box(
         modifier = modifier
@@ -62,8 +62,8 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
                 val h = size.height
                 if (obsidian) {
                     // Minimal original vector art: no external assets or manga images.
-                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.09f), h * 0.58f, Offset(w * 0.78f, h * 0.23f))
-                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.18f), h * 0.30f, Offset(w * 0.78f, h * 0.23f))
+                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.09f), h * 0.58f, Offset(w * 0.82f, h * 0.23f))
+                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.18f), h * 0.30f, Offset(w * 0.82f, h * 0.23f))
                     drawLine(Color(0xFFF1C66D).copy(alpha = 0.65f), Offset(w * 0.06f, h * 0.89f), Offset(w * 0.94f, h * 0.89f), 1.5f)
                 } else if (celestial) {
                     val moonCenter = Offset(w * 0.75f, h * 0.31f)
@@ -169,7 +169,7 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(bottom = 9.dp),
+                .padding(bottom = if (obsidian) 7.dp else 9.dp),
             textAlign = TextAlign.Center,
             color = primary,
             fontFamily = if (celestial) FontFamily.Serif else FontFamily.SansSerif,
