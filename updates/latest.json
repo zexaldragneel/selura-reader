@@ -2,21 +2,21 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "Slow-only reader diagnostics for chapter lists and page images (750 ms threshold)."
+      "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
     ],
     "fixed": [
-      "Correct public update descriptions so this release lists its actual changes."
+      "Public in-app update descriptions now reflect the actual release changes."
     ],
     "improved": [
-      "Bound online page preloading to nearby pages instead of scheduling entire long chapters.",
-      "Limit webtoon decode memory pressure and retain chapter image caching.",
-      "Preserve signed in-app updates and existing offline chapters, library, and reading progress."
+      "Keep nearby page preloading bounded to limit memory and network pressure.",
+      "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
+      "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
     ]
   },
-  "notes": "What's new: Slow-only reader diagnostics for chapter lists and page images (750 ms threshold).",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-166",
+  "notes": "What's new: Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-171",
   "schemaVersion": 1,
-  "sha256": "f8ff52448d3c8a18de1639baabfe27a42d12d78087e11dbd515d0d562581c972",
-  "versionCode": 1166,
-  "versionName": "Seiryn Build 166"
+  "sha256": "b9e0307c98555fae7eb54e67302a68526790d1e7e1b26bf3580809dd89d98d80",
+  "versionCode": 1171,
+  "versionName": "Seiryn Build 171"
 }
