@@ -34,10 +34,11 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
     val theme = appearance?.theme ?: SeluraLibraryTheme.DEFAULT
     if (theme == SeluraLibraryTheme.DEFAULT) return
 
+    val obsidian = theme == SeluraLibraryTheme.SEIRYN_OBSIDIAN
     val celestial = theme == SeluraLibraryTheme.CELESTIAL_XIANXIA
     val primary = MaterialTheme.colorScheme.primary
     val artwork = appearance?.backgroundArtwork != false
-    val height = if (celestial) 108.dp else 68.dp
+    val height = if (celestial) 108.dp else if (obsidian) 84.dp else 68.dp
 
     Box(
         modifier = modifier
@@ -45,7 +46,9 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
             .height(height)
             .background(
                 Brush.verticalGradient(
-                    if (celestial) {
+                    if (obsidian) {
+                        listOf(Color(0xFF24201B), Color(0xFF14151B), Color(0xFF08090D))
+                    } else if (celestial) {
                         listOf(Color(0xFF14243E), Color(0xFF233957), Color(0xFF080F20))
                     } else {
                         listOf(Color(0xFF24104B), Color(0xFF171530), Color(0xFF080A18))
@@ -57,7 +60,12 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
             Canvas(Modifier.fillMaxSize()) {
                 val w = size.width
                 val h = size.height
-                if (celestial) {
+                if (obsidian) {
+                    // Minimal original vector art: no external assets or manga images.
+                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.09f), h * 0.58f, Offset(w * 0.78f, h * 0.23f))
+                    drawCircle(Color(0xFFF1C66D).copy(alpha = 0.18f), h * 0.30f, Offset(w * 0.78f, h * 0.23f))
+                    drawLine(Color(0xFFF1C66D).copy(alpha = 0.65f), Offset(w * 0.06f, h * 0.89f), Offset(w * 0.94f, h * 0.89f), 1.5f)
+                } else if (celestial) {
                     val moonCenter = Offset(w * 0.75f, h * 0.31f)
                     drawCircle(Color(0xFFF5DDA7).copy(alpha = 0.10f), h * 0.34f, moonCenter)
                     drawCircle(Color(0xFFF5DDA7).copy(alpha = 0.16f), h * 0.27f, moonCenter)
@@ -157,7 +165,7 @@ fun SeluraSkylineHeader(modifier: Modifier = Modifier) {
             }
         }
         Text(
-            text = if (celestial) "✦     S E L U R A     ✦" else "✧   S E L U R A   ✧",
+            text = if (obsidian) "S E I R Y N" else if (celestial) "✦     S E I R Y N     ✦" else "✧   S E I R Y N   ✧",
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
