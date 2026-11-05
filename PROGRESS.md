@@ -1,11 +1,13 @@
 # Selura — Development Progress
 
-## November 5 — Integrated Obsidian screens, Build #177 compiling
+## November 5 — Integrated Obsidian screens, signed Build #178 verified
 
 - Commit `c064b110b3b2ae4d59853c127dc71632fb0e93c5` implements native Kotlin/Compose Home with library/history flows, historical chapter resume, real recently fetched and unread library shelves, empty/loading/error states, history/download shortcuts and five-destination Obsidian navigation.
 - Library gains a persistent search field, visible active-filter hint and gold cover frames while retaining categories, sort/filter, selection, refresh and native chapter navigation. Details gains a cinematic cover composition, read/total chapter summary, Start/Continue and sort/filter entry points, plus bookmark-aware chapter cards. Reader gains labeled mode/orientation/crop/settings tools and live page/percentage chrome; engine gestures, RTL/webtoon and chapter slider remain in place.
 - The new final patch only edits presentation and adds a read-only Home ViewModel. No schema, backup, source-ID, signing, download, progress or migration changes. Existing themes remain selectable; select Seiryn Obsidian in Appearance for the new screens.
-- Local: full pinned-source patch sequence succeeds; **170 Python patch-contract tests passed**. GitHub Actions [Build #177](https://github.com/zexaldragneel/selura-reader/actions/runs/41985048870) has passed snapshot, tests and patch integration; Android release compilation is in progress. Signed identity/artifact/release/feed checks are still pending.
+- Local and CI: full pinned-source patch sequence succeeds; **170 Python patch-contract tests passed**. Build #177 failed Kotlin compilation solely on the unavailable upstream Home symbol. Commit `78146cd14ccdca7e1a2fc157e929230c0cc6ee55` replaces it with an original bundled reading-room vector.
+- **AUTOMATED VERIFIED:** [Build #178, run 41985371033](https://github.com/zexaldragneel/selura-reader/actions/runs/41985371033) succeeded in all four jobs: pinned engine, 170 patch tests and full Android release assembly, signed APK publication, and public update metadata publication. Application ID `com.selura.manga`, versionCode **1178**. Original certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` confirmed by apksigner.
+- [Signed release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-178), APK **68,172,753 bytes**, SHA-256 `0e62402f2a8c63c6d480320a219f9c41415a69e362b4c84edbb449035aa9fe64`. GitHub release asset digest and live `gh-pages/updates/latest.json` match that hash, release URL and version. Release targets implementation commit `78146cd`; subsequent progress-only commits do not alter APK code.
 - Device acceptance and visual parity with the earlier mockup are **not verified**. See `native_manga/obsidian/README.md` for device acceptance covering in-place data retention, resume, library controls, details, reading modes, large fonts and tablet layout. This is substantial integrated implementation, not a claim that every visual detail has been device-approved.
 
 
