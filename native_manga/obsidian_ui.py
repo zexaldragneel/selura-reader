@@ -57,6 +57,29 @@ def apply(root):
         val pagerState = rememberPagerState(currentPage)""")
     s = once(s, "        if (premium != SeluraLibraryTheme.DEFAULT &&\n            selection.isEmpty()", "        if (premium != SeluraLibraryTheme.DEFAULT &&\n            premium != SeluraLibraryTheme.SEIRYN_OBSIDIAN &&\n            selection.isEmpty()")
     changed[p] = s
+
+    p = BASE + "presentation/library/components/LibraryPager.kt"
+    s = read(p)
+    s = once(s, "import eu.kanade.tachiyomi.ui.library.LibraryItem", "import eu.kanade.presentation.theme.LocalSeluraLibraryAppearance\nimport eu.kanade.presentation.theme.SeluraLibraryTheme\nimport eu.kanade.tachiyomi.ui.library.LibraryItem")
+    s = once(s, "        val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }\n        val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }\n\n        when (displayMode)", """        val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
+        val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
+        val obsidian = LocalSeluraLibraryAppearance.current?.theme == SeluraLibraryTheme.SEIRYN_OBSIDIAN
+        if (obsidian) {
+            SeirynLibraryGrid(
+                items = items,
+                contentPadding = contentPadding,
+                selection = selection,
+                onClick = onClickManga,
+                onLongClick = onLongClickManga,
+                onContinueReading = onClickContinueReading,
+                searchQuery = searchQuery,
+                onGlobalSearch = onGlobalSearchClicked,
+            )
+            return@HorizontalPager
+        }
+
+        when (displayMode)""")
+    changed[p] = s
     p = BASE + "tachiyomi/ui/library/LibraryTab.kt"
     s = read(p)
     s = once(s, "                    LibraryContent(\n", "                    LibraryContent(\n                        onSearchQueryChange = viewModel::search,\n")
@@ -180,6 +203,7 @@ private fun ReaderTool(icon: androidx.compose.ui.graphics.vector.ImageVector, la
         "SeirynHomeTab.kt": BASE + "tachiyomi/ui/home/SeirynHomeTab.kt",
         "SeirynDetailActions.kt": BASE + "presentation/manga/components/SeirynDetailActions.kt",
         "SeirynLibrarySearch.kt": BASE + "presentation/library/components/SeirynLibrarySearch.kt",
+        "SeirynLibraryGrid.kt": BASE + "presentation/library/components/SeirynLibraryGrid.kt",
         "strings.xml": "app/src/main/res/values/seiryn_obsidian_strings.xml",
     }
     for source, target in copies.items():

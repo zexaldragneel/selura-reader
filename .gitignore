@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .test-tmp/
 test-results.txt
+native-upstream-v2/
+native-upstream-v3/
+native-upstream-v4/

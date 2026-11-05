@@ -1,11 +1,11 @@
 {
   "prNumber": 0,
   "added": [
-    "Obsidian Home: real reading history, Continue Reading, recently updated titles and unread library shelves.",
-    "Dedicated Home navigation with Library, Updates, Browse and More; history and downloads remain accessible."
+    "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
+    "Home recommends unread titles by matching genre metadata from your recently read manga."
   ],
   "improved": [
-    "Persistent library search, gold cover frames and existing category, sorting and selection controls.",
+    "Persistent search, category filters, sorting, range selection, continue-reading and global search on the new Library grid.",
     "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
     "Reader tools now have labels and a reading-room page/percentage indicator in Obsidian.",
     "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."

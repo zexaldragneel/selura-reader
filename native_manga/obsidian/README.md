@@ -4,8 +4,15 @@ Select **Seiryn Obsidian** under Settings → Appearance → Library theme.
 The added Home tab uses the existing library/history flows and reader intent.
 Home history is deduplicated by manga; recent titles use chapter-fetch timestamps;
 the unread shelf contains real library titles without reading history. These are
-local shelves, not network recommendations. Home resumes the historical chapter
+Home also ranks unread titles from the local library by shared genres with the last-read series. Home resumes the historical chapter
 through GetNextChapters with onlyUnread=false, preserving partial page progress.
+
+The Obsidian Library uses the selected category's existing filtered manga rows,
+with native long-press selection, global search, and continue-reading callbacks.
+Its offline and bookmark counts and progress come from existing manga/chapter
+state. Home's optional recommendation shelf ranks unread library titles by
+shared genre names with the most recently read library title; it performs no
+source search and does not invent missing genres.
 
 The patch runs last, after premium_library_v2.py. It validates all replacements
 before writing. It changes presentation files and adds one read-only ViewModel;
@@ -31,3 +38,4 @@ existing engine. Other appearance themes retain their existing screen layouts.
 
 Automated checks establish source integration, compilation and artifact identity.
 They do not establish visual parity with the approved mockup or device behavior.
+

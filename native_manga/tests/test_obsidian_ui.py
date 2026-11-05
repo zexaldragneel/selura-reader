@@ -43,6 +43,13 @@ class ObsidianPatchTests(unittest.TestCase):
         for forbidden in ("UpdateManga", "SetReadStatus", "SetMangaCategories", "RemoveHistory", "DownloadManager"):
             self.assertNotIn(forbidden, model)
 
+    def test_related_shelf_uses_existing_genres_and_only_unread_library_titles(self):
+        model = (patch.ASSETS / "SeirynHomeViewModel.kt").read_text()
+        self.assertIn("recommendFromLibrary(state.library, state.history)", (patch.ASSETS / "SeirynHomeTab.kt").read_text())
+        self.assertIn("candidate.manga.genre.orEmpty()", model)
+        self.assertIn("it.id != seed.mangaId && it.unreadCount > 0L", model)
+        self.assertIn("shared.isEmpty()", model)
+
 
 if __name__ == "__main__":
     unittest.main()

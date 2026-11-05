@@ -179,6 +179,10 @@ jobs:
           python3 native_manga/premium_library_v2.py native-upstream
           # Integrated native Home, Library, Details and Reader presentation.
           python3 native_manga/obsidian_ui.py native-upstream
+          test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynLibraryGrid.kt
+          grep -Fq 'SeirynLibraryGrid(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryPager.kt
+          grep -Fq 'recommendFromLibrary(state.library, state.history)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeTab.kt
+          grep -Fq 'candidate.manga.genre.orEmpty()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeViewModel.kt
           grep -Fq 'SeirynReadingDesk(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryContent.kt
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
           grep -Fq 'onContinueReading(toResume)' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt

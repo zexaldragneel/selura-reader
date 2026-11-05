@@ -17,6 +17,8 @@
     <string name="seiryn_updates">Updates</string>
     <string name="seiryn_downloads">Downloads</string>
     <string name="seiryn_recent">Recently updated</string>
+    <string name="seiryn_picked_for_you">Picked from your library</string>
+    <string name="seiryn_inspired_by">Because you read %1$s</string>
     <string name="seiryn_rediscover">Waiting on your shelf</string>
     <string name="seiryn_view_all">View all</string>
     <string name="seiryn_shelf_empty">No titles here yet.</string>

@@ -135,6 +135,21 @@ data object SeirynHomeTab : Tab {
                     val recent = remember(state.library) { state.library.filter { it.chapterFetchedAt != null }.sortedByDescending { it.chapterFetchedAt }.take(12) }
                     Shelf(recent) { navigator.push(MangaScreen(it)) }
                 }
+                item {
+                    val recommendations = remember(state.library, state.history) {
+                        recommendFromLibrary(state.library, state.history)
+                    }
+                    if (recommendations.isNotEmpty()) {
+                        SectionHeading(stringResource(R.string.seiryn_picked_for_you)) { tabs.current = LibraryTab }
+                        Text(
+                            stringResource(R.string.seiryn_inspired_by, state.history.first().title),
+                            Modifier.padding(horizontal = 24.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Shelf(recommendations.map { it.entry }) { navigator.push(MangaScreen(it)) }
+                    }
+                }
                 item { SectionHeading(stringResource(R.string.seiryn_rediscover)) { tabs.current = LibraryTab } }
                 item {
                     val unread = remember(state.library) { state.library.filter { it.lastRead == null && it.unreadCount > 0 }.sortedBy { it.manga.title }.take(12) }

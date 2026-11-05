@@ -46,3 +46,34 @@ class SeirynHomeViewModel(
         val error: Boolean = false,
     )
 }
+
+/** Recommendations use only genre metadata already present in the user's shelf. */
+internal data class SeirynRelatedTitle(
+    val entry: LibraryManga,
+    val sharedGenres: List<String>,
+)
+
+internal fun recommendFromLibrary(
+    library: List<LibraryManga>,
+    history: List<HistoryWithRelations>,
+): List<SeirynRelatedTitle> {
+    val seed = history.firstOrNull() ?: return emptyList()
+    val seedGenres = library.firstOrNull { it.id == seed.mangaId }?.manga?.genre
+        .orEmpty()
+        .map { it.trim() }
+        .filter(String::isNotEmpty)
+        .distinctBy { it.lowercase() }
+    if (seedGenres.isEmpty()) return emptyList()
+    val normalizedSeed = seedGenres.associateBy { it.lowercase() }
+    return library.asSequence()
+        .filter { it.id != seed.mangaId && it.unreadCount > 0L }
+        .mapNotNull { candidate ->
+            val shared = candidate.manga.genre.orEmpty()
+                .mapNotNull { normalizedSeed[it.trim().lowercase()] }
+                .distinctBy { it.lowercase() }
+            if (shared.isEmpty()) null else SeirynRelatedTitle(candidate, shared)
+        }
+        .sortedWith(compareByDescending<SeirynRelatedTitle> { it.sharedGenres.size }.thenBy { it.entry.manga.title.lowercase() })
+        .take(8)
+        .toList()
+}
