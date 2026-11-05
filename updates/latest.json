@@ -16,9 +16,9 @@
     ]
   },
   "notes": "What's new: Seiryn Obsidian: optional graphite-black and warm-gold Material 3 library theme.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-175",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-176",
   "schemaVersion": 1,
-  "sha256": "a05c4db6988f8aef96e4c7aa1e8204af53a4ed6adde62b17d9cad9946cf19894",
-  "versionCode": 1175,
-  "versionName": "Seiryn Build 175"
+  "sha256": "6158b1802d54eb03e4e6bca6a29ca041b7f879d0774414d93e57a9624ee7fb14",
+  "versionCode": 1176,
+  "versionName": "Seiryn Build 176"
 }
