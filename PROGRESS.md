@@ -1,4 +1,26 @@
 # Selura — Development Progress
+
+## November 4 — Performance 3.1 foreground-first reader loading (CI pending)
+
+- Implemented `native_manga/reader_performance_v31.py` after v2/v3 patches. Changes the first HTTP prefetch chunk from two pages to one, so the currently visible page can be scheduled before speculative neighbors; retains bounded later chunks, cache, retries and cancellation. No claim of measured speed gain yet.
+- Added three fail-closed regression tests and enabled patch in native GitHub Actions; updated categorized release notes. Commits `f930b508`, `f6ee90af`, `a2647f0e`, `c0f4e883`.
+- User confirmed Build #166 acceptable. Signed APK build and device validation for the new patch remain pending. Adaptive network scheduling, webtoon changes, download recovery and offline optimizations are future work, not completed by this patch.
+
+
+## November 4 — Performance 3.1 preparation: accurate public release notes
+
+- User authorized next-stage performance work without Work mode. First change: dispatch/push releases now generate validated, categorized release-specific update notes, rather than generic descriptions. Commits `59122682`, `0accdaef`, `2b69c5b`, `4b0b872f`.
+- Reader Performance 3.0 public Build #162: GitHub Actions run #41795320059 completed successfully; public metadata versionCode 1162. User reports satisfaction with the update. No instrumented measurements supplied yet.
+- Faster first-page loading, adaptive preloading, webtoon decode improvements, download recovery and offline optimization remain **not implemented in 3.1**; preserve source rate limits, data and signing identity. New release-notes workflow requires CI verification before claiming public feed success.
+
+
+## November 4 — Reader Performance 3.0 slow-stage diagnostics (pilot)
+
+- Draft [PR #166](https://github.com/zexaldragneel/selura-reader/pull/166) adds privacy-safe, slow-only (750 ms threshold) timing logs for HTTP chapter-list and page-image loading, with cache/network origin and elapsed milliseconds only. No source names, gallery IDs, manga titles, URLs, credentials or exception messages are logged.
+- Patch is applied after bounded Reader Performance 2.0; preserves existing retry/cancellation, cache, prefetch, application ID, signing and user data. Contract tests cover patch safety, logging privacy and fail-closed source matching. This is instrumentation, **not yet a measured speed improvement**.
+- GitHub Actions [run #41783682748](https://github.com/zexaldragneel/selura-reader/actions/runs/41783682748) started for signed APK verification; results and Android testing are pending. Preview is intentionally excluded from public automatic update metadata until accepted.
+- NHentai v3 independent extension Build #17 was user-confirmed working and is unchanged.
+
 Last updated: 2026-10-20
 
 ## Build #46 installed — prepare phone test with next signed release (2026-10-21)

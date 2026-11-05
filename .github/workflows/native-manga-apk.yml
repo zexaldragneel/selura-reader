@@ -1,6 +1,11 @@
 name: Seiryn Native Manga APK
 
 on:
+  push:
+    branches: [feature/seiryn-reader-performance-v3-telemetry-20261104]
+    paths:
+      - "native_manga/**"
+      - ".github/workflows/native-manga-apk.yml"
   pull_request:
     branches: [main, feature/selura-native-manga-migration, feature/selura-app-update-prompt, feature/selura-background-nhentai-copy, feature/selura-in-app-apk-installer, feature/selura-native-reader-reliability, feature/selura-extension-store-shortcut, feature/selura-premium-library-themes, feature/selura-xianxia-theme-polish, feature/selura-xianxia-v3-1, feature/selura-download-network-recovery, feature/selura-detailed-update-changelog, feature/selura-chapter-integrity-recovery, feature/selura-download-manager-retry-ui, feature/selura-download-failure-details, fix/selura-one-based-chapter-page-validation, feature/selura-readonly-download-health, fix/selura-health-cbz-reader, feature/selura-review-unfinished-transfers, feature/selura-remove-upstream-community-ui, feature/selura-safe-single-chapter-recovery, feature/seiryn-native-branding, feature/seiryn-reader-performance-v2-bounded-prefetch, feature/seiryn-reader-v2-webtoon-decode-memory, fix/seiryn-http503-preserve-chapter-auto-recovery-20261026, fix/seiryn-extension-manual-apk-rescan-20261026, feature/seiryn-storage-v2-unfinished-footprint-20261027, fix/seiryn-android-splash-logo-20261028]
     paths:
@@ -20,6 +25,7 @@ jobs:
     name: Preserve pinned Mihon engine inside Selura
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -136,6 +142,8 @@ jobs:
             --version-code "$((1000 + SELURA_NATIVE_VERSION_CODE))"
           python3 native_manga/optimize_reader.py native-upstream
           python3 native_manga/reader_performance_v2.py native-upstream
+          python3 native_manga/reader_performance_v3.py native-upstream
+          python3 native_manga/reader_performance_v31.py native-upstream
           python3 native_manga/webtoon_decode_memory_v2.py native-upstream
           python3 native_manga/apply_premium_themes.py native-upstream
           python3 native_manga/refine_premium_themes.py native-upstream
@@ -251,7 +259,7 @@ jobs:
           grep -Fq 'MAX_TEMP_WEBTOON_PAGE_BYTES = 96L * 1024 * 1024' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/coil/ImageDecoder.kt
           grep -Fq 'private const val MAX_PAGES_AHEAD = 8' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
-          grep -Fq 'pages.loadByRollingChunked(page.index, 2, 3)' \
+          grep -Fq 'pages.loadByRollingChunked(page.index, 1, 3)' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
           ! grep -Fq 'items.subList(index + 2, items.size)' \
             native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt
@@ -343,6 +351,7 @@ jobs:
     needs: build
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -392,7 +401,7 @@ jobs:
           # PR releases require human-reviewed release-specific changes.
           # A stacked PR must update release_notes.json for its own PR number.
           # Workflow dispatch without a PR continues with legacy notes.
-          CHANGELOG_ARGS=()
+          CHANGELOG_ARGS=(--changes-file native_manga/selura_updater/dispatch_release_notes.json)
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             CHANGELOG_ARGS=(--changes-file native_manga/selura_updater/release_notes.json)
           fi
@@ -415,6 +424,8 @@ jobs:
     needs: release
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/feature/seiryn-reader-performance-v3-telemetry-20261104') ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -450,7 +461,7 @@ jobs:
           data = json.loads(source.read_text(encoding="utf-8"))
           keys = {"schemaVersion", "applicationId", "versionCode", "versionName",
                   "notes", "releaseUrl", "sha256"}
-          if "${{ github.event_name }}" == "pull_request":
+          if "changes" in data:
               assert set(data) == keys | {"changes"}
               groups = data["changes"]
               assert set(groups) == {"added", "improved", "fixed"}

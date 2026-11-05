@@ -19,13 +19,17 @@ TAG_PATTERN = re.compile(r"^test-native-(?:pr-[0-9]+|dispatch)-run-[0-9]+$")
 def load_release_changes(path: Path, tag: str) -> dict:
     """Read human-reviewed notes for THIS PR, never another branch's notes."""
     match = re.fullmatch(r"test-native-pr-([0-9]+)-run-[0-9]+", tag)
-    if match is None:
-        raise ValueError("PR-scoped release notes require a matching PR release tag.")
+    is_dispatch = re.fullmatch(r"test-native-dispatch-run-[0-9]+", tag) is not None
+    if match is None and not is_dispatch:
+        raise ValueError("Release notes require a recognized native release tag.")
     data = json.loads(path.read_text(encoding="utf-8"))
     if set(data) != {"prNumber", "added", "improved", "fixed"}:
         raise ValueError("Release note fields must be prNumber, added, improved, fixed.")
-    if type(data["prNumber"]) is not int or data["prNumber"] != int(match.group(1)):
-        raise ValueError("Release notes belong to another pull request; update them for this PR.")
+    if match is not None:
+        if type(data["prNumber"]) is not int or data["prNumber"] != int(match.group(1)):
+            raise ValueError("Release notes belong to another pull request; update them for this PR.")
+    elif data["prNumber"] != 0:
+        raise ValueError("Dispatch release notes must use prNumber 0.")
     result = {}
     for name in ("added", "improved", "fixed"):
         items = data[name]

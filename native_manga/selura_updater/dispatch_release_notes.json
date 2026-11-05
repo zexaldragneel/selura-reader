@@ -1,0 +1,14 @@
+{
+  "prNumber": 0,
+  "added": [
+    "Foreground-first HTTP page loading: start the visible manga page before speculative neighboring-page chunks."
+  ],
+  "improved": [
+    "Keep nearby page preloading bounded to limit memory and network pressure.",
+    "Retain slow-stage diagnostics, existing cache behavior, and cancellation-safe network retries.",
+    "Preserve offline chapters, library, bookmarks, reading progress, and signed in-app updates."
+  ],
+  "fixed": [
+    "Public in-app update descriptions now reflect the actual release changes."
+  ]
+}

@@ -1,4 +1,12 @@
 # Selura — Project Context
+
+## November 4 — Reader Performance 3.0 slow-stage diagnostics (pilot)
+
+- Draft [PR #166](https://github.com/zexaldragneel/selura-reader/pull/166) adds privacy-safe, slow-only (750 ms threshold) timing logs for HTTP chapter-list and page-image loading, with cache/network origin and elapsed milliseconds only. No source names, gallery IDs, manga titles, URLs, credentials or exception messages are logged.
+- Patch is applied after bounded Reader Performance 2.0; preserves existing retry/cancellation, cache, prefetch, application ID, signing and user data. Contract tests cover patch safety, logging privacy and fail-closed source matching. This is instrumentation, **not yet a measured speed improvement**.
+- GitHub Actions [run #41783682748](https://github.com/zexaldragneel/selura-reader/actions/runs/41783682748) started for signed APK verification; results and Android testing are pending. Preview is intentionally excluded from public automatic update metadata until accepted.
+- NHentai v3 independent extension Build #17 was user-confirmed working and is unchanged.
+
 Last updated: 2026-10-20
 
 ## ACTIVE DIRECTION — Manga-only Android reader
