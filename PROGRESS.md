@@ -4,7 +4,10 @@
 
 - Obsidian Details exposes **Find source** whenever the native migration callback is available, including working sources. Source search and confirmation remain native.
 - Added a persistent **Auto-resume: Wi-Fi only / Any network** chip beside chapter controls. It changes the existing Download only over Wi-Fi preference and reflects changes from Settings. It does not start a manually paused queue.
-- Eight existing Obsidian tests pass locally. Signed Android build and device interaction pending for these buttons.
+- Eight existing Obsidian tests pass locally; the full 177-test suite passed in CI. Implementation commit `f5f2cdcc09130444c42efc00d9a95c710b33bf70`; changelog-limit fix `2f08e8fae8cdc0ed8b3f9c8067acb557e54ed79f` removes a redundant sixth Added entry that blocked Build #184 feed publication.
+- **AUTOMATED VERIFIED:** [Build #187](https://github.com/zexaldragneel/selura-reader/actions/runs/42421290440) passed all four jobs; Gradle BUILD SUCCESSFUL in 6m 46s. Package `com.selura.manga`, versionCode 1187, permanent signer `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42` verified.
+- [Signed release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-187): APK 68,176,621 bytes, SHA-256 `959db7bc0bcc1e05b900c76f477d99ca7e30ada7f6fa263306faf950df280bb3`; GitHub asset digest matches live update feed version 1187 and release URL.
+- Device interaction remains unverified: on Obsidian manga Details check Find source opens native migration and the Auto-resume chip updates the Downloads setting in both directions, persists after relaunch, and does not restart a manually paused queue.
 
 ## November 8 — Guided source migration and Wi-Fi-aware download resume, signed Build #183 verified
 
