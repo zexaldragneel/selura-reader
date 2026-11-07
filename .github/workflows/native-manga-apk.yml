@@ -2,7 +2,7 @@ name: Seiryn Native Manga APK
 
 on:
   push:
-    branches: [feature/seiryn-reader-performance-v3-telemetry-20261104, feature/seiryn-obsidian-identity-20261105]
+    branches: [feature/seiryn-collections-read-next-20261108, feature/seiryn-reader-performance-v3-telemetry-20261104, feature/seiryn-obsidian-identity-20261105]
     paths:
       - "native_manga/**"
       - ".github/workflows/native-manga-apk.yml"
@@ -182,6 +182,7 @@ jobs:
           # Offer the native migration flow when an item's source extension is
           # missing, and resume queued downloads under the existing Wi-Fi rule.
           python3 native_manga/wifi_auto_resume.py native-upstream
+          python3 native_manga/organizer.py native-upstream
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynLibraryGrid.kt
           grep -Fq 'SeirynLibraryGrid(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryPager.kt
           grep -Fq 'recommendFromLibrary(state.library, state.history)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeTab.kt
@@ -324,6 +325,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./gradlew
+          ./gradlew :app:testReleaseUnitTest --tests 'eu.kanade.tachiyomi.ui.organizer.OrganizerRulesTest' --stacktrace --no-daemon -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
           # Local distribution excludes upstream telemetry and upstream updater.
           ./gradlew :app:assembleRelease --stacktrace --no-daemon \
             -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
