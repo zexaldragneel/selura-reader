@@ -253,7 +253,7 @@ jobs:
           grep -Fq 'header("Retry-After")?.trim()?.toLongOrNull()' native-upstream/core/common/src/main/kotlin/eu/kanade/tachiyomi/network/OkHttpExtensions.kt
           grep -Fq 'val slots = Semaphore(1)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'job.join()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
-          grep -Fq 'DownloadWorker.scheduleRateLimitResume(context, minutes)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
+          grep -Fq 'DownloadWorker.scheduleRateLimitResume(context, minutes, downloadPreferences.downloadOnlyOverWifi.get())' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'require(minutes in 1L..1440L)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -Fq '.setInitialDelay(minutes, TimeUnit.MINUTES)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
           grep -Fq 'downloader.cancelRateLimitAutoResume()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt
