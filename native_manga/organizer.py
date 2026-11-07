@@ -14,6 +14,8 @@ def once(text, old, new):
 
 def apply(root):
     root = Path(root)
+    if (root / BASE / "tachiyomi/ui/organizer/OrganizerScreen.kt").exists():
+        raise ValueError("Organizer already installed")
     changed = {}
     p = BASE + "tachiyomi/ui/home/SeirynHomeTab.kt"
     s = (root / p).read_text(encoding="utf-8")

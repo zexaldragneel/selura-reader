@@ -1,5 +1,12 @@
 # Selura — Development Progress
 
+## November 8 — Smart collections and Read Next
+
+- [PR #167](https://github.com/zexaldragneel/selura-reader/pull/167), implementation `9f982c264580923b946d6c61ecd2a66218b5a453`, adds a native organizer accessible through Home and More in every theme. Named collections combine unread, downloaded and completed-series rules; membership follows existing library and download-cache flows.
+- Persistent Read Next uses unique manga IDs with add, remove and explicit move-up/down ordering. Missing library entries remain removable. No categories, reading state, downloads, source IDs, app ID or signing changes. Organizer preferences survive in-place upgrades but are not part of .tachibk backup export yet; UI discloses this.
+- Five local Python tests cover patch failure/duplicate guards, resource references and persistence integration. CI includes real Kotlin rule/reorder behavior tests and signed Android assembly. Build #185 reached compilation after passing patch checks; final compilation/signature/artifact results and Android acceptance are pending.
+- Device checklist: save a collection, change read/download status and check membership, add/reorder three titles, restart and verify order, remove a queued title and verify original categories/history remain.
+
 ## November 8 — Direct buttons for migration and download network
 
 - Obsidian Details exposes **Find source** whenever the native migration callback is available, including working sources. Source search and confirmation remain native.

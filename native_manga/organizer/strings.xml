@@ -8,7 +8,7 @@
     <string name="organizer_unread">Has unread chapters</string>
     <string name="organizer_downloaded">Has downloaded chapters</string>
     <string name="organizer_rules_help">Collections match all selected rules automatically. Unread with downloads means the series has unread chapters and at least one downloaded chapter; that download may already be read.</string>
-    <string name="organizer_queue_help">Tap a title to open it. Use Move up or Move down to set your reading order. Categories and reading progress stay unchanged.</string>
+    <string name="organizer_queue_help">Tap a title to open it. Use Move up or Move down to set your reading order. Categories and reading progress stay unchanged. Organizer lists are saved on this device and are not included in manga backup exports yet.</string>
     <string name="organizer_queue_empty">Your reading queue is empty. Add titles from Smart collections.</string>
     <string name="organizer_empty">No library titles match these rules and search.</string>
     <string name="organizer_unavailable">Title no longer in library</string>

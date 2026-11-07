@@ -43,6 +43,16 @@ class OrganizerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             patch.once('anchor anchor', 'anchor', 'replacement')
 
+    def test_already_installed_patch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / patch.BASE / 'tachiyomi/ui/organizer/OrganizerScreen.kt'
+            path.parent.mkdir(parents=True)
+            path.write_text('existing screen')
+            with self.assertRaisesRegex(ValueError, 'already installed'):
+                patch.apply(root)
+            self.assertEqual(path.read_text(), 'existing screen')
+
 
 if __name__ == '__main__':
     unittest.main()
