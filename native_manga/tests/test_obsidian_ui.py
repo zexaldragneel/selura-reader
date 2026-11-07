@@ -50,6 +50,19 @@ class ObsidianPatchTests(unittest.TestCase):
         self.assertIn("it.id != seed.mangaId && it.unreadCount > 0L", model)
         self.assertIn("shared.isEmpty()", model)
 
+    def test_detail_actions_summarize_live_download_bookmark_and_unread_state(self):
+        detail = (patch.ASSETS / "SeirynDetailActions.kt").read_text()
+        self.assertIn("chapters.count { it.isDownloaded }", detail)
+        self.assertIn("chapters.count { it.chapter.bookmark }", detail)
+        self.assertIn("chapters.size - read", detail)
+        self.assertIn('name="seiryn_bookmarked"', (patch.ASSETS / "strings.xml").read_text())
+
+    def test_reader_progress_overlay_has_page_ratio_and_reuses_native_navigators(self):
+        source = (MODULE.parent / "obsidian_ui.py").read_text()
+        self.assertIn("LinearProgressIndicator(", source)
+        self.assertIn("currentPage.toLong() * 100 / totalPages", source)
+        self.assertIn("ReaderTool(readingMode.icon", source)
+
 
 if __name__ == "__main__":
     unittest.main()

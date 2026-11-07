@@ -33,6 +33,23 @@ fun SeirynDetailActions(
                 progress = { read.toFloat() / chapters.size },
                 modifier = Modifier.fillMaxWidth(),
             )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                DetailMetric(
+                    label = stringResource(R.string.seiryn_unread),
+                    value = (chapters.size - read).coerceAtLeast(0),
+                )
+                DetailMetric(
+                    label = stringResource(R.string.seiryn_downloads),
+                    value = chapters.count { it.isDownloaded },
+                )
+                DetailMetric(
+                    label = stringResource(R.string.seiryn_bookmarked),
+                    value = chapters.count { it.chapter.bookmark },
+                )
+            }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onContinue, enabled = chapters.any { !it.chapter.read }) {
                     Text(stringResource(if (read > 0) R.string.seiryn_resume else R.string.seiryn_start))
@@ -40,5 +57,20 @@ fun SeirynDetailActions(
                 OutlinedButton(onClick = onFilter) { Text(stringResource(R.string.seiryn_chapter_controls)) }
             }
         }
+    }
+}
+
+@Composable
+private fun DetailMetric(label: String, value: Int) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
+        Text(
+            text = "$value $label",
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

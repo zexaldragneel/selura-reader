@@ -31,9 +31,11 @@ existing engine. Other appearance themes retain their existing screen layouts.
 - Search Library, clear search, change categories, sort/filter, long-press/select,
   bookmark/mark read/download. Clear filters to distinguish filtering from missing data.
 - Open Details, cover dialog, author/source search, description/tags, notes,
-  category/track actions and chapter sort/filter; test chapter swipe and selection.
+  category/track actions and chapter sort/filter; confirm live unread, offline,
+  and bookmark counts; test chapter swipe and selection.
 - Read online and downloaded chapters in LTR, RTL, webtoon and landscape modes.
-  Check chapter skip, slider, crop, orientation, bookmarks and immersive hide/show.
+  Check chapter skip, slider, page progress bar, crop, orientation, bookmarks
+  and immersive hide/show.
 - Test large fonts, small phones and tablet rails; switch to another theme and back.
 
 Automated checks establish source integration, compilation and artifact identity.

@@ -2,12 +2,13 @@
   "prNumber": 0,
   "added": [
     "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
-    "Home recommends unread titles by matching genre metadata from your recently read manga."
+    "Home recommends unread titles by matching genre metadata from your recently read manga.",
+    "Manga Details now summarizes live unread, downloaded and bookmarked chapter counts."
   ],
   "improved": [
     "Persistent search, category filters, sorting, range selection, continue-reading and global search on the new Library grid.",
     "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
-    "Reader tools now have labels and a reading-room page/percentage indicator in Obsidian.",
+    "Reader tools now have labels, a reading-room page/percentage indicator and a visual progress bar in Obsidian.",
     "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
   ],
   "fixed": [

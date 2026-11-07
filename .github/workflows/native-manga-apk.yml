@@ -183,6 +183,10 @@ jobs:
           grep -Fq 'SeirynLibraryGrid(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryPager.kt
           grep -Fq 'recommendFromLibrary(state.library, state.history)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeTab.kt
           grep -Fq 'candidate.manga.genre.orEmpty()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeViewModel.kt
+          grep -Fq 'chapters.count { it.isDownloaded }' native-upstream/app/src/main/java/eu/kanade/presentation/manga/components/SeirynDetailActions.kt
+          grep -Fq 'chapters.count { it.chapter.bookmark }' native-upstream/app/src/main/java/eu/kanade/presentation/manga/components/SeirynDetailActions.kt
+          grep -Fq 'LinearProgressIndicator(' native-upstream/app/src/main/java/eu/kanade/presentation/reader/appbars/ReaderAppBars.kt
+          grep -Fq 'currentPage.toFloat() / totalPages' native-upstream/app/src/main/java/eu/kanade/presentation/reader/appbars/ReaderAppBars.kt
           grep -Fq 'SeirynReadingDesk(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryContent.kt
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt
           grep -Fq 'onContinueReading(toResume)' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynReadingDesk.kt

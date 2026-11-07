@@ -29,6 +29,7 @@
     <string name="seiryn_clear">Clear</string>
     <string name="seiryn_filters_active">Filters are active. Use the filter button to change them.</string>
     <string name="seiryn_chapter_progress">%1$d of %2$d chapters read</string>
+    <string name="seiryn_bookmarked">bookmarked</string>
     <string name="seiryn_chapter_controls">Sort and filter</string>
     <string name="seiryn_reader_progress">Page %1$d of %2$d · %3$d%%</string>
     <string name="seiryn_reader_focus">READING ROOM</string>

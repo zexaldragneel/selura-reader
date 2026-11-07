@@ -154,17 +154,25 @@ def apply(root):
 
     p = BASE + "presentation/reader/appbars/ReaderAppBars.kt"
     s = read(p)
-    s = once(s, "import androidx.compose.material3.MaterialTheme", "import androidx.compose.material3.Text\nimport androidx.compose.ui.res.stringResource\nimport eu.kanade.tachiyomi.R\nimport eu.kanade.presentation.theme.LocalSeluraLibraryAppearance\nimport eu.kanade.presentation.theme.SeluraLibraryTheme\nimport androidx.compose.material3.MaterialTheme")
+    s = once(s, "import androidx.compose.material3.MaterialTheme", "import androidx.compose.material3.Text\nimport androidx.compose.material3.LinearProgressIndicator\nimport androidx.compose.ui.res.stringResource\nimport eu.kanade.tachiyomi.R\nimport eu.kanade.presentation.theme.LocalSeluraLibraryAppearance\nimport eu.kanade.presentation.theme.SeluraLibraryTheme\nimport androidx.compose.material3.MaterialTheme")
     s = once(s, "    val backgroundColor = MaterialTheme.colorScheme", "    val obsidian = LocalSeluraLibraryAppearance.current?.theme == SeluraLibraryTheme.SEIRYN_OBSIDIAN\n    val backgroundColor = MaterialTheme.colorScheme")
     s = once(s, "            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {", """            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
                 if (obsidian && totalPages > 0) {
-                    Row(
+                    Column(
                         Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(horizontal = 24.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(stringResource(R.string.seiryn_reader_focus), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                        Text(stringResource(R.string.seiryn_reader_progress, currentPage, totalPages,
-                            (currentPage.toLong() * 100 / totalPages).toInt().coerceIn(0, 100)), style = MaterialTheme.typography.labelMedium)
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.seiryn_reader_focus), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.seiryn_reader_progress, currentPage, totalPages,
+                                (currentPage.toLong() * 100 / totalPages).toInt().coerceIn(0, 100)), style = MaterialTheme.typography.labelMedium)
+                        }
+                        LinearProgressIndicator(
+                            progress = { (currentPage.toFloat() / totalPages).coerceIn(0f, 1f) },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.outlineVariant,
+                        )
                     }
                 }""")
     changed[p] = s
