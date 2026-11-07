@@ -36,4 +36,6 @@
     <string name="seiryn_chapter_controls">Sort and filter</string>
     <string name="seiryn_reader_progress">Page %1$d of %2$d · %3$d%%</string>
     <string name="seiryn_reader_focus">READING ROOM</string>
+    <string name="seiryn_wifi_resume_on">Auto-resume: Wi-Fi only</string>
+    <string name="seiryn_wifi_resume_off">Auto-resume: Any network</string>
 </resources>

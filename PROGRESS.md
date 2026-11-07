@@ -1,5 +1,11 @@
 # Selura — Development Progress
 
+## November 8 — Direct buttons for migration and download network
+
+- Obsidian Details exposes **Find source** whenever the native migration callback is available, including working sources. Source search and confirmation remain native.
+- Added a persistent **Auto-resume: Wi-Fi only / Any network** chip beside chapter controls. It changes the existing Download only over Wi-Fi preference and reflects changes from Settings. It does not start a manually paused queue.
+- Eight existing Obsidian tests pass locally. Signed Android build and device interaction pending for these buttons.
+
 ## November 8 — Guided source migration and Wi-Fi-aware download resume, signed Build #183 verified
 
 - Commit `a45b325e734ec0a4338517263e2ca1b2b7a5b53a` adds a Seiryn Details prompt when the original source is a Mihon `StubSource`. **Find source** opens the existing native migration flow so the owner can review the matching title and confirm; it never silently changes a source ID or migrates an uncertain match.

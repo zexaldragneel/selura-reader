@@ -1,6 +1,7 @@
 {
   "prNumber": 0,
   "added": [
+    "Manga Details has a Find source button and an Auto-resume network button that switches between Wi-Fi only and any network.",
     "If a manga's source extension is unavailable, Details offers the native migration flow to find and review a matching source.",
     "Queued downloads resume when their allowed network returns; Wi-Fi-only mode waits for an unmetered connection.",
     "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",

@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
+import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -22,6 +27,9 @@ fun SeirynDetailActions(
     onFindSource: (() -> Unit)?,
 ) {
     if (LocalSeluraLibraryAppearance.current?.theme != SeluraLibraryTheme.SEIRYN_OBSIDIAN) return
+    val context = LocalContext.current
+    val wifiPreference = remember { context.appGraph.downloadPreferences.downloadOnlyOverWifi }
+    val wifiOnly by wifiPreference.collectAsState()
     val read = chapters.count { it.chapter.read }
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -43,9 +51,6 @@ fun SeirynDetailActions(
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(R.string.seiryn_source_unavailable), style = MaterialTheme.typography.titleSmall)
                             Text(stringResource(R.string.seiryn_source_suggestion), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        TextButton(onClick = onFindSource) {
-                            Text(stringResource(R.string.seiryn_find_source))
                         }
                     }
                 }
@@ -77,6 +82,20 @@ fun SeirynDetailActions(
                     Text(stringResource(if (read > 0) R.string.seiryn_resume else R.string.seiryn_start))
                 }
                 OutlinedButton(onClick = onFilter) { Text(stringResource(R.string.seiryn_chapter_controls)) }
+                if (onFindSource != null) {
+                    OutlinedButton(onClick = onFindSource) {
+                        Text(stringResource(R.string.seiryn_find_source))
+                    }
+                }
+                FilterChip(
+                    selected = wifiOnly,
+                    onClick = { wifiPreference.set(!wifiOnly) },
+                    label = {
+                        Text(stringResource(
+                            if (wifiOnly) R.string.seiryn_wifi_resume_on else R.string.seiryn_wifi_resume_off,
+                        ))
+                    },
+                )
             }
         }
     }
