@@ -3,7 +3,8 @@
   "changes": {
     "added": [
       "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
-      "Home recommends unread titles by matching genre metadata from your recently read manga."
+      "Home recommends unread titles by matching genre metadata from your recently read manga.",
+      "Manga Details now summarizes live unread, downloaded and bookmarked chapter counts."
     ],
     "fixed": [
       "Continue Reading resumes the historical partial chapter or advances after a completed chapter."
@@ -11,14 +12,14 @@
     "improved": [
       "Persistent search, category filters, sorting, range selection, continue-reading and global search on the new Library grid.",
       "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
-      "Reader tools now have labels and a reading-room page/percentage indicator in Obsidian.",
+      "Reader tools now have labels, a reading-room page/percentage indicator and a visual progress bar in Obsidian.",
       "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
     ]
   },
   "notes": "What's new: Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-180",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-181",
   "schemaVersion": 1,
-  "sha256": "5dd0a1387071337f46ed1db7d513c7b4d6c4ee95f7ee4ae5772124a531d138bf",
-  "versionCode": 1180,
-  "versionName": "Seiryn Build 180"
+  "sha256": "557489da828875c57b35da33a4401fedd1d70cab10dbeb8bad91b8a61af58cc6",
+  "versionCode": 1181,
+  "versionName": "Seiryn Build 181"
 }
