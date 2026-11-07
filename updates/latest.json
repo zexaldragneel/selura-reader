@@ -2,7 +2,7 @@
   "applicationId": "com.selura.manga",
   "changes": {
     "added": [
-      "If a manga's source extension is unavailable, Details offers the native migration flow to find and review a matching source.",
+      "Manga Details has a Find source button and an Auto-resume network button that switches between Wi-Fi only and any network.",
       "Queued downloads resume when their allowed network returns; Wi-Fi-only mode waits for an unmetered connection.",
       "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
       "Home recommends unread titles by matching genre metadata from your recently read manga.",
@@ -18,10 +18,10 @@
       "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
     ]
   },
-  "notes": "What's new: If a manga's source extension is unavailable, Details offers the native migration flow to find and review a matching source.",
-  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-183",
+  "notes": "What's new: Manga Details has a Find source button and an Auto-resume network button that switches between Wi-Fi only and any network.",
+  "releaseUrl": "https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-187",
   "schemaVersion": 1,
-  "sha256": "3b530fdf80a5bdd0b634b1260d802002d30e0167888758a78153ca60ff0193a0",
-  "versionCode": 1183,
-  "versionName": "Seiryn Build 183"
+  "sha256": "959db7bc0bcc1e05b900c76f477d99ca7e30ada7f6fa263306faf950df280bb3",
+  "versionCode": 1187,
+  "versionName": "Seiryn Build 187"
 }
