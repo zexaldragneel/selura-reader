@@ -1,5 +1,14 @@
 # Selura — Development Progress
 
+## November 8 — Guided source migration and Wi-Fi-aware download resume, signed Build #183 verified
+
+- Commit `a45b325e734ec0a4338517263e2ca1b2b7a5b53a` adds a Seiryn Details prompt when the original source is a Mihon `StubSource`. **Find source** opens the existing native migration flow so the owner can review the matching title and confirm; it never silently changes a source ID or migrates an uncertain match.
+- New `wifi_auto_resume.py` carries the existing `Download only over Wi-Fi` preference into normal and rate-limit WorkManager requests. If enabled, the persisted queue waits for an unmetered connection before resuming; otherwise it retains connected-network behavior. Explicit Pause and Clear still cancel the worker. No queue, chapter files, progress, or data schema changes.
+- Local full contract suite: **177 tests passed**. Build #182 caught one stale workflow assertion after the Wi-Fi-aware worker signature changed; the assertion was corrected in commit `dd63daa7d8941af1e7b4884c61cd2c04547a790c`.
+- **AUTOMATED VERIFIED:** [Build #183, run 42419242379](https://github.com/zexaldragneel/selura-reader/actions/runs/42419242379) passed all four jobs: pinned engine, patch tests and Android build, signed release, and update-feed publication. Gradle reported **BUILD SUCCESSFUL in 7m 13s**.
+- Application ID `com.selura.manga`, versionCode **1183**, original signing certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`. [Signed APK release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-183), **68,175,669 bytes**, SHA-256 `3b530fdf80a5bdd0b634b1260d802002d30e0167888758a78153ca60ff0193a0`; the asset digest matches live `gh-pages/updates/latest.json`.
+- Android-device behavior remains to be checked: with a missing extension, confirm **Find source** opens the existing picker and verify only a selected match is migrated. Enable **Download only over Wi-Fi**, queue downloads, reconnect to Wi-Fi, and confirm the queue resumes; confirm explicit Pause and Clear remain stopped.
+
 ## November 7 — Obsidian Details and immersive Reader refinements, signed Build #181 verified
 
 - Commit `3e4790a9aa53791ea14fb15c52697d74ee5a8f40` deepens the existing Details experience with live unread, downloaded, and bookmarked chapter counts beside total read progress. Reader now adds a warm-accent page progress bar with page and percentage status; existing page slider, chapter navigation, gestures, viewer modes, orientation, crop, bookmarks, and immersive hide/show remain native.
