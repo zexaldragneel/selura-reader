@@ -1,5 +1,13 @@
 # Selura — Development Progress
 
+## November 7 — Obsidian Details and immersive Reader refinements, signed Build #181 verified
+
+- Commit `3e4790a9aa53791ea14fb15c52697d74ee5a8f40` deepens the existing Details experience with live unread, downloaded, and bookmarked chapter counts beside total read progress. Reader now adds a warm-accent page progress bar with page and percentage status; existing page slider, chapter navigation, gestures, viewer modes, orientation, crop, bookmarks, and immersive hide/show remain native.
+- Local full patch-contract suite: **173 tests passed**. GitHub Actions [Build #181, run 42330648726](https://github.com/zexaldragneel/selura-reader/actions/runs/42330648726) passed all four jobs, including pinned source verification, patch tests, Android release assembly, signing verification, release publication, and update-feed publication. Gradle reported **BUILD SUCCESSFUL in 8m 54s**.
+- Automated identity: application ID `com.selura.manga`, versionCode **1181**, permanent certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
+- [Signed release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-181), APK **68,174,165 bytes**, SHA-256 `557489da828875c57b35da33a4401fedd1d70cab10dbeb8bad91b8a61af58cc6`. GitHub release asset digest matches `gh-pages/updates/latest.json`, version 1181, and release URL.
+- Device behavior and pixel-level parity are still not established by CI. Install over the existing app for device acceptance; do not uninstall first. Verify reading data preservation, live Details counts, Reader progress and hide/show, and the device/mode combinations in `native_manga/obsidian/README.md`.
+
 ## November 5 — Deeper Obsidian Library and genre-aware Home, signed Build #180 verified
 
 - Follow-up to Build #178 after owner pointed out that the first release still left the Library mostly Mihon-shaped and had no recommendations. Commit `89c3a39e48142c3dbb258772017f2a3f7210cb85` adds a custom responsive Obsidian cover grid with live unread/download/bookmark/read-progress details, long-press selection, global search, chapter resume and existing category/filter/sort data. Other themes continue to use their original grids.
