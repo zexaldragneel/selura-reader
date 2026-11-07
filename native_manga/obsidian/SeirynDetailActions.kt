@@ -18,6 +18,8 @@ fun SeirynDetailActions(
     chapters: List<ChapterList.Item>,
     onContinue: () -> Unit,
     onFilter: () -> Unit,
+    sourceUnavailable: Boolean,
+    onFindSource: (() -> Unit)?,
 ) {
     if (LocalSeluraLibraryAppearance.current?.theme != SeluraLibraryTheme.SEIRYN_OBSIDIAN) return
     val read = chapters.count { it.chapter.read }
@@ -28,6 +30,26 @@ fun SeirynDetailActions(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (sourceUnavailable && onFindSource != null) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(stringResource(R.string.seiryn_source_unavailable), style = MaterialTheme.typography.titleSmall)
+                            Text(stringResource(R.string.seiryn_source_suggestion), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        TextButton(onClick = onFindSource) {
+                            Text(stringResource(R.string.seiryn_find_source))
+                        }
+                    }
+                }
+            }
             Text(stringResource(R.string.seiryn_chapter_progress, read, chapters.size), style = MaterialTheme.typography.labelLarge)
             if (chapters.isNotEmpty()) LinearProgressIndicator(
                 progress = { read.toFloat() / chapters.size },

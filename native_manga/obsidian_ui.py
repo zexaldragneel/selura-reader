@@ -135,6 +135,8 @@ def apply(root):
                             chapters = state.chapters,
                             onContinue = onContinueReading,
                             onFilter = """ + "ON_FILTER" + """,
+                            sourceUnavailable = state.source is StubSource,
+                            onFindSource = onMigrateClicked,
                         )""")
     # Phone and tablet parameter names differ.
     s = s.replace("onFilter = ON_FILTER", "onFilter = onFilterClicked", 1)

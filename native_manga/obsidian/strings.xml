@@ -30,6 +30,9 @@
     <string name="seiryn_filters_active">Filters are active. Use the filter button to change them.</string>
     <string name="seiryn_chapter_progress">%1$d of %2$d chapters read</string>
     <string name="seiryn_bookmarked">bookmarked</string>
+    <string name="seiryn_source_unavailable">This source extension is unavailable</string>
+    <string name="seiryn_source_suggestion">Search installed sources for a matching title. Review the match before migrating.</string>
+    <string name="seiryn_find_source">Find source</string>
     <string name="seiryn_chapter_controls">Sort and filter</string>
     <string name="seiryn_reader_progress">Page %1$d of %2$d · %3$d%%</string>
     <string name="seiryn_reader_focus">READING ROOM</string>

@@ -32,10 +32,15 @@ existing engine. Other appearance themes retain their existing screen layouts.
   bookmark/mark read/download. Clear filters to distinguish filtering from missing data.
 - Open Details, cover dialog, author/source search, description/tags, notes,
   category/track actions and chapter sort/filter; confirm live unread, offline,
-  and bookmark counts; test chapter swipe and selection.
+  and bookmark counts; test chapter swipe and selection. If an item's extension
+  is unavailable, use **Find source**, review the candidate in Mihon's migration
+  flow, and confirm only the correct match.
 - Read online and downloaded chapters in LTR, RTL, webtoon and landscape modes.
   Check chapter skip, slider, page progress bar, crop, orientation, bookmarks
   and immersive hide/show.
+- With **Download only over Wi-Fi** enabled, leave queued work waiting without
+  Wi-Fi, reconnect to Wi-Fi, and confirm the existing queue resumes. Confirm
+  manual Pause and Clear still prevent later automatic resumption.
 - Test large fonts, small phones and tablet rails; switch to another theme and back.
 
 Automated checks establish source integration, compilation and artifact identity.

@@ -179,10 +179,17 @@ jobs:
           python3 native_manga/premium_library_v2.py native-upstream
           # Integrated native Home, Library, Details and Reader presentation.
           python3 native_manga/obsidian_ui.py native-upstream
+          # Offer the native migration flow when an item's source extension is
+          # missing, and resume queued downloads under the existing Wi-Fi rule.
+          python3 native_manga/wifi_auto_resume.py native-upstream
           test -s native-upstream/app/src/main/java/eu/kanade/presentation/library/components/SeirynLibraryGrid.kt
           grep -Fq 'SeirynLibraryGrid(' native-upstream/app/src/main/java/eu/kanade/presentation/library/components/LibraryPager.kt
           grep -Fq 'recommendFromLibrary(state.library, state.history)' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeTab.kt
           grep -Fq 'candidate.manga.genre.orEmpty()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/ui/home/SeirynHomeViewModel.kt
+          grep -Fq 'sourceUnavailable = state.source is StubSource' native-upstream/app/src/main/java/eu/kanade/presentation/manga/MangaScreen.kt
+          grep -Fq 'onFindSource = onMigrateClicked' native-upstream/app/src/main/java/eu/kanade/presentation/manga/MangaScreen.kt
+          grep -Fq 'if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadWorker.kt
+          grep -Fq 'downloadPreferences.downloadOnlyOverWifi.get()' native-upstream/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt
           grep -Fq 'chapters.count { it.isDownloaded }' native-upstream/app/src/main/java/eu/kanade/presentation/manga/components/SeirynDetailActions.kt
           grep -Fq 'chapters.count { it.chapter.bookmark }' native-upstream/app/src/main/java/eu/kanade/presentation/manga/components/SeirynDetailActions.kt
           grep -Fq 'LinearProgressIndicator(' native-upstream/app/src/main/java/eu/kanade/presentation/reader/appbars/ReaderAppBars.kt

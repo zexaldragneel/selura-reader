@@ -57,6 +57,16 @@ class ObsidianPatchTests(unittest.TestCase):
         self.assertIn("chapters.size - read", detail)
         self.assertIn('name="seiryn_bookmarked"', (patch.ASSETS / "strings.xml").read_text())
 
+    def test_unavailable_extension_suggests_native_migration_with_review(self):
+        detail = (patch.ASSETS / "SeirynDetailActions.kt").read_text()
+        strings = (patch.ASSETS / "strings.xml").read_text()
+        script = (MODULE.parent / "obsidian_ui.py").read_text()
+        self.assertIn("sourceUnavailable && onFindSource != null", detail)
+        self.assertIn("Text(stringResource(R.string.seiryn_find_source))", detail)
+        self.assertIn("Review the match before migrating", strings)
+        self.assertEqual(script.count("sourceUnavailable = state.source is StubSource"), 1)
+        self.assertIn("onFindSource = onMigrateClicked", script)
+
     def test_reader_progress_overlay_has_page_ratio_and_reuses_native_navigators(self):
         source = (MODULE.parent / "obsidian_ui.py").read_text()
         self.assertIn("LinearProgressIndicator(", source)
