@@ -1,20 +1,13 @@
 {
   "prNumber": 0,
   "added": [
-    "Manga Details has a Find source button and an Auto-resume network button that switches between Wi-Fi only and any network.",
-    "If a manga's source extension is unavailable, Details offers the native migration flow to find and review a matching source.",
-    "Queued downloads resume when their allowed network returns; Wi-Fi-only mode waits for an unmetered connection.",
-    "Obsidian Library now uses a custom responsive cover grid with unread, offline, bookmark and reading progress details.",
-    "Home recommends unread titles by matching genre metadata from your recently read manga.",
-    "Manga Details now summarizes live unread, downloaded and bookmarked chapter counts."
+    "Smart collections with saved combinations of unread, downloaded and completed-series rules.",
+    "Persistent Read Next queue with add, remove and move up/down controls.",
+    "Open Collections & Read Next from Home or More in any theme."
   ],
   "improved": [
-    "Persistent search, category filters, sorting, range selection, continue-reading and global search on the new Library grid.",
-    "Cinematic manga details, chapter reading progress, Start/Continue controls and bookmark-aware chapter cards.",
-    "Reader tools now have labels, a reading-room page/percentage indicator and a visual progress bar in Obsidian.",
-    "Preserves com.selura.manga, permanent signing, source IDs, backups and existing reading data."
+    "Live collection membership follows library and download-cache changes without network requests.",
+    "Categories, reading progress, downloads, app identity and permanent signer remain unchanged."
   ],
-  "fixed": [
-    "Continue Reading resumes the historical partial chapter or advances after a completed chapter."
-  ]
+  "fixed": []
 }

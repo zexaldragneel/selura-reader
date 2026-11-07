@@ -1,0 +1,30 @@
+<resources>
+    <string name="organizer_title">Collections &amp; Read Next</string>
+    <string name="organizer_collections">Smart collections</string>
+    <string name="organizer_queue_count">Read Next (%1$d)</string>
+    <string name="organizer_all">All library titles</string>
+    <string name="organizer_unread_downloaded">Unread with downloads</string>
+    <string name="organizer_completed">Completed series</string>
+    <string name="organizer_unread">Has unread chapters</string>
+    <string name="organizer_downloaded">Has downloaded chapters</string>
+    <string name="organizer_rules_help">Collections match all selected rules automatically. Unread with downloads means the series has unread chapters and at least one downloaded chapter; that download may already be read.</string>
+    <string name="organizer_queue_help">Tap a title to open it. Use Move up or Move down to set your reading order. Categories and reading progress stay unchanged. Organizer lists are saved on this device and are not included in manga backup exports yet.</string>
+    <string name="organizer_queue_empty">Your reading queue is empty. Add titles from Smart collections.</string>
+    <string name="organizer_empty">No library titles match these rules and search.</string>
+    <string name="organizer_unavailable">Title no longer in library</string>
+    <string name="organizer_up">Move up</string>
+    <string name="organizer_down">Move down</string>
+    <string name="organizer_remove">Remove from queue</string>
+    <string name="organizer_create">New collection</string>
+    <string name="organizer_delete_rule">Delete collection rule</string>
+    <string name="organizer_search">Search collection</string>
+    <string name="organizer_counts">%1$d unread � %2$d downloaded</string>
+    <string name="organizer_add">Add to Read Next</string>
+    <string name="organizer_queued">Already in Read Next</string>
+    <string name="organizer_name">Unique collection name</string>
+    <string name="organizer_save">Save</string>
+    <string name="organizer_cancel">Cancel</string>
+    <string name="organizer_back">Back</string>
+    <string name="organizer_error">Could not load or save organizer data. Reopen this screen and try again.</string>
+</resources>
+
