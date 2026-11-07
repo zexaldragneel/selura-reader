@@ -27,6 +27,8 @@ def apply(root):
     changed[p] = once(s, "            onClickCategories =", "            onClickOrganizer = { navigator.push(eu.kanade.tachiyomi.ui.organizer.OrganizerScreen()) },\n            onClickCategories =")
     p = BASE + "presentation/more/MoreScreen.kt"
     s = (root / p).read_text(encoding="utf-8")
+    anchor = "            item {\n                SwitchPreferenceWidget(\n                    title = stringResource(MR.strings.label_downloaded_only),"
+    s = once(s, anchor, "            item { eu.kanade.tachiyomi.ui.organizer.SeirynBuildVersion() }\n" + anchor)
     s = once(s, "    onClickCategories: () -> Unit,", "    onClickOrganizer: () -> Unit,\n    onClickCategories: () -> Unit,")
     s = once(s, "            item {\n                TextPreferenceWidget(\n                    title = stringResource(MR.strings.categories)", '''            item {
                 TextPreferenceWidget(
@@ -39,7 +41,7 @@ def apply(root):
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.categories)''')
     changed[p] = s
-    for name in ("OrganizerScreen.kt", "OrganizerViewModel.kt", "OrganizerRules.kt"):
+    for name in ("OrganizerScreen.kt", "OrganizerViewModel.kt", "OrganizerRules.kt", "SeirynBuildVersion.kt"):
         changed[BASE + "tachiyomi/ui/organizer/" + name] = (ASSETS / name).read_text(encoding="utf-8")
     changed["app/src/main/res/values/seiryn_organizer.xml"] = (ASSETS / "strings.xml").read_text(encoding="utf-8")
     changed["app/src/test/java/eu/kanade/tachiyomi/ui/organizer/OrganizerRulesTest.kt"] = (ASSETS / "OrganizerRulesTest.kt").read_text(encoding="utf-8")

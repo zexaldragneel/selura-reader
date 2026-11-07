@@ -1,5 +1,11 @@
 # Selura — Development Progress
 
+## November 8 — Visible installed build button
+
+- Adds **Build version** immediately below the More header in every theme. Row shows the installed Seiryn build number; tapping opens version name, Android version code and application ID, with Copy version and Close actions.
+- Uses installed APK BuildConfig, not remote update-feed metadata or the pinned upstream commit. Retains Smart collections and Read Next from verified Build #188.
+- Local five organizer checks and native navigation patch smoke check pass. Signed Android compilation and device acceptance pending.
+
 ## November 8 — Smart collections and Read Next
 
 - [PR #167](https://github.com/zexaldragneel/selura-reader/pull/167), implementation `9f982c264580923b946d6c61ecd2a66218b5a453`, adds a native organizer accessible through Home and More in every theme. Named collections combine unread, downloaded and completed-series rules; membership follows existing library and download-cache flows.

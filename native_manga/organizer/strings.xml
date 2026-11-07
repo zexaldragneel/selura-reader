@@ -1,4 +1,9 @@
 <resources>
+    <string name="organizer_build_version">Build version</string>
+    <string name="organizer_build_number">Seiryn Build #%1$d</string>
+    <string name="organizer_build_details">%1$s\nVersion: %2$s\nVersion code: %3$d\nApp ID: %4$s</string>
+    <string name="organizer_close">Close</string>
+    <string name="organizer_copy_version">Copy version</string>
     <string name="organizer_title">Collections &amp; Read Next</string>
     <string name="organizer_collections">Smart collections</string>
     <string name="organizer_queue_count">Read Next (%1$d)</string>
@@ -18,7 +23,7 @@
     <string name="organizer_create">New collection</string>
     <string name="organizer_delete_rule">Delete collection rule</string>
     <string name="organizer_search">Search collection</string>
-    <string name="organizer_counts">%1$d unread � %2$d downloaded</string>
+    <string name="organizer_counts">%1$d unread &#183; %2$d downloaded</string>
     <string name="organizer_add">Add to Read Next</string>
     <string name="organizer_queued">Already in Read Next</string>
     <string name="organizer_name">Unique collection name</string>

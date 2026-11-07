@@ -1,6 +1,7 @@
 {
   "prNumber": 0,
   "added": [
+    "More now shows a Build version button with the installed build number, version details and Copy version.",
     "Smart collections with saved combinations of unread, downloaded and completed-series rules.",
     "Persistent Read Next queue with add, remove and move up/down controls.",
     "Open Collections & Read Next from Home or More in any theme."
