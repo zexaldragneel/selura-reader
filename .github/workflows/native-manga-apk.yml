@@ -325,7 +325,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          ./gradlew :app:testReleaseUnitTest --tests 'eu.kanade.tachiyomi.ui.organizer.OrganizerRulesTest' --stacktrace --no-daemon -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
+          ./gradlew :app:testDebugUnitTest --tests 'eu.kanade.tachiyomi.ui.organizer.OrganizerRulesTest' --stacktrace --no-daemon -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
           # Local distribution excludes upstream telemetry and upstream updater.
           ./gradlew :app:assembleRelease --stacktrace --no-daemon \
             -Pdist=local -Pinclude-telemetry=false -Penable-updater=false
