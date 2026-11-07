@@ -6,7 +6,7 @@
 - Local full patch-contract suite: **173 tests passed**. GitHub Actions [Build #181, run 42330648726](https://github.com/zexaldragneel/selura-reader/actions/runs/42330648726) passed all four jobs, including pinned source verification, patch tests, Android release assembly, signing verification, release publication, and update-feed publication. Gradle reported **BUILD SUCCESSFUL in 8m 54s**.
 - Automated identity: application ID `com.selura.manga`, versionCode **1181**, permanent certificate SHA-256 `da9cfd25f9b1c694b585d427e5faa8c9a1d052b8d846051fbe1569d65c851d42`.
 - [Signed release](https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-181), APK **68,174,165 bytes**, SHA-256 `557489da828875c57b35da33a4401fedd1d70cab10dbeb8bad91b8a61af58cc6`. GitHub release asset digest matches `gh-pages/updates/latest.json`, version 1181, and release URL.
-- Device behavior and pixel-level parity are still not established by CI. Install over the existing app for device acceptance; do not uninstall first. Verify reading data preservation, live Details counts, Reader progress and hide/show, and the device/mode combinations in `native_manga/obsidian/README.md`.
+- Owner confirmed Build #181 is installed. No Android device or emulator is connected to the development workspace, so data-preservation, interactive behavior and visual-parity checks still need device observations. On device, verify library/history/download retention, live Details counts, Reader progress and immersive hide/show, plus the device/mode combinations in `native_manga/obsidian/README.md`.
 
 ## November 5 — Deeper Obsidian Library and genre-aware Home, signed Build #180 verified
 
