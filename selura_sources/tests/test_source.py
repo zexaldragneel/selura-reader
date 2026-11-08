@@ -51,15 +51,15 @@ class SeluraNhentaiTests(unittest.TestCase):
         self.assertIn('Regex("""^i[0-9]+', source)
         self.assertIn("it.scheme == \"https\"", source)
         self.assertIn("response.code == 403 || response.code == 429", source)
-        self.assertIn("take(3)", source)
+        self.assertIn("take(if (thumbnailMode) 2 else 3)", source)
         self.assertIn("0 until 1", source)
-        self.assertIn("take(3)", source)
-        self.assertIn("withConnectTimeout(4, TimeUnit.SECONDS)", source)
-        self.assertIn("withReadTimeout(9, TimeUnit.SECONDS)", source)
+        self.assertIn("take(if (thumbnailMode) 2 else 3)", source)
+        self.assertIn("withConnectTimeout(if (thumbnailMode) 2 else 4, TimeUnit.SECONDS)", source)
+        self.assertIn("withReadTimeout(if (thumbnailMode) 5 else 9, TimeUnit.SECONDS)", source)
         self.assertIn("lastGoodHost()", source)
         self.assertIn("rememberGoodHost(host)", source)
         self.assertIn("response.code == 404", source)
-        self.assertIn("versionCode = 3", (self.provider / "build.gradle.kts").read_text())
+        self.assertIn("versionCode = 4", (self.provider / "build.gradle.kts").read_text())
         self.assertIn("response.close()", source)
 
     def test_browse_thumbnail_host_is_stable(self):
@@ -67,6 +67,9 @@ class SeluraNhentaiTests(unittest.TestCase):
         self.assertNotIn("nhConfig.thumbServers.random()", source)
         self.assertIn('nhConfig.thumbServers.firstOrNull { it.startsWith("https://") }', source)
         self.assertIn('thumbnail_url = "$thumbServer/', source)
+        self.assertIn("lastHealthyThumbCdn", source)
+        self.assertIn("thumbnailMode = true", source)
+        self.assertIn('Regex("""^t[0-9]+', source)
 
     def test_duplicate_patching_fails(self):
         patch(self.upstream, self.provider, verify_git=False)
