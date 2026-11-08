@@ -74,6 +74,7 @@ class NHentai(
     private val baseUrlHost by lazy { baseUrl.toHttpUrl().host }
 
     private val lastHealthyCdn = AtomicReference<String?>(null)
+    private val lastHealthyThumbCdn = AtomicReference<String?>(null)
 
     override val supportsLatest = true
 
@@ -106,6 +107,14 @@ class NHentai(
                     imageServers = { nhConfig.imageServers },
                     lastGoodHost = { lastHealthyCdn.get() },
                     rememberGoodHost = { lastHealthyCdn.set(it) },
+                ),
+            )
+            .addInterceptor(
+                NhImageRecoveryInterceptor(
+                    imageServers = { nhConfig.thumbServers },
+                    lastGoodHost = { lastHealthyThumbCdn.get() },
+                    rememberGoodHost = { lastHealthyThumbCdn.set(it) },
+                    thumbnailMode = true,
                 ),
             )
             .addNetworkInterceptor(NhGalleryCacheInterceptor())
@@ -150,7 +159,8 @@ class NHentai(
             ?: "https://i1.nhentai.net"
 
     val thumbServer
-        get() = nhConfig.thumbServers.firstOrNull { it.startsWith("https://") }
+        get() = lastHealthyThumbCdn.get()?.let { "https://$it" }
+            ?: nhConfig.thumbServers.firstOrNull { it.startsWith("https://") }
             ?: "https://t1.nhentai.net"
 
     // Preferences
@@ -532,8 +542,13 @@ class NHentai(
         private val imageServers: () -> List<String>,
         private val lastGoodHost: () -> String?,
         private val rememberGoodHost: (String) -> Unit,
+        private val thumbnailMode: Boolean = false,
     ) : Interceptor {
-        private val allowedHost = Regex("""^i[0-9]+\.nhentai\.net$""")
+        private val allowedHost = if (thumbnailMode) {
+            Regex("""^t[0-9]+\.nhentai\.net$""")
+        } else {
+            Regex("""^i[0-9]+\.nhentai\.net$""")
+        }
 
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
@@ -545,11 +560,11 @@ class NHentai(
                 .distinct()
             val previous = lastGoodHost()?.takeIf { it in alternativeHosts }
             val hosts = (listOfNotNull(previous, request.url.host) + alternativeHosts)
-                .distinct().take(3)
+                .distinct().take(if (thumbnailMode) 2 else 3)
             var lastError: IOException? = null
             val started = System.nanoTime()
-            val timedChain = chain.withConnectTimeout(4, TimeUnit.SECONDS)
-                .withReadTimeout(9, TimeUnit.SECONDS)
+            val timedChain = chain.withConnectTimeout(if (thumbnailMode) 2 else 4, TimeUnit.SECONDS)
+                .withReadTimeout(if (thumbnailMode) 5 else 9, TimeUnit.SECONDS)
 
             for (host in hosts) {
                 if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started) > 18_000) break
