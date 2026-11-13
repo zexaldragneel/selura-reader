@@ -6,6 +6,7 @@ on:
       - main
       - feature/selura-keiyoushi-foundation
       - feature/selura-extension-batch
+      - feature/selura-orphaned-18-sources
     paths:
       - 'selura_extensions/orphaned_sources.py'
       - 'selura_extensions/asura_details_fix.py'
