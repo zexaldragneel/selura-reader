@@ -35,19 +35,9 @@ NEW = '''        val url = getMangaUrl(manga)
             response = client.get(url.replace(URL_RANDOM_PART, ""), detailsHeaders)
         }
 
-        response.use { response ->
-            if (!response.isSuccessful) {
-                throw okhttp3.internal.http2.StreamResetException(okhttp3.internal.http2.ErrorCode.CANCEL)
-            }
-        }
-        response = client.get(url, detailsHeaders)
+        // The existing response.use below owns the response lifecycle.
 '''
 
-# The replacement above must not add a second request for successful details.
-# Keep the original response open and let the existing response.use parse it.
-NEW = NEW[:NEW.index('        response.use { response ->')] + '''        // Preserve the HTTP status for the normal caller rather than parsing
-        // a challenge page as if it contained Astro manga metadata.
-'''
 
 def patch(root: Path) -> None:
     path = root / TARGET
