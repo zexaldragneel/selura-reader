@@ -44,7 +44,25 @@ def patch(root: Path) -> None:
     original = path.read_text(encoding="utf-8")
     if original.count(OLD) != 1:
         raise RuntimeError("Asura details request contract changed; refusing patch")
-    path.write_text(original.replace(OLD, NEW), encoding="utf-8")
+    updated = original.replace(OLD, NEW)
+    # Chapter HTML must use a real comic-page navigation context, not the
+    # generic JSON/API headers. This shares the normal source cookie jar.
+    chapter_old = """        client.get(url).use { response ->
+            val document = response.asJsoup()
+            var pages = try {
+"""
+    chapter_new = """        val chapterHeaders = headersBuilder()
+            .set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .set("Referer", url.substringBefore("/chapter/") + "/")
+            .build()
+        client.get(url, chapterHeaders).use { response ->
+            val document = response.asJsoup()
+            var pages = try {
+"""
+    if updated.count(chapter_old) != 1:
+        raise RuntimeError("Asura chapter request contract changed; refusing patch")
+    updated = updated.replace(chapter_old, chapter_new)
+    path.write_text(updated, encoding="utf-8")
 
 
 if __name__ == "__main__":
