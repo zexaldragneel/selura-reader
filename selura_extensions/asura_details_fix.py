@@ -6,7 +6,7 @@ Keiyoushi source. Does not bypass a Cloudflare challenge.
 """
 from pathlib import Path
 
-TARGET = Path("src/en/seluraasurascans/src/eu/kanade/tachiyomi/extension/en/seluraasurascans/AsuraScans.kt")
+TARGET = Path("src/en/seluraasurascans/src/eu/kanade/tachiyomi/extension/en/asurascans/AsuraScans.kt")
 
 OLD = '''        val url = getMangaUrl(manga)
         var response = client.get(url, ensureSuccess = false)
