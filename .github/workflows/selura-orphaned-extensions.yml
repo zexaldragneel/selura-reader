@@ -8,6 +8,7 @@ on:
       - feature/selura-extension-batch
     paths:
       - 'selura_extensions/orphaned_sources.py'
+      - 'selura_extensions/asura_details_fix.py'
       - 'selura_extensions/tests/test_orphaned_sources.py'
       - 'selura_extensions/ORPHANED_18.md'
       - '.github/workflows/selura-orphaned-extensions.yml'
@@ -54,6 +55,7 @@ jobs:
             --version-code "$((3000 + ${{ github.run_number }}))" \
             --shard "${{ matrix.shard }}" \
             --task-file "$RUNNER_TEMP/tasks.txt"
+          python3 selura_extensions/asura_details_fix.py keiyoushi-deps
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
 
