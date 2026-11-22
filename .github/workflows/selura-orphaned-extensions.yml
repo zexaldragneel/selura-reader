@@ -6,8 +6,12 @@ on:
       - main
       - feature/selura-keiyoushi-foundation
       - feature/selura-extension-batch
+      - feature/selura-orphaned-18-sources
     paths:
       - 'selura_extensions/orphaned_sources.py'
+      - 'selura_extensions/asura_details_fix.py'
+      - 'selura_extensions/hiperdex_cover_fix.py'
+      - 'selura_extensions/toonily_performance_fix.py'
       - 'selura_extensions/tests/test_orphaned_sources.py'
       - 'selura_extensions/ORPHANED_18.md'
       - '.github/workflows/selura-orphaned-extensions.yml'
@@ -51,9 +55,12 @@ jobs:
           set -euo pipefail
           test "$(git -C keiyoushi-deps rev-parse HEAD)" = ff521c17bb3e503c01e658e8fac00b60a95829f3
           python3 selura_extensions/orphaned_sources.py keiyoushi-deps \
-            --version-code "$((3000 + ${{ github.run_number }}))" \
+            --version-code "$((3100 + ${{ github.run_number }}))" \
             --shard "${{ matrix.shard }}" \
             --task-file "$RUNNER_TEMP/tasks.txt"
+          python3 selura_extensions/asura_details_fix.py keiyoushi-deps
+          python3 selura_extensions/hiperdex_cover_fix.py keiyoushi-deps
+          python3 selura_extensions/toonily_performance_fix.py keiyoushi-deps
           test "$(grep -c ':assembleRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
           test "$(grep -c ':lintRelease' "$RUNNER_TEMP/tasks.txt")" -eq 6
 
@@ -99,7 +106,7 @@ jobs:
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)"
           test -x "$APKSIGNER" && test -x "$AAPT"
           mkdir -p release
-          version="$((3000 + ${{ github.run_number }}))"
+          version="$((3100 + ${{ github.run_number }}))"
           while IFS= read -r task; do
             [[ "$task" == *:assembleRelease ]] || continue
             item="${task#:src:}"
