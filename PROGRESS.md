@@ -1,5 +1,9 @@
 # Selura — Development Progress
 
+## November 25 — Shelf Shuffle
+
+Added a native Home discovery card with two local unread pools, saved deck position and series detail navigation. Signed build and Android interaction checks pending.
+
 ## November 8 — Visible installed build button
 
 - Adds **Build version** immediately below the More header in every theme. Row shows the installed Seiryn build number; tapping opens version name, Android version code and application ID, with Copy version and Close actions.

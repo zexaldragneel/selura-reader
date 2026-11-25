@@ -38,4 +38,12 @@
     <string name="seiryn_reader_focus">READING ROOM</string>
     <string name="seiryn_wifi_resume_on">Auto-resume: Wi-Fi only</string>
     <string name="seiryn_wifi_resume_off">Auto-resume: Any network</string>
+    <string name="shuffle_title">Shelf Shuffle</string>
+    <string name="shuffle_new">Unstarted</string>
+    <string name="shuffle_continue">Continue</string>
+    <string name="shuffle_empty_new">Your unstarted series with unread chapters will appear here.</string>
+    <string name="shuffle_empty_continue">Series you’ve started with chapters left to read will appear here.</string>
+    <string name="shuffle_unread">%1$d unread</string>
+    <string name="shuffle_open">Open series</string>
+    <string name="shuffle_another">Draw again</string>
 </resources>

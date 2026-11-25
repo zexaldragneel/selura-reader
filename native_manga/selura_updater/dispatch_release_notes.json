@@ -1,14 +1,8 @@
 {
   "prNumber": 0,
   "added": [
-    "More now shows a Build version button with the installed build number, version details and Copy version.",
-    "Smart collections with saved combinations of unread, downloaded and completed-series rules.",
-    "Persistent Read Next queue with add, remove and move up/down controls.",
-    "Open Collections & Read Next from Home or More in any theme."
+    "Shelf Shuffle on Home deals cover cards from your library. Choose Unstarted or Continue and draw again to see another series."
   ],
-  "improved": [
-    "Live collection membership follows library and download-cache changes without network requests.",
-    "Categories, reading progress, downloads, app identity and permanent signer remain unchanged."
-  ],
+  "improved": [],
   "fixed": []
 }
