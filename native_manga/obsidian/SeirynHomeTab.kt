@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.home
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -88,6 +90,9 @@ data object SeirynHomeTab : Tab {
                         DeskStat(state.library.sumOf { it.unreadCount.coerceAtLeast(0) }.toString(), stringResource(R.string.seiryn_unread), Modifier.weight(1f))
                         DeskStat(state.library.count { it.lastRead != null }.toString(), stringResource(R.string.seiryn_started), Modifier.weight(1f))
                     }
+                }
+                if (state.library.isNotEmpty()) item(key = "shuffle") {
+                    ShelfShuffle(state.library) { navigator.push(MangaScreen(it)) }
                 }
                 if (state.loading) item { Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
                 if (state.error) item { Text(stringResource(R.string.seiryn_home_error), Modifier.padding(horizontal = 24.dp)) }
@@ -195,6 +200,62 @@ private fun Shelf(manga: List<LibraryManga>, onClick: (Long) -> Unit) {
             Column(Modifier.width(120.dp).clickable { onClick(entry.id) }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 MangaCover.Book(data = entry.manga, contentDescription = entry.manga.title, shape = RoundedCornerShape(14.dp))
                 Text(entry.manga.title, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShelfShuffle(library: List<LibraryManga>, open: (Long) -> Unit) {
+    var unstarted by rememberSaveable { mutableStateOf(true) }
+    var seed by rememberSaveable { mutableIntStateOf(kotlin.random.Random.nextInt()) }
+    var position by rememberSaveable { mutableIntStateOf(0) }
+    val candidates = remember(library, unstarted, seed) {
+        library.asSequence()
+            .filter { it.unreadCount > 0 && (it.lastRead == null) == unstarted }
+            .distinctBy { it.id }
+            .toList()
+            .shuffled(kotlin.random.Random(seed))
+    }
+    val index = position.coerceIn(0, candidates.lastIndex.coerceAtLeast(0))
+    ElevatedCard(Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(24.dp)) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.shuffle_title), style = MaterialTheme.typography.headlineSmall, fontFamily = FontFamily.Serif)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(true, false).forEach { fresh ->
+                    FilterChip(
+                        selected = fresh == unstarted,
+                        onClick = { if (fresh != unstarted) { unstarted = fresh; position = 0 } },
+                        label = { Text(stringResource(if (fresh) R.string.shuffle_new else R.string.shuffle_continue)) },
+                    )
+                }
+            }
+            val entry = candidates.getOrNull(index)
+            if (entry == null) {
+                Text(stringResource(if (unstarted) R.string.shuffle_empty_new else R.string.shuffle_empty_continue))
+            } else {
+                Crossfade(targetState = entry, label = "Shelf shuffle") { pick ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        MangaCover.Book(data = pick.manga, contentDescription = pick.manga.title,
+                            modifier = Modifier.width(104.dp), shape = RoundedCornerShape(12.dp), onClick = { open(pick.id) })
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(pick.manga.title, style = MaterialTheme.typography.titleLarge, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                            pick.manga.genre.orEmpty().take(2).joinToString(" · ").takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                            Text(stringResource(R.string.shuffle_unread, pick.unreadCount), style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { open(entry.id) }) { Text(stringResource(R.string.shuffle_open)) }
+                    if (candidates.size > 1) {
+                        OutlinedButton(onClick = {
+                            if (index < candidates.lastIndex) position = index + 1
+                            else { position = 0 }
+                        }) { Text(stringResource(R.string.shuffle_another)) }
+                    }
+                }
             }
         }
     }

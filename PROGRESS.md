@@ -1,5 +1,9 @@
 # Selura — Development Progress
 
+## November 25 — Shelf Shuffle
+
+Added a native Home discovery card with two local unread pools, saved deck position and series detail navigation. Build #192 (59c7bab) passed native compilation, signed APK identity/certificate checks and GitHub Release publication. Package com.selura.manga, versionCode 1192. Preview: https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-192. Public in-app feed promoted from 1187 to 1192 at gh-pages commit d136ee8. Signed APK digest matched the CI verification log. Android device acceptance pending.
+
 ## November 8 — Visible installed build button
 
 - Adds **Build version** immediately below the More header in every theme. Row shows the installed Seiryn build number; tapping opens version name, Android version code and application ID, with Copy version and Close actions.
