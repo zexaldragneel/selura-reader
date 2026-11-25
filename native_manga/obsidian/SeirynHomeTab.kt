@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.home
 
-import androidx.animation.Crossfade
+import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.BorderStroke
