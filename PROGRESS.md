@@ -2,7 +2,7 @@
 
 ## November 25 — Shelf Shuffle
 
-Added a native Home discovery card with two local unread pools, saved deck position and series detail navigation. Signed build and Android interaction checks pending.
+Added a native Home discovery card with two local unread pools, saved deck position and series detail navigation. Build #192 (59c7bab) passed native compilation, signed APK identity/certificate checks and GitHub Release publication. Package com.selura.manga, versionCode 1192. Preview: https://github.com/zexaldragneel/selura-reader/releases/tag/test-native-dispatch-run-192. Public feed skipped for preview. Android device acceptance pending.
 
 ## November 8 — Visible installed build button
 
